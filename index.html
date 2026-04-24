@@ -819,7 +819,7 @@ function bCardHTML(b){
         <button class="b-status-btn ${b.tripStatus==='done'?'act-done':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','done')">Ездил</button>
         <button class="b-status-btn ${b.tripStatus==='cancelled'?'act-cancel':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','cancelled')">Отмена</button>
         <button class="b-status-btn ${b.tripStatus==='waiting_date'?'act-waiting':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','waiting_date')">Ждёт</button>
-        <button onclick="event.stopPropagation();bToggleBase('${b.id}')" style="background:none;border:none;font-size:22px;cursor:pointer;padding:0 4px;opacity:${b.inBase?1:0.3}">⭐</button>
+        <button onclick="event.stopPropagation();bToggleBase('${b.id}')" style="padding:5px 11px;border-radius:5px;border:1px solid ${b.inBase?'#7c5cbf':'var(--border)'};background:${b.inBase?'rgba(124,92,191,.1)':'none'};color:${b.inBase?'#7c5cbf':'var(--muted)'};cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px">База</button>
         <button class="b-status-btn" onclick="event.stopPropagation();bDelete('${b.id}')" style="margin-left:auto;color:var(--red);border-color:var(--red)">Удалить</button>
       </div>
     </div>
@@ -1315,15 +1315,19 @@ function pfInsertAmount(){
 }
 function bGetFormData(){
   const p=mTab==='manual'?'f':'pf';
-  const sfx=mTab==='manual'?'':'2';
-  const commEl=document.getElementById('previewComm'+sfx);
-  const comm=commEl?parseFloat((commEl.textContent||'0').replace('$',''))||0:0;
+  const route=document.getElementById(p+'Route').value;
+  const adults=parseInt(document.getElementById(p+'Adults').value)||0;
+  const children=parseInt(document.getElementById(p+'Children').value)||0;
+  const tour=TOURS.find(t=>t.key===route);
+  const adultUSD=parseFloat(document.getElementById(p+'PriceAdult')?.value)||(tour?tour.rows[0].usd:0);
+  const childUSD=parseFloat(document.getElementById(p+'PriceChild')?.value)||(tour&&tour.rows[1]?tour.rows[1].usd:0);
+  const tourUSD=adultUSD*adults+childUSD*children;
+  const comm=tourUSD>0?Math.ceil(tourUSD/10*2)/2:0;
   return {
     id:editingId,
     date:document.getElementById(p+'Date').value,
-    route:document.getElementById(p+'Route').value,
-    adults:parseInt(document.getElementById(p+'Adults').value)||0,
-    children:parseInt(document.getElementById(p+'Children').value)||0,
+    route,
+    adults, children,
     infants:parseInt(document.getElementById(p+'Infants').value)||0,
     contact:document.getElementById(p+'Contact').value,
     hotel:document.getElementById(p+'Hotel').value,
@@ -1331,8 +1335,8 @@ function bGetFormData(){
     payMethod:document.getElementById(p+'PayMethod').value,
     totalAmount:document.getElementById(p+'Amount').value,
     commission:comm,
-    customPriceAdult: parseFloat(document.getElementById(p+'PriceAdult')?.value)||0,
-    customPriceChild: parseFloat(document.getElementById(p+'PriceChild')?.value)||0,
+    customPriceAdult:adultUSD,
+    customPriceChild:childUSD,
     payStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.payStatus||'unpaid') : 'unpaid',
     tripStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.tripStatus||'waiting') : 'waiting',
     notes:document.getElementById(p+'Notes').value
