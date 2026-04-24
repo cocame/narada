@@ -135,6 +135,8 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .booking-card.s-waiting .b-card-exp{background:#daf9e4}
 .booking-card.s-tomorrow{background:#fffbe6;border-color:#f0e0b8}
 .booking-card.s-tomorrow .b-card-exp{background:#f9f3da}
+.booking-card.s-base{background:#f3f0fc;border-color:#c9bfee}
+.booking-card.s-base .b-card-exp{background:#ede8f9}
 .b-card-main{display:grid;grid-template-columns:1.3fr 0.65fr 1fr 22px 22px 50px;gap:5px;padding:12px 14px;align-items:center;cursor:pointer}
 .b-card-route{font-weight:600;font-size:15px}
 .b-card-pax{font-size:12px;color:var(--muted)}
@@ -271,9 +273,11 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
       </div>
     </div>
     <div class="b-controls">
-      <button class="b-filter-btn active" id="bfUpcoming" onclick="bSetFilter('upcoming')">Предстоящие</button>
+      <button class="b-filter-btn active" id="bfUpcoming" onclick="bSetFilter('upcoming')">Скоро</button>
       <button class="b-filter-btn" id="bfWaiting" onclick="bSetFilter('waiting')">Ждут</button>
       <button class="b-filter-btn" id="bfAll" onclick="bSetFilter('all')">Все</button>
+      <button class="b-filter-btn" id="bfCancelled" onclick="bSetFilter('cancelled')">Отказ</button>
+      <button class="b-filter-btn" id="bfBase" onclick="bSetFilter('base')">База</button>
       <button class="b-add-btn" onclick="bOpenModal()">+</button>
     </div>
     <div class="b-filter-row">
@@ -740,8 +744,11 @@ async function gasDelete(id){
 // ══════════════════════════════════════
 function bSetFilter(f){
   bFilter=f;
-  ['Upcoming','Waiting','All'].forEach(n=>document.getElementById('bf'+n).classList.remove('active'));
-  document.getElementById('bf'+cap(f)).classList.add('active');
+  ['Upcoming','Waiting','All','Cancelled','Base'].forEach(n=>{
+    const el=document.getElementById('bf'+n); if(el) el.classList.remove('active');
+  });
+  const map={upcoming:'Upcoming',waiting:'Waiting',all:'All',cancelled:'Cancelled',base:'Base'};
+  const el=document.getElementById('bf'+map[f]); if(el) el.classList.add('active');
   bRender();
 }
 function bRender(){
@@ -753,6 +760,8 @@ function bRender(){
     if(dateF&&b.date!==dateF) return false;
     if(bFilter==='upcoming') return b.date&&b.date>=tod&&b.tripStatus!=='cancelled'&&b.tripStatus!=='waiting_date';
     if(bFilter==='waiting') return b.tripStatus==='waiting_date';
+    if(bFilter==='cancelled') return b.tripStatus==='cancelled';
+    if(bFilter==='base') return !!b.inBase;
     return true;
   });
   filtered.sort((a,b)=>{if(!a.date&&!b.date) return 0;if(!a.date) return 1;if(!b.date) return -1;return a.date.localeCompare(b.date);});
@@ -777,8 +786,10 @@ function bCardHTML(b){
   if(b.infants>0) paxParts.push(b.infants+' мал');
   const tom=tomorrowStr();
   const sc=b.tripStatus==='done'?' s-done':b.tripStatus==='cancelled'?' s-cancelled':b.tripStatus==='waiting_date'?' s-waiting':(b.date&&b.date===tom)?' s-tomorrow':'';
+  const baseSc=b.inBase?' s-base':'';
   const payIcon=b.payStatus==='paid'?'💵':b.payStatus==='refund'?'🤑':'💳';
   const comm=b.tripStatus==='done'?'$'+(b.commission||0):'';
+  const starCol=b.inBase?'#7c5cbf':'#ccc';
 
   // inline calc для этой карточки
   const tour=TOURS.find(t=>t.key===b.route);
@@ -786,15 +797,24 @@ function bCardHTML(b){
   if(tour){
     const tid='bc_'+b.id;
     const initAdult=b.adults||0, initChild=b.children||0;
-    const rowsHTML=tour.rows.map((r,i)=>`
-      <div class="b-calc-row">
-        <div class="b-calc-label">${r.label}</div>
-        <div class="calc-counter">
-          <button class="calc-btn" onclick="event.stopPropagation();bcChange('${b.id}','r${i}',-1)">−</button>
-          <div class="calc-num" id="${tid}-r${i}">${i===0?initAdult:i===1?initChild:0}</div>
-          <button class="calc-btn" onclick="event.stopPropagation();bcChange('${b.id}','r${i}',1)">+</button>
+    let rowsHTML=`<div class="b-calc-row">
+      <div class="b-calc-label">Взрослый × ${initAdult}</div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <input type="number" id="${tid}-priceA" value="${tour.rows[0].usd}" oninput="event.stopPropagation();bcPriceChange('${b.id}')" onclick="event.stopPropagation()" style="width:52px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+        <span style="font-size:10px;color:var(--muted)">$ =</span>
+        <span id="${tid}-totA" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${fmtUSD(tour.rows[0].usd*initAdult)}</span>
+      </div>
+    </div>`;
+    if(initChild&&tour.rows[1]){
+      rowsHTML+=`<div class="b-calc-row">
+        <div class="b-calc-label">Ребёнок × ${initChild}</div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <input type="number" id="${tid}-priceC" value="${tour.rows[1].usd}" oninput="event.stopPropagation();bcPriceChange('${b.id}')" onclick="event.stopPropagation()" style="width:52px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+          <span style="font-size:10px;color:var(--muted)">$ =</span>
+          <span id="${tid}-totC" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${fmtUSD(tour.rows[1].usd*initChild)}</span>
         </div>
-      </div>`).join('');
+      </div>`;
+    }
     let tkHTML='';
     if(tour.tickets&&tour.tickets.length){
       tkHTML=`<div class="b-calc-section">Входные билеты</div>`+
@@ -825,7 +845,7 @@ function bCardHTML(b){
     </div>`;
   }
 
-  return `<div class="booking-card${sc}" id="bcard-${b.id}">
+  return `<div class="booking-card${sc}${baseSc}" id="bcard-${b.id}">
     <div class="b-card-main" onclick="bToggle('${b.id}')">
       <div class="b-card-route">${b.route}</div>
       <div class="b-card-pax">${paxParts.join('+')||'—'}</div>
@@ -850,13 +870,22 @@ function bCardHTML(b){
         <button class="b-status-btn ${b.tripStatus==='done'?'act-done':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','done')">Ездил</button>
         <button class="b-status-btn ${b.tripStatus==='cancelled'?'act-cancel':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','cancelled')">Отмена</button>
         <button class="b-status-btn ${b.tripStatus==='waiting_date'?'act-waiting':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','waiting_date')">Ждёт</button>
+        <button class="b-status-btn" onclick="event.stopPropagation();bToggleBase('${b.id}')" style="color:${starCol};border-color:${starCol}">⭐ База</button>
         <button class="b-status-btn" onclick="event.stopPropagation();bDelete('${b.id}')" style="margin-left:auto;color:var(--red);border-color:var(--red)">Удалить</button>
       </div>
     </div>
   </div>`;
 }
 
-function bToggle(id){ document.getElementById('bexp-'+id).classList.toggle('open'); bcUpdateInit(id); }
+function bToggle(id){
+  document.getElementById('bexp-'+id).classList.toggle('open');
+  if(!calcCounts['bc_'+id]){
+    calcCounts['bc_'+id]={};
+    const b=allBookings.find(x=>x.id==id);
+    if(b){ calcCounts['bc_'+id]['r0']=b.adults||0; calcCounts['bc_'+id]['r1']=b.children||0; }
+  }
+  bcUpdate(id);
+}
 
 // Init inline calc counts from booking data
 function bcUpdateInit(id){
@@ -881,30 +910,58 @@ function bcChange(bid, key, delta){
   bcUpdate(bid);
 }
 function bcGetCurs(bid){ return Array.from(document.querySelectorAll(`.bc-cur[data-bid="${bid}"]:checked`)).map(c=>c.value); }
+function bcPriceChange(bid){
+  // просто пересчитываем без перерисовки
+  bcUpdate(bid);
+}
 function bcUpdate(bid){
   const tid='bc_'+bid;
   const b=allBookings.find(x=>x.id==bid); if(!b) return;
   const tour=TOURS.find(t=>t.key===b.route); if(!tour||!currentRates) return;
   const R=currentRates; const cc=calcCounts[tid]||{};
-  let total=zeroP(); let hasAny=false; const rows=[]; const tickets=[];
-  tour.rows.forEach((r,i)=>{
-    const n=cc['r'+i]||0; if(!n) return; hasAny=true;
-    const p=mulP(calcFromUSD(r.usd,R),n); total=addP(total,p);
-    rows.push({label:r.label,n,p});
-  });
+
+  // читаем редактируемые цены без перерисовки
+  const paEl=document.getElementById(`${tid}-priceA`);
+  const pcEl=document.getElementById(`${tid}-priceC`);
+  const adultUSD=paEl&&parseFloat(paEl.value)?parseFloat(paEl.value):tour.rows[0].usd;
+  const childUSD=pcEl&&parseFloat(pcEl.value)?parseFloat(pcEl.value):(tour.rows[1]?tour.rows[1].usd:0);
+
+  let total=zeroP(); let hasAny=false; let tourUSD=0;
+  const adultN=cc['r0']||0; const childN=cc['r1']||0;
+  if(adultN){hasAny=true; tourUSD+=adultUSD*adultN; total=addP(total,calcFromUSD(adultUSD*adultN,R));}
+  if(childN&&tour.rows[1]){hasAny=true; tourUSD+=childUSD*childN; total=addP(total,calcFromUSD(childUSD*childN,R));}
+
+  const tickets=[];
   if(tour.tickets) tour.tickets.forEach((tk,i)=>{
     const n=cc['t'+i]||0; if(!n) return; hasAny=true;
     const p=mulP(calcFromVND(tk.vnd_fixed,R),n); total=addP(total,p);
     tickets.push({label:tk.label,n,p});
   });
+
+  // обновить строки цен без перерисовки всего блока
+  if(paEl){
+    const pTot=calcFromUSD(adultUSD*adultN,R);
+    const totEl=document.getElementById(`${tid}-totA`);
+    if(totEl) totEl.textContent=fmtUSD(adultUSD*adultN);
+  }
+  if(pcEl&&childN){
+    const pTot=calcFromUSD(childUSD*childN,R);
+    const totEl=document.getElementById(`${tid}-totC`);
+    if(totEl) totEl.textContent=fmtUSD(childUSD*childN);
+  }
+
   const resEl=document.getElementById(`${tid}-result`);
   if(!hasAny){resEl.style.display='none';return;}
   resEl.style.display='block';
   const curs=bcGetCurs(bid); const cF=curs.length?curs:['usd'];
   document.getElementById(`${tid}-total`).textContent='Итого: '+formatPrice(total,cF);
+  // breakdown только билеты
   document.getElementById(`${tid}-breakdown`).textContent=
-    [...rows,...tickets].map(r=>r.label+' × '+r.n+' — '+formatPrice(r.p,cF)).join('\n');
-  resEl.dataset.rows=JSON.stringify(rows.map(r=>({label:r.label,n:r.n,...r.p})));
+    tickets.map(r=>r.label+' × '+r.n+' — '+formatPrice(r.p,cF)).join('\n');
+  resEl.dataset.rows=JSON.stringify([
+    ...(adultN?[{label:'Взрослый',n:adultN,usd:adultUSD*adultN,rub:calcFromUSD(adultUSD*adultN,R).rub,vnd:calcFromUSD(adultUSD*adultN,R).vnd,usdt:calcFromUSD(adultUSD*adultN,R).usdt}]:[]),
+    ...(childN&&tour.rows[1]?[{label:'Ребёнок',n:childN,usd:childUSD*childN,rub:calcFromUSD(childUSD*childN,R).rub,vnd:calcFromUSD(childUSD*childN,R).vnd,usdt:calcFromUSD(childUSD*childN,R).usdt}]:[])
+  ]);
   resEl.dataset.tickets=JSON.stringify(tickets.map(r=>({label:r.label,n:r.n,...r.p})));
   Object.assign(resEl.dataset,{tusd:total.usd,trub:total.rub,tvnd:total.vnd,tusdt:total.usdt});
 }
@@ -967,6 +1024,11 @@ function bUpdateStats(){
 // ══════════════════════════════════════
 // BOOKING ACTIONS
 // ══════════════════════════════════════
+async function bToggleBase(id){
+  const b=allBookings.find(x=>x.id==id); if(!b) return;
+  b.inBase=!b.inBase;
+  await gasSave('updateBooking',b); bLoad();
+}
 async function bCyclePay(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   b.payStatus=b.payStatus==='unpaid'?'paid':b.payStatus==='paid'?'refund':'unpaid';
