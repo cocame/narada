@@ -778,7 +778,7 @@ function bCardHTML(b){
   const tom=tomorrowStr();
   const sc=b.tripStatus==='done'?' s-done':b.tripStatus==='cancelled'?' s-cancelled':b.tripStatus==='waiting_date'?' s-waiting':(b.date&&b.date===tom)?' s-tomorrow':'';
   const payIcon=b.payStatus==='paid'?'💵':b.payStatus==='refund'?'🤑':'💳';
-  const comm=b.payStatus==='paid'?'$'+(b.commission||0):'';
+  const comm=b.tripStatus==='done'?'$'+(b.commission||0):'';
 
   // inline calc для этой карточки
   const tour=TOURS.find(t=>t.key===b.route);
@@ -1067,9 +1067,15 @@ function fUpdateCalc(){
   const R=currentRates;
   // строки участников
   let rowsHTML=''; let tourUSD=0;
-  if(adults){const p=calcFromUSD(tour.rows[0].usd*adults,R); tourUSD+=tour.rows[0].usd*adults; rowsHTML+=fCalcRowHTML('Взрослые × '+adults, p, currency);}
-  if(children&&tour.rows[1]){const p=calcFromUSD(tour.rows[1].usd*children,R); tourUSD+=tour.rows[1].usd*children; rowsHTML+=fCalcRowHTML('Дети × '+children, p, currency);}
-  document.getElementById('fCalcRows').innerHTML=rowsHTML;
+  if(customPrice>0){
+    // своя цена — одна строка
+    const p=calcFromUSD(customPrice,R); tourUSD=customPrice;
+    rowsHTML+=fCalcRowHTML('Тур ('+(adults+children)+' чел.)', p, currency);
+  } else {
+    if(adults){const p=calcFromUSD(tour.rows[0].usd*adults,R); tourUSD+=tour.rows[0].usd*adults; rowsHTML+=fCalcRowHTML('Взрослые × '+adults, p, currency);}
+    if(children&&tour.rows[1]){const p=calcFromUSD(tour.rows[1].usd*children,R); tourUSD+=tour.rows[1].usd*children; rowsHTML+=fCalcRowHTML('Дети × '+children, p, currency);}
+  }
+  document.getElementById('fCalcRows').innerHTML=customPriceHTML+rowsHTML;
   // билеты
   const tickSec=document.getElementById('fTicketSection');
   if(tour.tickets){
@@ -1100,21 +1106,18 @@ function fCalcRowHTML(label, p, cur){
 }
 function fCalcTotal(tour, adults, children, currency, tourUSD){
   const R=currentRates; let total=calcFromUSD(tourUSD,R);
-  let break_='';
-  if(adults) break_+='Взрослые × '+adults+'\n';
-  if(children) break_+='Дети × '+children+'\n';
-  // прибавить билеты
+  let ticketLines='';
   if(tour.tickets){
     tour.tickets.forEach((tk,i)=>{
       const cnt=fTickCounts['f_'+i]||0; if(!cnt) return;
       const p=mulP(calcFromVND(tk.vnd_fixed,R),cnt);
       total=addP(total,p);
-      break_+=tk.label+' × '+cnt+'\n';
+      ticketLines+=tk.label+' × '+cnt+'\n';
     });
   }
   const val=currency==='USD'?fmtUSD(total.usd):currency==='RUB'?fmtRUB(total.rub):currency==='USDT'?fmtUSDT(total.usdt):fmtVND(total.vnd);
   document.getElementById('fCalcTotal').textContent=val;
-  document.getElementById('fCalcBreak').textContent=break_.trim();
+  document.getElementById('fCalcBreak').textContent=ticketLines.trim();
   document.getElementById('fCalcResult').style.display='block';
   document.getElementById('fCalcResult').dataset.val=val;
 }
@@ -1136,7 +1139,15 @@ function pfUpdateCalc(){
   if(!tour||!currentRates||(!adults&&!children)){block.style.display='none';return;}
   block.style.display='block';
   const R=currentRates;
+  // поле своей цены
+  let customPriceHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border2)">
+    <div style="font-size:11px;color:var(--muted);flex-shrink:0">Цена тура $</div>
+    <input type="number" id="fCustomPrice" placeholder="авто" oninput="fUpdateCalc()" style="width:80px;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;font-size:13px;background:var(--surface)">
+    <div style="font-size:10px;color:var(--muted)">оставь пустым для авто</div>
+  </div>`;
   let rowsHTML=''; let tourUSD=0;
+  const customEl=document.getElementById('fCustomPrice');
+  const customPrice=customEl?parseFloat(customEl.value)||0:0;
   if(adults){const p=calcFromUSD(tour.rows[0].usd*adults,R); tourUSD+=tour.rows[0].usd*adults; rowsHTML+=fCalcRowHTML('Взрослые × '+adults, p, currency);}
   if(children&&tour.rows[1]){const p=calcFromUSD(tour.rows[1].usd*children,R); tourUSD+=tour.rows[1].usd*children; rowsHTML+=fCalcRowHTML('Дети × '+children, p, currency);}
   document.getElementById('pfCalcRows').innerHTML=rowsHTML;
@@ -1164,20 +1175,18 @@ function pfTickChange(i,d){
 }
 function pfCalcTotal(tour, adults, children, currency, tourUSD){
   const R=currentRates; let total=calcFromUSD(tourUSD,R);
-  let break_='';
-  if(adults) break_+='Взрослые × '+adults+'\n';
-  if(children) break_+='Дети × '+children+'\n';
+  let ticketLines='';
   if(tour.tickets){
     tour.tickets.forEach((tk,i)=>{
       const cnt=pfTickCounts['pf_'+i]||0; if(!cnt) return;
       const p=mulP(calcFromVND(tk.vnd_fixed,R),cnt);
       total=addP(total,p);
-      break_+=tk.label+' × '+cnt+'\n';
+      ticketLines+=tk.label+' × '+cnt+'\n';
     });
   }
   const val=currency==='USD'?fmtUSD(total.usd):currency==='RUB'?fmtRUB(total.rub):currency==='USDT'?fmtUSDT(total.usdt):fmtVND(total.vnd);
   document.getElementById('pfCalcTotal').textContent=val;
-  document.getElementById('pfCalcBreak').textContent=break_.trim();
+  document.getElementById('pfCalcBreak').textContent=ticketLines.trim();
   document.getElementById('pfCalcResult').style.display='block';
   document.getElementById('pfCalcResult').dataset.val=val;
 }
