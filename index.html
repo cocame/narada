@@ -994,6 +994,9 @@ function bOpenModal(){
 function bEdit(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   editingId=id;
+  // сбросить счётчики билетов и кэш маршрута
+  Object.keys(fTickCounts).forEach(k=>delete fTickCounts[k]);
+  const fb=document.getElementById('fCalcBlock'); if(fb){fb.style.display='none';delete fb.dataset.route;}
   document.getElementById('modalTitle').textContent='Редактировать';
   mSwitchTab('manual');
   document.getElementById('fDate').value=b.date||'';
@@ -1273,7 +1276,8 @@ function bGetFormData(){
     payMethod:document.getElementById(p+'PayMethod').value,
     totalAmount:document.getElementById(p+'Amount').value,
     commission:comm,
-    payStatus:'unpaid', tripStatus:'waiting',
+    payStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.payStatus||'unpaid') : 'unpaid',
+    tripStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.tripStatus||'waiting') : 'waiting',
     notes:document.getElementById(p+'Notes').value
   };
 }
