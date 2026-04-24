@@ -1138,21 +1138,24 @@ function fCalcRowHTML(label, p, cur){
 }
 function fCalcTotal(tour, adults, children, currency, tourUSD){
   const R=currentRates; let total=calcFromUSD(tourUSD,R);
-  let ticketLines='';
   if(tour.tickets){
     tour.tickets.forEach((tk,i)=>{
       const cnt=fTickCounts['f_'+i]||0; if(!cnt) return;
       const p=mulP(calcFromVND(tk.vnd_fixed,R),cnt);
       total=addP(total,p);
-      ticketLines+=tk.label+' × '+cnt+'\n';
     });
   }
   const val=currency==='USD'?fmtUSD(total.usd):currency==='RUB'?fmtRUB(total.rub):currency==='USDT'?fmtUSDT(total.usdt):fmtVND(total.vnd);
   document.getElementById('fCalcTotal').textContent=val;
-  document.getElementById('fCalcBreak').textContent=ticketLines.trim();
+  document.getElementById('fCalcBreak').textContent='';
   document.getElementById('fCalcResult').style.display='block';
   document.getElementById('fCalcResult').dataset.val=val;
   document.getElementById('fCalcResult').dataset.usd=total.usd;
+  // пересчитать комиссию: tourUSD / 10, округление до 0.5
+  const commRaw = tourUSD / 10;
+  const comm = Math.ceil(commRaw*2)/2;
+  const cEl=document.getElementById('previewComm'); if(cEl) cEl.textContent='$'+comm;
+}
 }
 function fInsertAmount(){
   const val=document.getElementById('fCalcResult').dataset.val||'';
@@ -1232,20 +1235,21 @@ function pfTickChange(i,d){
 }
 function pfCalcTotal(tour, adults, children, currency, tourUSD){
   const R=currentRates; let total=calcFromUSD(tourUSD,R);
-  let ticketLines='';
   if(tour.tickets){
     tour.tickets.forEach((tk,i)=>{
       const cnt=pfTickCounts['pf_'+i]||0; if(!cnt) return;
       const p=mulP(calcFromVND(tk.vnd_fixed,R),cnt);
       total=addP(total,p);
-      ticketLines+=tk.label+' × '+cnt+'\n';
     });
   }
   const val=currency==='USD'?fmtUSD(total.usd):currency==='RUB'?fmtRUB(total.rub):currency==='USDT'?fmtUSDT(total.usdt):fmtVND(total.vnd);
   document.getElementById('pfCalcTotal').textContent=val;
-  document.getElementById('pfCalcBreak').textContent=ticketLines.trim();
+  document.getElementById('pfCalcBreak').textContent='';
   document.getElementById('pfCalcResult').style.display='block';
   document.getElementById('pfCalcResult').dataset.val=val;
+  const commRaw=tourUSD/10;
+  const comm=Math.ceil(commRaw*2)/2;
+  const cEl=document.getElementById('previewComm2'); if(cEl) cEl.textContent='$'+comm;
 }
 function pfInsertAmount(){
   const val=document.getElementById('pfCalcResult').dataset.val||'';
@@ -1254,6 +1258,9 @@ function pfInsertAmount(){
 }
 function bGetFormData(){
   const p=mTab==='manual'?'f':'pf';
+  const sfx=mTab==='manual'?'':'2';
+  const commEl=document.getElementById('previewComm'+sfx);
+  const comm=commEl?parseFloat((commEl.textContent||'0').replace('$',''))||0:0;
   return {
     id:editingId,
     date:document.getElementById(p+'Date').value,
@@ -1266,6 +1273,7 @@ function bGetFormData(){
     currency:document.getElementById(p+'Currency').value,
     payMethod:document.getElementById(p+'PayMethod').value,
     totalAmount:document.getElementById(p+'Amount').value,
+    commission:comm,
     payStatus:'unpaid', tripStatus:'waiting',
     notes:document.getElementById(p+'Notes').value
   };
