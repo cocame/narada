@@ -1065,17 +1065,37 @@ function fUpdateCalc(){
   if(!tour||!currentRates||(!adults&&!children)){block.style.display='none';return;}
   block.style.display='block';
   const R=currentRates;
-  // строки участников
-  let rowsHTML=''; let tourUSD=0;
-  if(customPrice>0){
-    // своя цена — одна строка
-    const p=calcFromUSD(customPrice,R); tourUSD=customPrice;
-    rowsHTML+=fCalcRowHTML('Тур ('+(adults+children)+' чел.)', p, currency);
-  } else {
-    if(adults){const p=calcFromUSD(tour.rows[0].usd*adults,R); tourUSD+=tour.rows[0].usd*adults; rowsHTML+=fCalcRowHTML('Взрослые × '+adults, p, currency);}
-    if(children&&tour.rows[1]){const p=calcFromUSD(tour.rows[1].usd*children,R); tourUSD+=tour.rows[1].usd*children; rowsHTML+=fCalcRowHTML('Дети × '+children, p, currency);}
+  const adultUSD=parseFloat(document.getElementById('fPriceAdult')?.value)||tour.rows[0].usd;
+  const childUSD=parseFloat(document.getElementById('fPriceChild')?.value)||(tour.rows[1]?tour.rows[1].usd:0);
+  let tourUSD=0;
+  if(adults) tourUSD+=adultUSD*adults;
+  if(children&&tour.rows[1]) tourUSD+=childUSD*children;
+  let rowsHTML='';
+  if(adults){
+    const pTotal=calcFromUSD(adultUSD*adults,R);
+    const totalVal=currency==='USD'?fmtUSD(pTotal.usd):currency==='RUB'?fmtRUB(pTotal.rub):currency==='USDT'?fmtUSDT(pTotal.usdt):fmtVND(pTotal.vnd);
+    rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+      <div style="font-size:12px;color:var(--muted);flex-shrink:0">Взрослый × ${adults}</div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <input type="number" id="fPriceAdult" value="${adultUSD}" oninput="fUpdateCalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+        <span style="font-size:10px;color:var(--muted)">$ × ${adults} =</span>
+        <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${totalVal}</span>
+      </div>
+    </div>`;
   }
-  document.getElementById('fCalcRows').innerHTML=customPriceHTML+rowsHTML;
+  if(children&&tour.rows[1]){
+    const pTotal=calcFromUSD(childUSD*children,R);
+    const totalVal=currency==='USD'?fmtUSD(pTotal.usd):currency==='RUB'?fmtRUB(pTotal.rub):currency==='USDT'?fmtUSDT(pTotal.usdt):fmtVND(pTotal.vnd);
+    rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+      <div style="font-size:12px;color:var(--muted);flex-shrink:0">Ребёнок × ${children}</div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <input type="number" id="fPriceChild" value="${childUSD}" oninput="fUpdateCalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+        <span style="font-size:10px;color:var(--muted)">$ × ${children} =</span>
+        <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${totalVal}</span>
+      </div>
+    </div>`;
+  }
+  document.getElementById('fCalcRows').innerHTML=rowsHTML;
   // билеты
   const tickSec=document.getElementById('fTicketSection');
   if(tour.tickets){
@@ -1120,6 +1140,7 @@ function fCalcTotal(tour, adults, children, currency, tourUSD){
   document.getElementById('fCalcBreak').textContent=ticketLines.trim();
   document.getElementById('fCalcResult').style.display='block';
   document.getElementById('fCalcResult').dataset.val=val;
+  document.getElementById('fCalcResult').dataset.usd=total.usd;
 }
 function fInsertAmount(){
   const val=document.getElementById('fCalcResult').dataset.val||'';
@@ -1139,17 +1160,36 @@ function pfUpdateCalc(){
   if(!tour||!currentRates||(!adults&&!children)){block.style.display='none';return;}
   block.style.display='block';
   const R=currentRates;
-  // поле своей цены
-  let customPriceHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border2)">
-    <div style="font-size:11px;color:var(--muted);flex-shrink:0">Цена тура $</div>
-    <input type="number" id="fCustomPrice" placeholder="авто" oninput="fUpdateCalc()" style="width:80px;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-family:'DM Mono',monospace;font-size:13px;background:var(--surface)">
-    <div style="font-size:10px;color:var(--muted)">оставь пустым для авто</div>
-  </div>`;
-  let rowsHTML=''; let tourUSD=0;
-  const customEl=document.getElementById('fCustomPrice');
-  const customPrice=customEl?parseFloat(customEl.value)||0:0;
-  if(adults){const p=calcFromUSD(tour.rows[0].usd*adults,R); tourUSD+=tour.rows[0].usd*adults; rowsHTML+=fCalcRowHTML('Взрослые × '+adults, p, currency);}
-  if(children&&tour.rows[1]){const p=calcFromUSD(tour.rows[1].usd*children,R); tourUSD+=tour.rows[1].usd*children; rowsHTML+=fCalcRowHTML('Дети × '+children, p, currency);}
+  const adultUSD2=parseFloat(document.getElementById('pfPriceAdult')?.value)||tour.rows[0].usd;
+  const childUSD2=parseFloat(document.getElementById('pfPriceChild')?.value)||(tour.rows[1]?tour.rows[1].usd:0);
+  let tourUSD=0;
+  if(adults) tourUSD+=adultUSD2*adults;
+  if(children&&tour.rows[1]) tourUSD+=childUSD2*children;
+  let rowsHTML='';
+  if(adults){
+    const pTotal=calcFromUSD(adultUSD2*adults,R);
+    const totalVal=currency==='USD'?fmtUSD(pTotal.usd):currency==='RUB'?fmtRUB(pTotal.rub):currency==='USDT'?fmtUSDT(pTotal.usdt):fmtVND(pTotal.vnd);
+    rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+      <div style="font-size:12px;color:var(--muted);flex-shrink:0">Взрослый × ${adults}</div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <input type="number" id="pfPriceAdult" value="${adultUSD2}" oninput="pfUpdateCalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+        <span style="font-size:10px;color:var(--muted)">$ × ${adults} =</span>
+        <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${totalVal}</span>
+      </div>
+    </div>`;
+  }
+  if(children&&tour.rows[1]){
+    const pTotal=calcFromUSD(childUSD2*children,R);
+    const totalVal=currency==='USD'?fmtUSD(pTotal.usd):currency==='RUB'?fmtRUB(pTotal.rub):currency==='USDT'?fmtUSDT(pTotal.usdt):fmtVND(pTotal.vnd);
+    rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+      <div style="font-size:12px;color:var(--muted);flex-shrink:0">Ребёнок × ${children}</div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <input type="number" id="pfPriceChild" value="${childUSD2}" oninput="pfUpdateCalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+        <span style="font-size:10px;color:var(--muted)">$ × ${children} =</span>
+        <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${totalVal}</span>
+      </div>
+    </div>`;
+  }
   document.getElementById('pfCalcRows').innerHTML=rowsHTML;
   const tickSec=document.getElementById('pfTicketSection');
   if(tour.tickets){
