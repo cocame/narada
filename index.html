@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <style>
 :root {
-  --bg:#f5f3ef; --surface:#fff; --border:#e4e0d8; --border2:#f0ece4;
+  --bg:#f5f3ef; --surface:#ffffff; --border:#e4e0d8; --border2:#f0ece4;
   --accent:#8b6914; --accent2:#2a7a6f; --text:#1a1917; --muted:#7a756c;
   --green:#2d6a3f; --purple:#5a4a8a; --note-bg:#fdf8ee; --radius:10px;
   --shadow:0 1px 3px rgba(0,0,0,.07),0 4px 12px rgba(0,0,0,.04);
@@ -18,20 +18,22 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;padding-bottom:80px}
 
-/* HEADER */
-header{padding:18px 20px 12px;text-align:center;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:var(--shadow)}
-.brand{font-size:clamp(18px,5vw,24px);font-weight:600;letter-spacing:.04em;color:var(--accent)}
+/* ── HEADER ── */
+header{padding:20px 20px 14px;text-align:center;background:var(--surface);border-bottom:1px solid var(--border);box-shadow:var(--shadow)}
+.brand{font-family:'DM Sans',sans-serif;font-size:clamp(18px,5vw,24px);font-weight:600;letter-spacing:.04em;color:var(--accent)}
 .tagline{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-top:4px}
 
-/* TABS */
+/* ── TAB NAV ── */
 .tab-nav{display:flex;background:var(--surface);border-bottom:2px solid var(--border);position:sticky;top:0;z-index:100}
-.tab-btn{flex:1;padding:11px 4px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab-btn{flex:1;padding:12px 4px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
 .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
-.tab-btn span{font-size:15px;display:block;margin-bottom:2px}
+.tab-btn span{font-size:16px;display:block;margin-bottom:2px}
+
+/* ── TAB PANELS ── */
 .tab-panel{display:none}
 .tab-panel.active{display:block}
 
-/* STATUS BAR */
+/* ── STATUS BAR ── */
 #status-bar{display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 16px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
 .rate-badge{display:inline-flex;align-items:center;gap:5px;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:3px 10px;font-size:11px}
 .rate-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--muted)}
@@ -39,11 +41,13 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .rate-badge.error .dot{background:#c0392b}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 #last-updated{color:var(--muted);font-size:10px}
+
+/* ── CURRENCY CHIPS ── */
 #rates-row{display:flex;justify-content:center;gap:6px;padding:8px 16px;flex-wrap:wrap;background:var(--surface);border-bottom:1px solid var(--border)}
 .cur-chip{font-family:'DM Mono',monospace;font-size:11px;padding:3px 10px;border:1px solid var(--border);border-radius:4px;background:var(--bg);color:var(--muted);white-space:nowrap}
 .cur-chip span{color:var(--accent);font-weight:400}
 
-/* PRICE LIST */
+/* ── MAIN PRICE ── */
 #price-list-wrap{max-width:700px;margin:0 auto;padding:16px 12px 0}
 .col-headers{display:grid;grid-template-columns:1.6fr 0.8fr 1fr 1.4fr 1fr;padding:0 16px 6px;gap:4px}
 .col-headers div{font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-family:'DM Mono',monospace;text-align:right;color:var(--muted)}
@@ -52,80 +56,69 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .col-h-rub{color:var(--accent)!important}
 .col-h-vnd{color:var(--accent2)!important}
 .col-h-usdt{color:var(--purple)!important}
+
 .tour-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow)}
 .tour-header{display:flex;align-items:center;gap:8px;padding:12px 16px 10px;border-bottom:1px solid var(--border2);background:#fafaf8}
 .tour-icon{font-size:16px;flex-shrink:0;line-height:1}
-.tour-name{font-size:15px;font-weight:500}
+.tour-name{font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;color:var(--text)}
 .price-rows{padding:6px 16px 10px}
 .price-row{display:grid;grid-template-columns:1.6fr 0.8fr 1fr 1.4fr 1fr;align-items:center;padding:6px 0;border-bottom:1px solid var(--border2);gap:4px}
 .price-row:last-child{border-bottom:none}
 .row-label{font-size:11.5px;color:var(--muted)}
 .row-label.ticket-label{font-size:10.5px;color:#aaa09a;font-style:italic}
 .price-cell{font-family:'DM Mono',monospace;font-size:11.5px;text-align:right;white-space:nowrap}
-.price-cell.usd{color:var(--green)}.price-cell.rub{color:var(--accent)}.price-cell.vnd{color:var(--accent2)}.price-cell.usdt{color:var(--purple)}
+.price-cell.usd{color:var(--green)}
+.price-cell.rub{color:var(--accent)}
+.price-cell.vnd{color:var(--accent2)}
+.price-cell.usdt{color:var(--purple)}
 .price-cell.ticket{opacity:.75;font-size:10.5px}
 .ticket-section-label{padding:6px 16px 2px;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:#bbb5ad;border-top:1px dashed var(--border);font-family:'DM Mono',monospace}
 .skeleton{display:inline-block;width:52px;height:9px;background:linear-gradient(90deg,var(--border) 25%,#ede9e0 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-radius:3px;vertical-align:middle}
 @keyframes shimmer{to{background-position:-200% 0}}
+.copy-card-btn{display:block;width:calc(100% - 32px);margin:4px 16px 12px;padding:7px 0;background:var(--accent);border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#fff;cursor:pointer;text-align:center}
+.copy-card-btn:hover{opacity:.85}
 
-/* PRICE CALC TOGGLE */
-.calc-toggle{display:block;width:calc(100% - 32px);margin:0 16px 12px;padding:7px 0;background:none;border:1px dashed var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer}
-.calc-toggle:hover{border-color:var(--accent);color:var(--accent)}
-.calc-block{display:none;padding:10px 16px 14px;border-top:1px dashed var(--border);background:#fafaf8}
-.calc-block.open{display:block}
-.calc-row-p{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2)}
-.calc-row-p:last-of-type{border-bottom:none}
-.calc-label-p{font-size:11px;color:var(--muted)}
-.calc-counter{display:flex;align-items:center;gap:10px}
-.calc-btn{width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:16px;line-height:1;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center}
+/* ── РАСЧЁТ TAB ── */
+#calc-wrap{max-width:500px;margin:0 auto;padding:16px 12px}
+.calc-tour-select{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);margin-bottom:14px;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237a756c' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.calc-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.calc-section-title{font-size:9px;letter-spacing:.14em;text-transform:uppercase;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:10px}
+.calc-row2{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border2)}
+.calc-row2:last-of-type{border-bottom:none}
+.calc-row2-label{font-size:13px;color:var(--text)}
+.calc-counter{display:flex;align-items:center;gap:12px}
+.calc-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:18px;line-height:1;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .calc-btn:hover{border-color:var(--accent);color:var(--accent)}
-.calc-num{font-family:'DM Mono',monospace;font-size:13px;min-width:20px;text-align:center}
-.calc-total{margin-top:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:11px}
-.calc-total-label{color:var(--muted);font-size:9px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
-.calc-total-usd{color:var(--green);font-size:15px;font-weight:500}
-.calc-currencies{display:flex;gap:12px;margin:8px 0;flex-wrap:wrap}
-.calc-currencies label{display:flex;align-items:center;gap:4px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);cursor:pointer}
-.calc-currencies input{cursor:pointer;accent-color:var(--accent)}
-.calc-copy{display:block;width:100%;margin-top:8px;padding:7px 0;background:var(--accent);border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#fff;cursor:pointer}
-.calc-copy:hover{opacity:.85}
-.copy-price-btn{display:block;width:calc(100% - 32px);margin:4px 16px 12px;padding:7px 0;background:none;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer;text-align:center}
-.copy-price-btn:hover{border-color:var(--accent);color:var(--accent)}
+.calc-num{font-family:'DM Mono',monospace;font-size:15px;min-width:22px;text-align:center}
+.calc-result{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.calc-result-title{font-size:9px;letter-spacing:.14em;text-transform:uppercase;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:10px}
+.calc-total-line{font-family:'DM Mono',monospace;font-size:18px;color:var(--green);font-weight:500;margin-bottom:8px}
+.calc-breakdown{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);line-height:1.8;margin-bottom:10px}
+.calc-cur-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+.calc-cur-row label{display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);cursor:pointer}
+.calc-cur-row input{cursor:pointer;accent-color:var(--accent)}
+.calc-copy-btn{display:block;width:100%;padding:10px 0;background:var(--accent);border:none;border-radius:7px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#fff;cursor:pointer}
+.calc-copy-btn:hover{opacity:.85}
+.calc-empty{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px}
 
-/* CUSTOM PRICE BLOCK */
-.custom-price-wrap{max-width:700px;margin:0 auto;padding:0 12px 16px}
-.custom-price-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
-.custom-price-title{font-size:9px;letter-spacing:.14em;text-transform:uppercase;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:10px}
-.custom-price-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.custom-price-input{width:100px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-family:'DM Mono',monospace;font-size:15px;color:var(--text);text-align:center}
-.custom-price-input:focus{outline:none;border-color:var(--accent)}
-.custom-price-label{font-size:13px;color:var(--muted)}
-.custom-price-result{font-family:'DM Mono',monospace;font-size:13px;margin-top:8px;color:var(--text);min-height:20px}
-.custom-price-result span{margin-right:12px}
-.custom-price-result .r-usd{color:var(--green)}
-.custom-price-result .r-rub{color:var(--accent)}
-.custom-price-result .r-vnd{color:var(--accent2)}
-.custom-price-result .r-usdt{color:var(--purple)}
-
-/* BOOKING TAB */
-#booking-wrap{max-width:680px;margin:0 auto}
-.b-header{padding:12px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+/* ── БРОНЬ TAB ── */
+#booking-wrap{max-width:680px;margin:0 auto;padding:0}
+.b-header{padding:14px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .b-stats{display:flex;gap:16px}
 .b-stat-val{font-size:20px;color:var(--accent);font-weight:700;font-family:'DM Mono',monospace}
-.b-stat-label{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.b-stat-label{font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
 .b-controls{padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.b-filter-btn{padding:6px 12px;border:1px solid var(--border);border-radius:20px;background:none;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.b-filter-btn{padding:6px 14px;border:1px solid var(--border);border-radius:20px;background:none;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap}
 .b-filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(139,105,20,.06)}
-.b-add-btn{margin-left:auto;width:34px;height:34px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1}
+.b-add-btn{margin-left:auto;width:34px;height:34px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .b-filter-row{padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap}
-.b-select{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px}
+.b-select{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer}
 .b-list{padding:12px 12px 40px}
 .b-date-group{margin-bottom:20px}
 .b-date-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .b-date-title{font-size:13px;font-weight:600;color:var(--accent)}
 .b-date-line{flex:1;height:1px;background:var(--border)}
 .b-date-count{font-size:10px;color:var(--muted);letter-spacing:.08em}
-
-/* BOOKING CARD */
 .booking-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden;box-shadow:var(--shadow)}
 .booking-card.s-done{background:#e8f4fd;border-color:#b8d9f0}
 .booking-card.s-done .b-card-exp{background:#daeef9}
@@ -135,52 +128,34 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .booking-card.s-waiting .b-card-exp{background:#daf9e4}
 .booking-card.s-tomorrow{background:#fffbe6;border-color:#f0e0b8}
 .booking-card.s-tomorrow .b-card-exp{background:#f9f3da}
-.b-card-main{display:grid;grid-template-columns:1.3fr 0.65fr 1fr 22px 22px 50px;gap:5px;padding:12px 14px;align-items:center;cursor:pointer}
-.b-card-route{font-weight:600;font-size:15px}
-.b-card-pax{font-size:12px;color:var(--muted)}
-.b-card-contact{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.b-card-comm{font-size:15px;color:var(--accent);font-weight:700;text-align:right;font-family:'DM Mono',monospace}
-.b-action-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:0;line-height:1}
+.b-card-main{display:grid;grid-template-columns:1.4fr 0.7fr 1fr 26px 26px 52px;gap:6px;padding:12px 14px;align-items:center;cursor:pointer}
+.b-card-route{font-weight:600;font-size:16px}
+.b-card-pax{font-size:13px;color:var(--muted)}
+.b-card-contact{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.b-card-comm{font-size:16px;color:var(--accent);font-weight:700;text-align:right;font-family:'DM Mono',monospace}
+.b-action-btn{background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:2px;line-height:1}
+.b-action-btn:hover{color:var(--accent)}
 .b-card-exp{display:none;border-top:1px solid var(--border);padding:14px;background:#fafaf8}
 .b-card-exp.open{display:block}
 .b-exp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .b-exp-item label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:3px}
 .b-exp-item span{font-size:12px}
-.b-comm-val{cursor:pointer;border-bottom:1px dashed var(--accent);color:var(--accent);font-size:12px}
 .b-notes-row{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
 .b-notes-row label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:3px}
-
-/* INLINE CALC IN BOOKING CARD */
-.b-calc-block{margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)}
-.b-calc-title{font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:8px}
-.b-calc-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2)}
-.b-calc-row:last-of-type{border-bottom:none}
-.b-calc-label{font-size:12px;color:var(--text)}
-.b-calc-label.ticket{font-style:italic;font-size:11px;color:var(--muted)}
-.b-calc-section{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;font-family:'DM Mono',monospace;padding:6px 0 2px;border-top:1px dashed var(--border);margin-top:2px}
-.b-calc-result{margin-top:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:7px}
-.b-calc-total{font-family:'DM Mono',monospace;font-size:15px;color:var(--green);font-weight:500;margin-bottom:6px}
-.b-calc-breakdown{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);line-height:1.7;margin-bottom:8px;white-space:pre-line}
-.b-calc-curs{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
-.b-calc-curs label{display:flex;align-items:center;gap:4px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);cursor:pointer}
-.b-calc-curs input{accent-color:var(--accent)}
-.b-calc-copy{display:block;width:100%;padding:8px 0;background:var(--accent);border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#fff;cursor:pointer}
-
-.b-status-row{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap;align-items:center}
-.b-status-btn{padding:5px 11px;border-radius:5px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted)}
+.b-status-row{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap}
+.b-status-btn{padding:5px 12px;border-radius:5px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted)}
 .b-status-btn.act-done{background:rgba(41,114,184,.08);color:var(--blue);border-color:var(--blue)}
 .b-status-btn.act-cancel{background:rgba(192,57,43,.08);color:var(--red);border-color:var(--red)}
 .b-status-btn.act-waiting{background:rgba(46,139,87,.08);color:var(--green);border-color:var(--green)}
-.b-copy-card-btn{display:block;width:100%;margin-top:10px;padding:8px 0;background:none;border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;text-align:center}
-.b-copy-card-btn:hover{border-color:var(--accent);color:var(--accent)}
+.b-copy-btn{display:block;width:100%;margin-top:10px;padding:8px 0;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif}
 
-/* MODAL */
+/* ── MODAL ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:flex-end;justify-content:center}
 .modal-overlay.open{display:flex}
 @media(min-width:600px){.modal-overlay{align-items:center}}
 .modal{background:var(--surface);border-radius:14px 14px 0 0;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;box-shadow:0 -4px 40px rgba(0,0,0,.18)}
 @media(min-width:600px){.modal{border-radius:14px}}
-.modal-header{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--surface);z-index:10}
+.modal-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:var(--surface);z-index:10}
 .modal-title{font-size:15px;font-weight:600}
 .modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:22px;line-height:1;padding:4px}
 .modal-body{padding:16px 20px}
@@ -206,16 +181,20 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .comm-preview .cl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
 .modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--surface)}
 .btn-save{padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer}
+.btn-save:hover{opacity:.88}
 .btn-cancel{padding:10px 18px;background:none;border:1px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--muted);cursor:pointer}
 .b-loading{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px}
 .b-empty{text-align:center;padding:50px 20px;color:var(--muted);font-size:13px}
 
-#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1917;color:#fff;padding:10px 22px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .2s;z-index:9999;pointer-events:none;white-space:nowrap}
+/* ── TOAST ── */
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1a1917;color:#fff;padding:10px 22px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .2s;z-index:9999;pointer-events:none;white-space:nowrap}
 
+/* ── MOBILE ── */
 @media(max-width:480px){
   .price-row,.col-headers{grid-template-columns:1.4fr 0.8fr 1fr 1.4fr 0.9fr}
   .price-cell{font-size:10.5px}
   .tour-name{font-size:14px}
+  .b-card-main{grid-template-columns:1.3fr 0.6fr 1fr 24px 24px 44px;gap:4px}
 }
 </style>
 </head>
@@ -226,12 +205,14 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
   <div class="tagline">Экскурсии из Дананга</div>
 </header>
 
+<!-- TAB NAV -->
 <nav class="tab-nav">
   <button class="tab-btn active" onclick="switchTab('price')" id="tnPrice"><span>💰</span>Прайс</button>
+  <button class="tab-btn" onclick="switchTab('calc')" id="tnCalc"><span>🧮</span>Расчёт</button>
   <button class="tab-btn" onclick="switchTab('booking')" id="tnBooking"><span>📋</span>Бронь</button>
 </nav>
 
-<!-- ══ TAB: ПРАЙС ══ -->
+<!-- ══════════════ TAB: ПРАЙС ══════════════ -->
 <div class="tab-panel active" id="tabPrice">
   <div id="status-bar">
     <div class="rate-badge" id="rate-status"><div class="dot"></div><span id="status-text">Загрузка курсов…</span></div>
@@ -244,30 +225,30 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
   </div>
   <div id="price-list-wrap">
     <div id="price-list"></div>
-    <div class="custom-price-wrap">
-      <div class="custom-price-card">
-        <div class="custom-price-title">Своя цена — введи сумму в $</div>
-        <div class="custom-price-row">
-          <input class="custom-price-input" type="number" id="customUSD" min="1" placeholder="0" oninput="calcCustom()">
-          <div class="custom-price-label">$</div>
-        </div>
-        <div class="custom-price-result" id="customResult"></div>
-      </div>
-    </div>
-    <footer style="text-align:center;padding:12px 0 0;font-size:10px;color:#bbb5ad;letter-spacing:.05em">
+    <footer style="text-align:center;margin-top:20px;font-size:10px;color:#bbb5ad;letter-spacing:.05em">
       Курсы: ExchangeRate-API · обновление раз в сутки
     </footer>
   </div>
 </div>
 
-<!-- ══ TAB: БРОНЬ ══ -->
+<!-- ══════════════ TAB: РАСЧЁТ ══════════════ -->
+<div class="tab-panel" id="tabCalc">
+  <div id="calc-wrap">
+    <select class="calc-tour-select" id="calcTourSel" onchange="initCalcTab()">
+      <option value="">— выбрать экскурсию —</option>
+    </select>
+    <div id="calcBody"><div class="calc-empty">Выберите экскурсию</div></div>
+  </div>
+</div>
+
+<!-- ══════════════ TAB: БРОНЬ ══════════════ -->
 <div class="tab-panel" id="tabBooking">
   <div id="booking-wrap">
     <div class="b-header">
       <div class="b-stats">
         <div><div class="b-stat-val" id="bStatToday">0</div><div class="b-stat-label">Сегодня</div></div>
         <div><div class="b-stat-val" id="bStatTomorrow">0</div><div class="b-stat-label">Завтра</div></div>
-        <div><div class="b-stat-val" id="bStatEarn">$0</div><div class="b-stat-label">Комиссия / мес</div></div>
+        <div><div class="b-stat-val" id="bStatEarn">$0</div><div class="b-stat-label">Комиссия / месяц</div></div>
       </div>
     </div>
     <div class="b-controls">
@@ -300,6 +281,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
         <button class="m-tab" onclick="mSwitchTab('manual')" id="mTabManual">Вручную</button>
         <button class="m-tab active" onclick="mSwitchTab('paste')" id="mTabPaste">Вставить текст</button>
       </div>
+      <!-- ВРУЧНУЮ -->
       <div id="mPanelManual" style="display:none">
         <div class="form-grid">
           <div class="form-group"><label>Дата поездки</label><input type="date" id="fDate"></div>
@@ -333,6 +315,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
           <div><div class="cv" id="previewPax">0 чел.</div><div class="cl">Состав группы</div></div>
         </div>
       </div>
+      <!-- ВСТАВИТЬ ТЕКСТ -->
       <div id="mPanelPaste">
         <p style="font-size:13px;color:var(--muted);margin-bottom:10px">Вставьте сообщение клиента — распознаю автоматически.</p>
         <textarea class="paste-area" id="pasteText" placeholder="Хочу на Хюэ, 15.05, 2 взрослых + 1 ребёнок..."></textarea>
@@ -383,13 +366,13 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 <div id="toast">✓ Скопировано</div>
 
 <script>
-// ══════════════════════════════════════
+// ═══════════════════════════════════════
 // КОНФИГ
-// ══════════════════════════════════════
+// ═══════════════════════════════════════
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbz4AP9eRBrmH-NKi27CH4nhDPF1WfDrXYH90TJhVqGBn0I1ROqN18KW4JlrpgxzEAtI_w/exec';
 const MARKUP     = { RUB:0.15, VND:0.03, USDT:0.00 };
-const ROUND_STEP = { RUB:100, VND:100000, USDT:1 };
-const COMM_RATES = { 'ХЮЭ':9,'ХОЙАН':9,'ОСТРОВА ЧАМ':6,'ДАНАНГ':7,'БА НА ХИЛЛС':5,'HOT SPRINGS':7 };
+const ROUND_STEP = { RUB:100,  VND:100000, USDT:1  };
+const COMMISSION_RATES = { 'ХЮЭ':9,'ХОЙАН':9,'ОСТРОВА ЧАМ':6,'ДАНАНГ':7,'БА НА ХИЛЛС':5,'HOT SPRINGS':7 };
 
 const TOURS = [
   { icon:'🏯', name:'Хюэ', key:'ХЮЭ',
@@ -402,26 +385,19 @@ const TOURS = [
     rows:[{label:'Взрослый',usd:67},{label:'Ребёнок до 10',usd:33.5}] },
   { icon:'⛰', name:'Ба На Хиллс', key:'БА НА ХИЛЛС',
     rows:[{label:'Взрослый',usd:48},{label:'Ребёнок до 10',usd:24}],
-    tickets:[
-      {id:'bana_adult', label:'Взрослые и дети >140 см', vnd_fixed:1300000},
-      {id:'bana_child', label:'Дети 100–140 см / 70+',   vnd_fixed:1000000}
-    ]},
+    tickets:[{id:'bana_adult',label:'Взрослые и дети >140 см',vnd_fixed:1000000},{id:'bana_senior',label:'Дети 100–140 см / 70+',vnd_fixed:800000}] },
   { icon:'♨️', name:'Hot Springs', key:'HOT SPRINGS',
     rows:[{label:'Взрослый',usd:72},{label:'Ребёнок до 10',usd:36}],
-    tickets:[
-      {id:'hs_adult', label:'Взрослые и дети >140 см', vnd_fixed:500000},
-      {id:'hs_child', label:'Дети 100–140 см',          vnd_fixed:300000}
-    ]},
+    tickets:[{id:'hs_adult',label:'Взрослые и дети >140 см',vnd_fixed:500000},{id:'hs_child',label:'Дети 100–140 см',vnd_fixed:300000}] },
 ];
 
-// Очень расширенный алиас-словарь маршрутов
 const ROUTE_ALIASES = {
-  'ХЮЭ': ['хюэ','хуэ','hue','hué','хье','хьюэ','хуэй','хюэй','хьюй','hyue','хuэ','хue','huê','хюе','хyэ','hyé'],
-  'ХОЙАН': ['хойан','хаян','хой ан','хой-ан','hoian','hoi an','hội an','hoian','хоян','хоиан','хаиан','хоян','хаян','хойен','хойане','хоя','хаяне','хои-ан','hoian','hoi-an'],
-  'ОСТРОВА ЧАМ': ['острова чам','чам','cham','чамские','о-ва чам','ова чам','cham island','cham islands','острова','island cham','чамски','cham isl','чам острова','ча м'],
-  'ДАНАНГ': ['дананг','да нанг','danang','da nang','да-нанг','дананге','дананга','da-nang','данан','данг','dnang','дананж','да-нан','да нан'],
-  'БА НА ХИЛЛС': ['ба на хиллс','банахиллс','бана хиллс','ба на','ba na hills','bana','banahills','ba na','бана','ба-на','ba-na','бана хилс','ба на хилс','банахилс','bana hills','ba na hill','банахилл','ba-na-hills','банахилс','ба на холмы','golden bridge','золотой мост','бана хил','ба на хил','bana hill','ba na hilz','банахильс','бана-хиллс','ба-на-хиллс','банна хиллс','ba na hilss','банахилз'],
-  'HOT SPRINGS': ['hot springs','хот спрингс','горячие источники','горячие','источники','hot spring','термальные','термы','спрингс','хот-спрингс','термальный','hot-springs','горячий источник','термал','терм','хот спринг','источник','hot sprigs','hot spings','hot spirngs','горяч источники','горяч','хот спрингз','hot springz','хот-спринг']
+  'ХЮЭ':['хюэ','хуэ','hue','хье'],
+  'ХОЙАН':['хойан','хаян','хой ан','hoian','hoi an'],
+  'ОСТРОВА ЧАМ':['острова чам','чам','cham','чамские'],
+  'ДАНАНГ':['дананг','да нанг','danang','da nang'],
+  'БА НА ХИЛЛС':['ба на хиллс','банахиллс','bana hills','ba na hills','bana','ba na'],
+  'HOT SPRINGS':['hot springs','хот спрингс','горячие источники','горячие','источники','термальные']
 };
 
 let currentRates = null;
@@ -429,113 +405,107 @@ let allBookings = [];
 let bFilter = 'upcoming';
 let editingId = null;
 let mTab = 'paste';
-const calcCounts = {};
+let calcCounts = {};
 
-// ══════════════════════════════════════
+// ═══════════════════════════════════════
 // TABS
-// ══════════════════════════════════════
+// ═══════════════════════════════════════
 function switchTab(name) {
-  ['price','booking'].forEach(t => {
-    document.getElementById('tab'+cap(t)).classList.toggle('active', t===name);
-    document.getElementById('tn'+cap(t)).classList.toggle('active', t===name);
+  ['price','calc','booking'].forEach(t => {
+    document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active', t===name);
+    document.getElementById('tn'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active', t===name);
   });
   if (name==='booking' && allBookings.length===0) bLoad();
 }
-function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 
-// ══════════════════════════════════════
+// ═══════════════════════════════════════
 // UTILS
-// ══════════════════════════════════════
+// ═══════════════════════════════════════
 const ceilTo = (v,s) => Math.ceil(v/s)*s;
 const fmtUSD  = n => Math.ceil(n)+' $';
-const fmtRUB  = n => ceilTo(n,ROUND_STEP.RUB).toLocaleString('ru-RU')+' ₽';
-const fmtVND  = n => ceilTo(n,ROUND_STEP.VND).toLocaleString('ru-RU')+' ₫';
-const fmtUSDT = n => ceilTo(n,ROUND_STEP.USDT)+' USDT';
+const fmtRUB  = n => n.toLocaleString('ru-RU')+' ₽';
+const fmtVND  = n => n.toLocaleString('ru-RU')+' ₫';
+const fmtUSDT = n => n+' USDT';
 
 function calcFromUSD(usd, R) {
   if (!R) return null;
   return {
-    usd, rub: usd*R.RUB*(1+MARKUP.RUB),
-    vnd: usd*R.VND*(1+MARKUP.VND),
-    usdt: usd*R.USDT*(1+MARKUP.USDT)
+    rub:  ceilTo(usd*R.RUB*(1+MARKUP.RUB),   ROUND_STEP.RUB),
+    vnd:  ceilTo(usd*R.VND*(1+MARKUP.VND),   ROUND_STEP.VND),
+    usdt: ceilTo(usd*R.USDT*(1+MARKUP.USDT), ROUND_STEP.USDT),
+    usd
   };
 }
-function calcFromVND(vnd, R) {
-  if (!R) return {usd:null,rub:null,vnd,usdt:null};
-  const usd = vnd/R.VND;
-  return { usd, rub: usd*R.RUB, vnd, usdt: usd*R.USDT };
-}
-function addP(a,b){ return {usd:a.usd+b.usd,rub:a.rub+b.rub,vnd:a.vnd+b.vnd,usdt:a.usdt+b.usdt}; }
-function mulP(p,n){ return {usd:p.usd*n,rub:p.rub*n,vnd:p.vnd*n,usdt:p.usdt*n}; }
-function zeroP(){ return {usd:0,rub:0,vnd:0,usdt:0}; }
-
-function formatPrice(p, curs) {
-  const parts=[];
-  if (curs.includes('usd'))  parts.push(fmtUSD(p.usd));
-  if (curs.includes('rub'))  parts.push(fmtRUB(p.rub));
-  if (curs.includes('vnd'))  parts.push(fmtVND(p.vnd));
-  if (curs.includes('usdt')) parts.push(fmtUSDT(p.usdt));
-  return parts.join(' / ');
+function calcFromVND(vnd_fixed, R) {
+  if (!R) return {usd:null,rub:null,vnd:vnd_fixed,usdt:null};
+  const usd = vnd_fixed/R.VND;
+  return { usd:Math.ceil(usd*100)/100, rub:ceilTo(usd*R.RUB,ROUND_STEP.RUB), vnd:vnd_fixed, usdt:ceilTo(usd*R.USDT,ROUND_STEP.USDT) };
 }
 
 function toast(msg) {
-  const el=document.getElementById('toast');
-  el.textContent=msg||'✓ Скопировано';
-  el.style.opacity='1'; clearTimeout(el._t);
-  el._t=setTimeout(()=>el.style.opacity='0',1800);
+  const el = document.getElementById('toast');
+  el.textContent = msg || '✓ Скопировано';
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.style.opacity='0', 1800);
 }
 function copyText(txt) {
-  try { navigator.clipboard.writeText(txt); }
-  catch(e) { const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
-  toast();
+  try { navigator.clipboard.writeText(txt); } catch(e) {
+    const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  }
+  toast('✓ Скопировано');
 }
 
-function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function tomorrowStr(){ const d=new Date(); d.setDate(d.getDate()+1); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function formatDateLabel(s){
-  if(!s||s==='—') return '—';
+function todayStr() { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function tomorrowStr() { const d=new Date(); d.setDate(d.getDate()+1); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function formatDateLabel(s) {
+  if (!s||s==='—') return '—';
   const d=new Date(s+'T00:00:00'); if(isNaN(d)) return s;
-  const M=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
-  const W=['вс','пн','вт','ср','чт','пт','сб'];
-  const base=d.getDate()+' '+M[d.getMonth()]+' ('+W[d.getDay()]+')';
-  if(s===todayStr()) return 'Сегодня, '+base;
-  if(s===tomorrowStr()) return 'Завтра, '+base;
+  const months=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+  const days=['вс','пн','вт','ср','чт','пт','сб'];
+  const base = d.getDate()+' '+months[d.getMonth()]+' ('+days[d.getDay()]+')';
+  if (s===todayStr()) return 'Сегодня, '+base;
+  if (s===tomorrowStr()) return 'Завтра, '+base;
   return base;
 }
-function pluralB(n){ return n===1?'бронь':n>=2&&n<=4?'брони':'броней'; }
+function pluralB(n) { if(n===1) return 'бронь'; if(n>=2&&n<=4) return 'брони'; return 'броней'; }
 
-// ══════════════════════════════════════
+// ═══════════════════════════════════════
 // RATES
-// ══════════════════════════════════════
+// ═══════════════════════════════════════
 async function fetchRates() {
   try {
-    const r=await fetch('https://open.er-api.com/v6/latest/USD',{mode:'cors'});
-    const d=await r.json();
-    if(d.result==='success') return {RUB:d.rates.RUB,VND:d.rates.VND,USDT:1.0,source:'ExchangeRate-API',updated:new Date(d.time_last_update_utc)};
-  } catch(_){}
+    const r = await fetch('https://open.er-api.com/v6/latest/USD',{mode:'cors'});
+    const d = await r.json();
+    if (d.result==='success') return {RUB:d.rates.RUB,VND:d.rates.VND,USDT:1.0,source:'ExchangeRate-API',updated:new Date(d.time_last_update_utc)};
+  } catch(_) {}
   try {
-    const r=await fetch('https://api.frankfurter.dev/v2/latest?base=USD&symbols=RUB,VND',{mode:'cors'});
-    const d=await r.json();
-    if(d.rates) return {RUB:d.rates.RUB,VND:d.rates.VND||25400,USDT:1.0,source:'Frankfurter',updated:new Date(d.date)};
-  } catch(_){}
+    const r = await fetch('https://api.frankfurter.dev/v2/latest?base=USD&symbols=RUB,VND',{mode:'cors'});
+    const d = await r.json();
+    if (d.rates) return {RUB:d.rates.RUB,VND:d.rates.VND||25400,USDT:1.0,source:'Frankfurter',updated:new Date(d.date)};
+  } catch(_) {}
   return {RUB:82.5,VND:25400,USDT:1.0,source:'Резервные курсы (апрель 2026)',updated:new Date('2026-04-17')};
 }
 
-// ══════════════════════════════════════
-// PRICE LIST
-// ══════════════════════════════════════
+// ═══════════════════════════════════════
+// ПРАЙС
+// ═══════════════════════════════════════
 function priceRowHTML(label, p, isTicket) {
-  const lc=isTicket?'row-label ticket-label':'row-label';
-  const tc=isTicket?'price-cell ticket':'price-cell';
+  const lc = isTicket?'row-label ticket-label':'row-label';
+  const tc = isTicket?'price-cell ticket':'price-cell';
+  const usdStr  = p&&p.usd!=null  ? fmtUSD(p.usd)   : '—';
+  const rubStr  = p&&p.rub!=null  ? fmtRUB(p.rub)   : '—';
+  const vndStr  = p&&p.vnd!=null  ? fmtVND(p.vnd)   : '—';
+  const usdtStr = p&&p.usdt!=null ? fmtUSDT(p.usdt) : '—';
   return `<div class="price-row${isTicket?' separator':''}">
     <div class="${lc}">${label}</div>
-    <div class="${tc} usd">${p&&p.usd!=null?fmtUSD(p.usd):'—'}</div>
-    <div class="${tc} rub">${p&&p.rub!=null?fmtRUB(p.rub):'—'}</div>
-    <div class="${tc} vnd">${p&&p.vnd!=null?fmtVND(p.vnd):'—'}</div>
-    <div class="${tc} usdt">${p&&p.usdt!=null?fmtUSDT(p.usdt):'—'}</div>
+    <div class="${tc} usd">${usdStr}</div>
+    <div class="${tc} rub">${rubStr}</div>
+    <div class="${tc} vnd">${vndStr}</div>
+    <div class="${tc} usdt">${usdtStr}</div>
   </div>`;
 }
-function skelRowHTML(isTicket){
+function skelRowHTML(isTicket) {
   return `<div class="price-row${isTicket?' separator':''}">
     <div class="${isTicket?'row-label ticket-label':'row-label'}"><span class="skeleton" style="width:80px"></span></div>
     <div class="price-cell usd"><span class="skeleton"></span></div>
@@ -544,258 +514,255 @@ function skelRowHTML(isTicket){
     <div class="price-cell usdt"><span class="skeleton"></span></div>
   </div>`;
 }
-
-function buildPriceCalc(t, idx) {
-  const rows = t.rows.map((r,i)=>`
-    <div class="calc-row-p">
-      <div class="calc-label-p">${r.label}</div>
-      <div class="calc-counter">
-        <button class="calc-btn" onclick="pCalcChange(${idx},'r${i}',-1)">−</button>
-        <div class="calc-num" id="pc-${idx}-r${i}">0</div>
-        <button class="calc-btn" onclick="pCalcChange(${idx},'r${i}',1)">+</button>
-      </div>
-    </div>`).join('');
-  const trows = t.tickets ? `<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;font-family:'DM Mono',monospace;padding-bottom:2px">Входные билеты</div>`+
-    t.tickets.map((tk,i)=>`
-      <div class="calc-row-p">
-        <div class="calc-label-p" style="font-style:italic;font-size:10.5px">${tk.label}</div>
-        <div class="calc-counter">
-          <button class="calc-btn" onclick="pCalcChange(${idx},'t${i}',-1)">−</button>
-          <div class="calc-num" id="pc-${idx}-t${i}">0</div>
-          <button class="calc-btn" onclick="pCalcChange(${idx},'t${i}',1)">+</button>
-        </div>
-      </div>`).join('') : '';
-  return `<div class="calc-block" id="pcb-${idx}">
-    ${rows}${trows}
-    <div class="calc-total" id="pct-${idx}" style="display:none">
-      <div class="calc-total-label">Итого</div>
-      <div class="calc-total-usd" id="pcu-${idx}"></div>
-      <div class="calc-currencies">
-        <label><input type="checkbox" class="pc-cur" data-idx="${idx}" value="usd" onchange="pCalcUpdate(${idx})"> USD</label>
-        <label><input type="checkbox" class="pc-cur" data-idx="${idx}" value="rub" onchange="pCalcUpdate(${idx})"> RUB</label>
-        <label><input type="checkbox" class="pc-cur" data-idx="${idx}" value="vnd" onchange="pCalcUpdate(${idx})"> VND</label>
-        <label><input type="checkbox" class="pc-cur" data-idx="${idx}" value="usdt" onchange="pCalcUpdate(${idx})"> USDT</label>
-      </div>
-      <button class="calc-copy" onclick="pCalcCopy(${idx})">Скопировать расчёт</button>
-    </div>
-  </div>`;
-}
-
 function renderPriceCards(rates, skeleton) {
-  const colH=`<div class="col-headers"><div></div><div class="col-h-usd">USD</div><div class="col-h-rub">RUB</div><div class="col-h-vnd">VND</div><div class="col-h-usdt">USDT</div></div>`;
-  const cards=TOURS.map((t,idx)=>{
-    const mainRows=t.rows.map(r=>skeleton?skelRowHTML(false):priceRowHTML(r.label,calcFromUSD(r.usd,rates))).join('');
-    let ticketRows='';
-    if(t.tickets&&t.tickets.length){
-      const trs=skeleton?t.tickets.map(()=>skelRowHTML(true)).join(''):t.tickets.map(tk=>priceRowHTML(tk.label,calcFromVND(tk.vnd_fixed,rates),true)).join('');
-      ticketRows=`<div class="ticket-section-label">Входные билеты</div><div class="price-rows" style="padding-top:0">${trs}</div>`;
+  const colH = `<div class="col-headers"><div></div><div class="col-h-usd">USD</div><div class="col-h-rub">RUB</div><div class="col-h-vnd">VND</div><div class="col-h-usdt">USDT</div></div>`;
+  const cards = TOURS.map((t,idx) => {
+    const mainRows = t.rows.map(r => skeleton ? skelRowHTML(false) : priceRowHTML(r.label, calcFromUSD(r.usd,rates))).join('');
+    let ticketRows = '';
+    if (t.tickets&&t.tickets.length) {
+      const trs = skeleton
+        ? t.tickets.map(()=>skelRowHTML(true)).join('')
+        : t.tickets.map(tk=>priceRowHTML(tk.label, calcFromVND(tk.vnd_fixed,rates), true)).join('');
+      ticketRows = `<div class="ticket-section-label">Входные билеты</div><div class="price-rows" style="padding-top:0">${trs}</div>`;
     }
-    return `<div class="tour-card">
+    return `<div class="tour-card" data-idx="${idx}" style="cursor:pointer">
       <div class="tour-header"><div class="tour-icon">${t.icon}</div><div class="tour-name">${t.name}</div></div>
       <div class="price-rows">${mainRows}</div>
       ${ticketRows}
-      <button class="copy-price-btn" onclick="copyPriceCard(${idx})">Скопировать прайс</button>
-      <button class="calc-toggle" onclick="this.nextElementSibling.classList.toggle('open');this.textContent=this.nextElementSibling.classList.contains('open')?'▲ Закрыть калькулятор':'▼ Калькулятор группы'">▼ Калькулятор группы</button>
-      ${buildPriceCalc(t,idx)}
+      <button class="copy-card-btn" data-copy="${idx}" onclick="event.stopPropagation();copyPriceCard(${idx})">Скопировать прайс</button>
     </div>`;
   }).join('');
-  document.getElementById('price-list').innerHTML=colH+cards;
+  document.getElementById('price-list').innerHTML = colH + cards;
 }
-
-function copyPriceCard(idx){
-  const t=TOURS[idx]; if(!currentRates){toast('⏳ Загрузка курсов…');return;}
-  let text=t.icon+' '+t.name+'\n──────────────\n';
-  t.rows.forEach(r=>{const p=calcFromUSD(r.usd,currentRates); text+=r.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});
-  if(t.tickets){text+='\nВходные билеты:\n'; t.tickets.forEach(tk=>{const p=calcFromVND(tk.vnd_fixed,currentRates); text+=tk.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});}
+function copyPriceCard(idx) {
+  const t = TOURS[idx];
+  if (!currentRates) { toast('⏳ Курсы ещё загружаются'); return; }
+  let text = t.icon+' '+t.name+'\n──────────────\n';
+  t.rows.forEach(r => {
+    const p = calcFromUSD(r.usd, currentRates);
+    text += r.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';
+  });
+  if (t.tickets) {
+    text += '\nВходные билеты:\n';
+    t.tickets.forEach(tk => {
+      const p = calcFromVND(tk.vnd_fixed, currentRates);
+      text += tk.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';
+    });
+  }
   copyText(text.trim());
 }
-
-function updateStatusBar(rates){
-  const badge=document.getElementById('rate-status'),txt=document.getElementById('status-text'),upd=document.getElementById('last-updated');
-  if(!rates){badge.className='rate-badge error';txt.textContent='Курсы недоступны';return;}
+function updateStatusBar(rates) {
+  const badge=document.getElementById('rate-status'), txt=document.getElementById('status-text'), upd=document.getElementById('last-updated');
+  if (!rates) { badge.className='rate-badge error'; txt.textContent='Курсы недоступны'; return; }
   badge.className='rate-badge live'; txt.textContent=rates.source;
-  if(rates.updated instanceof Date&&!isNaN(rates.updated))
+  if (rates.updated instanceof Date&&!isNaN(rates.updated))
     upd.textContent=rates.updated.toLocaleDateString('ru-RU',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-  document.getElementById('chip-rub').textContent=Math.round(rates.RUB*(1+MARKUP.RUB)).toLocaleString('ru-RU')+' ₽';
-  document.getElementById('chip-vnd').textContent=Math.round(rates.VND*(1+MARKUP.VND)).toLocaleString('ru-RU')+' ₫';
-  document.getElementById('chip-usdt').textContent=ceilTo(rates.USDT*(1+MARKUP.USDT),ROUND_STEP.USDT).toFixed(2)+' USDT';
+  document.getElementById('chip-rub').textContent   = Math.round(rates.RUB*1.15).toLocaleString('ru-RU')+' ₽';
+  document.getElementById('chip-vnd').textContent   = Math.round(rates.VND*1.03).toLocaleString('ru-RU')+' ₫';
+  document.getElementById('chip-usdt').textContent  = ceilTo(rates.USDT*(1+MARKUP.USDT),ROUND_STEP.USDT).toFixed(2)+' USDT';
 }
 
-// PRICE CALC
-function pCalcChange(idx, key, delta){
-  if(!calcCounts[idx]) calcCounts[idx]={};
-  const el=document.getElementById(`pc-${idx}-${key}`);
-  let v=Math.max(0,(parseInt(el.textContent)||0)+delta);
-  el.textContent=v; calcCounts[idx][key]=v;
-  pCalcUpdate(idx);
-}
-function pCalcGetCurs(idx){ return Array.from(document.querySelectorAll(`.pc-cur[data-idx="${idx}"]:checked`)).map(c=>c.value); }
-function pCalcUpdate(idx){
-  const t=TOURS[idx]; if(!t||!currentRates) return;
-  const R=currentRates; const cc=calcCounts[idx]||{};
-  let total=zeroP(); let hasAny=false; const rows=[]; const tickets=[];
-  t.rows.forEach((r,i)=>{
-    const n=cc['r'+i]||0; if(!n) return; hasAny=true;
-    const p=mulP(calcFromUSD(r.usd,R),n); total=addP(total,p);
-    rows.push({label:r.label,n,p});
+// ═══════════════════════════════════════
+// РАСЧЁТ TAB
+// ═══════════════════════════════════════
+function buildCalcTourSelect() {
+  const sel = document.getElementById('calcTourSel');
+  TOURS.forEach((t,i) => {
+    const opt = document.createElement('option');
+    opt.value = i; opt.textContent = t.icon+' '+t.name;
+    sel.appendChild(opt);
   });
-  if(t.tickets) t.tickets.forEach((tk,i)=>{
-    const n=cc['t'+i]||0; if(!n) return; hasAny=true;
-    const p=mulP(calcFromVND(tk.vnd_fixed,R),n); total=addP(total,p);
-    tickets.push({label:tk.label,n,p});
-  });
-  const totalEl=document.getElementById(`pct-${idx}`);
-  if(!hasAny){totalEl.style.display='none';return;}
-  totalEl.style.display='block';
-  const curs=pCalcGetCurs(idx);
-  const cursF=curs.length?curs:['usd'];
-  document.getElementById(`pcu-${idx}`).textContent=formatPrice(total,cursF);
-  // store for copy
-  totalEl.dataset.rows=JSON.stringify(rows.map(r=>({label:r.label,n:r.n,...r.p})));
-  totalEl.dataset.tickets=JSON.stringify(tickets.map(r=>({label:r.label,n:r.n,...r.p})));
-  Object.assign(totalEl.dataset,{tusd:total.usd,trub:total.rub,tvnd:total.vnd,tusdt:total.usdt,tidx:idx});
 }
-function pCalcCopy(idx){
-  const totalEl=document.getElementById(`pct-${idx}`);
-  const t=TOURS[idx];
-  const curs=pCalcGetCurs(idx); const cursF=curs.length?curs:['usd'];
-  const rows=JSON.parse(totalEl.dataset.rows||'[]');
-  const tickets=JSON.parse(totalEl.dataset.tickets||'[]');
-  const total={usd:+totalEl.dataset.tusd,rub:+totalEl.dataset.trub,vnd:+totalEl.dataset.tvnd,usdt:+totalEl.dataset.tusdt};
-  let text=t.icon+' '+t.name+'\n\n';
-  rows.forEach(r=>text+=r.label+' × '+r.n+' — '+formatPrice(r,cursF)+'\n');
-  if(tickets.length){text+='\nВходные билеты:\n'; tickets.forEach(r=>text+=r.label+' × '+r.n+' — '+formatPrice(r,cursF)+'\n');}
-  text+='\nИтого: '+formatPrice(total,cursF);
+
+function initCalcTab() {
+  const idx = parseInt(document.getElementById('calcTourSel').value);
+  if (isNaN(idx)) { document.getElementById('calcBody').innerHTML='<div class="calc-empty">Выберите экскурсию</div>'; return; }
+  calcCounts[idx] = calcCounts[idx] || {};
+  const t = TOURS[idx];
+  let rowsHTML = t.rows.map((r,i) => `
+    <div class="calc-row2">
+      <div class="calc-row2-label">${r.label}</div>
+      <div class="calc-counter">
+        <button class="calc-btn" onclick="calcChange(${idx},'r${i}',-1)">−</button>
+        <div class="calc-num" id="cn-${idx}-r${i}">${calcCounts[idx]['r'+i]||0}</div>
+        <button class="calc-btn" onclick="calcChange(${idx},'r${i}',1)">+</button>
+      </div>
+    </div>`).join('');
+  let ticketHTML = '';
+  if (t.tickets&&t.tickets.length) {
+    ticketHTML = `<div class="calc-section"><div class="calc-section-title">Входные билеты</div>`+
+      t.tickets.map((tk,i) => `
+        <div class="calc-row2">
+          <div class="calc-row2-label" style="font-style:italic;font-size:12px">${tk.label}</div>
+          <div class="calc-counter">
+            <button class="calc-btn" onclick="calcChange(${idx},'t${i}',-1)">−</button>
+            <div class="calc-num" id="cn-${idx}-t${i}">${calcCounts[idx]['t'+i]||0}</div>
+            <button class="calc-btn" onclick="calcChange(${idx},'t${i}',1)">+</button>
+          </div>
+        </div>`).join('')+`</div>`;
+  }
+  const curs = ['usd','rub','vnd','usdt'];
+  const saved = calcCounts[idx]._curs || ['usd'];
+  const cursHTML = curs.map(c => `<label><input type="checkbox" class="c-cur" data-idx="${idx}" value="${c}" ${saved.includes(c)?'checked':''} onchange="calcUpdate(${idx})"> ${c.toUpperCase()}</label>`).join('');
+  document.getElementById('calcBody').innerHTML = `
+    <div class="calc-section"><div class="calc-section-title">Участники</div>${rowsHTML}</div>
+    ${ticketHTML}
+    <div class="calc-result" id="calcResult-${idx}" style="display:none">
+      <div class="calc-result-title">Итого</div>
+      <div class="calc-total-line" id="calcTotal-${idx}"></div>
+      <div class="calc-breakdown" id="calcBreak-${idx}"></div>
+      <div class="calc-cur-row">${cursHTML}</div>
+      <button class="calc-copy-btn" onclick="calcCopy(${idx})">Скопировать расчёт</button>
+    </div>`;
+  calcUpdate(idx);
+}
+
+function calcChange(idx, key, delta) {
+  if (!calcCounts[idx]) calcCounts[idx]={};
+  const el = document.getElementById(`cn-${idx}-${key}`);
+  let v = parseInt(el.textContent)||0;
+  v = Math.max(0, v+delta);
+  el.textContent = v;
+  calcCounts[idx][key] = v;
+  calcUpdate(idx);
+}
+
+function calcGetCurs(idx) {
+  const checks = document.querySelectorAll(`.c-cur[data-idx="${idx}"]:checked`);
+  const curs = Array.from(checks).map(c=>c.value);
+  calcCounts[idx]._curs = curs;
+  return curs;
+}
+
+function formatPrice(usd, rub, vnd, usdt, curs) {
+  const parts = [];
+  if (curs.includes('usd'))  parts.push(Math.ceil(usd)+' $');
+  if (curs.includes('rub'))  parts.push(fmtRUB(ceilTo(rub,100)));
+  if (curs.includes('vnd'))  parts.push(fmtVND(ceilTo(vnd,100000)));
+  if (curs.includes('usdt')) parts.push(Math.ceil(usdt)+' USDT');
+  return parts.join(' / ');
+}
+
+function calcUpdate(idx) {
+  const t = TOURS[idx];
+  if (!t||!currentRates) return;
+  const R = currentRates;
+  let tUSD=0, tRUB=0, tVND=0, tUSDT=0, hasAny=false;
+  const rows=[], tickets=[];
+
+  t.rows.forEach((r,i) => {
+    const n = calcCounts[idx]['r'+i]||0; if (!n) return;
+    hasAny=true;
+    const p = calcFromUSD(r.usd,R);
+    tUSD+=Math.ceil(r.usd)*n; tRUB+=p.rub*n; tVND+=p.vnd*n; tUSDT+=p.usdt*n;
+    rows.push({label:r.label,n,usd:Math.ceil(r.usd)*n,rub:p.rub*n,vnd:p.vnd*n,usdt:p.usdt*n});
+  });
+  if (t.tickets) t.tickets.forEach((tk,i) => {
+    const n = calcCounts[idx]['t'+i]||0; if (!n) return;
+    hasAny=true;
+    const p = calcFromVND(tk.vnd_fixed,R);
+    tUSD+=p.usd*n; tRUB+=p.rub*n; tVND+=tk.vnd_fixed*n; tUSDT+=p.usdt*n;
+    tickets.push({label:tk.label,n,usd:p.usd*n,rub:p.rub*n,vnd:tk.vnd_fixed*n,usdt:p.usdt*n});
+  });
+
+  const resEl = document.getElementById(`calcResult-${idx}`);
+  if (!hasAny) { resEl.style.display='none'; return; }
+  resEl.style.display='block';
+  const curs = calcGetCurs(idx);
+  document.getElementById(`calcTotal-${idx}`).textContent = formatPrice(tUSD,tRUB,tVND,tUSDT,curs)||'—';
+  let breakdown = rows.map(r=>r.label+' × '+r.n+' — '+formatPrice(r.usd,r.rub,r.vnd,r.usdt,curs)).join('\n');
+  if (tickets.length) breakdown += '\n'+tickets.map(r=>r.label+' × '+r.n+' — '+formatPrice(r.usd,r.rub,r.vnd,r.usdt,curs)).join('\n');
+  document.getElementById(`calcBreak-${idx}`).textContent = breakdown;
+  // store totals
+  resEl.dataset.usd=tUSD; resEl.dataset.rub=tRUB; resEl.dataset.vnd=tVND; resEl.dataset.usdt=tUSDT;
+  resEl.dataset.rows=JSON.stringify(rows); resEl.dataset.tickets=JSON.stringify(tickets);
+}
+
+function calcCopy(idx) {
+  const t = TOURS[idx];
+  const resEl = document.getElementById(`calcResult-${idx}`);
+  const curs = calcGetCurs(idx);
+  const rows = JSON.parse(resEl.dataset.rows||'[]');
+  const tickets = JSON.parse(resEl.dataset.tickets||'[]');
+  const tUSD=+resEl.dataset.usd, tRUB=+resEl.dataset.rub, tVND=+resEl.dataset.vnd, tUSDT=+resEl.dataset.usdt;
+  let text = t.icon+' '+t.name+'\n\n';
+  rows.forEach(r => text += r.label+' × '+r.n+' — '+formatPrice(r.usd,r.rub,r.vnd,r.usdt,curs)+'\n');
+  if (tickets.length) { text += '\nВходные билеты:\n'; tickets.forEach(r => text += r.label+' × '+r.n+' — '+formatPrice(r.usd,r.rub,r.vnd,r.usdt,curs)+'\n'); }
+  text += '\nИтого: '+formatPrice(tUSD,tRUB,tVND,tUSDT,curs);
   copyText(text.trim());
 }
 
-// CUSTOM PRICE
-function calcCustom(){
-  const usd=parseFloat(document.getElementById('customUSD').value)||0;
-  const el=document.getElementById('customResult');
-  if(!usd||!currentRates){el.innerHTML='';return;}
-  const p=calcFromUSD(usd,currentRates);
-  el.innerHTML=`<span class="r-usd">${fmtUSD(p.usd)}</span><span class="r-rub">${fmtRUB(p.rub)}</span><span class="r-vnd">${fmtVND(p.vnd)}</span><span class="r-usdt">${fmtUSDT(p.usdt)}</span>`;
-}
-
-// ══════════════════════════════════════
-// BOOKING LOAD
-// ══════════════════════════════════════
-async function bLoad(){
+// ═══════════════════════════════════════
+// БРОНЬ — ЗАГРУЗКА
+// ═══════════════════════════════════════
+async function bLoad() {
   try {
-    const r=await fetch(GAS_URL+'?action=getBookings',{mode:'cors'});
-    const data=await r.json();
-    allBookings=Array.isArray(data)?data:[];
+    const r = await fetch(GAS_URL+'?action=getBookings');
+    const data = await r.json();
+    allBookings = Array.isArray(data) ? data : [];
     bRender(); bUpdateStats();
-  } catch(e){
+  } catch(e) {
     document.getElementById('bList').innerHTML='<div class="b-loading" style="color:var(--red)">Ошибка загрузки. Проверьте соединение.</div>';
   }
 }
-async function gasSave(action,data){
-  const r=await fetch(GAS_URL,{method:'POST',mode:'cors',body:JSON.stringify({action,...data}),headers:{'Content-Type':'text/plain'}});
+async function gasSave(action, data) {
+  const r = await fetch(GAS_URL, { method:'POST', body:JSON.stringify({action,...data}) });
   return r.json();
 }
-async function gasDelete(id){
-  const r=await fetch(GAS_URL,{method:'POST',mode:'cors',body:JSON.stringify({action:'deleteBooking',id}),headers:{'Content-Type':'text/plain'}});
+async function gasDelete(id) {
+  const r = await fetch(GAS_URL, { method:'POST', body:JSON.stringify({action:'deleteBooking',id}) });
   return r.json();
 }
 
-// ══════════════════════════════════════
-// BOOKING RENDER
-// ══════════════════════════════════════
-function bSetFilter(f){
-  bFilter=f;
-  ['Upcoming','Waiting','All'].forEach(n=>document.getElementById('bf'+n).classList.remove('active'));
-  document.getElementById('bf'+cap(f)).classList.add('active');
+// ═══════════════════════════════════════
+// БРОНЬ — РЕНДЕР
+// ═══════════════════════════════════════
+function bSetFilter(f) {
+  bFilter = f;
+  ['Upcoming','Waiting','All'].forEach(n => document.getElementById('bf'+n).classList.remove('active'));
+  document.getElementById('bf'+f.charAt(0).toUpperCase()+f.slice(1)).classList.add('active');
   bRender();
 }
-function bRender(){
-  const routeF=document.getElementById('bFilterRoute').value;
-  const dateF=document.getElementById('bFilterDate').value;
-  const tod=todayStr();
-  let filtered=allBookings.filter(b=>{
-    if(routeF&&b.route!==routeF) return false;
-    if(dateF&&b.date!==dateF) return false;
-    if(bFilter==='upcoming') return b.date&&b.date>=tod&&b.tripStatus!=='cancelled'&&b.tripStatus!=='waiting_date';
-    if(bFilter==='waiting') return b.tripStatus==='waiting_date';
+function bRender() {
+  const routeF = document.getElementById('bFilterRoute').value;
+  const dateF  = document.getElementById('bFilterDate').value;
+  const tod = todayStr();
+  let filtered = allBookings.filter(b => {
+    if (routeF&&b.route!==routeF) return false;
+    if (dateF&&b.date!==dateF) return false;
+    if (bFilter==='upcoming') return b.date&&b.date>=tod&&b.tripStatus!=='cancelled'&&b.tripStatus!=='waiting_date';
+    if (bFilter==='waiting') return b.tripStatus==='waiting_date';
     return true;
   });
-  filtered.sort((a,b)=>{if(!a.date&&!b.date) return 0;if(!a.date) return 1;if(!b.date) return -1;return a.date.localeCompare(b.date);});
-  if(!filtered.length){document.getElementById('bList').innerHTML='<div class="b-empty">Нет бронирований</div>';return;}
-  if(bFilter==='waiting'){
-    document.getElementById('bList').innerHTML='<div class="b-date-group"><div class="b-date-header"><div class="b-date-title">Ждут даты</div><div class="b-date-line"></div><div class="b-date-count">'+filtered.length+' '+pluralB(filtered.length)+'</div></div>'+filtered.map(bCardHTML).join('')+'</div>';
+  filtered.sort((a,b)=>{ if(!a.date&&!b.date) return 0; if(!a.date) return 1; if(!b.date) return -1; return a.date.localeCompare(b.date); });
+  if (!filtered.length) { document.getElementById('bList').innerHTML='<div class="b-empty">Нет бронирований</div>'; return; }
+  if (bFilter==='waiting') {
+    document.getElementById('bList').innerHTML = '<div class="b-date-group"><div class="b-date-header"><div class="b-date-title">Ждут даты</div><div class="b-date-line"></div><div class="b-date-count">'+filtered.length+' '+pluralB(filtered.length)+'</div></div>'+filtered.map(bCardHTML).join('')+'</div>';
     return;
   }
-  const groups={};
-  filtered.forEach(b=>{const d=b.date||'—';if(!groups[d])groups[d]=[];groups[d].push(b);});
-  let html='';
-  Object.keys(groups).sort().forEach(date=>{
-    html+='<div class="b-date-group"><div class="b-date-header"><div class="b-date-title">'+formatDateLabel(date)+'</div><div class="b-date-line"></div><div class="b-date-count">'+groups[date].length+' '+pluralB(groups[date].length)+'</div></div>'+groups[date].map(bCardHTML).join('')+'</div>';
+  const groups = {};
+  filtered.forEach(b => { const d=b.date||'—'; if(!groups[d]) groups[d]=[]; groups[d].push(b); });
+  let html = '';
+  Object.keys(groups).sort().forEach(date => {
+    html += '<div class="b-date-group"><div class="b-date-header"><div class="b-date-title">'+formatDateLabel(date)+'</div><div class="b-date-line"></div><div class="b-date-count">'+groups[date].length+' '+pluralB(groups[date].length)+'</div></div>'+groups[date].map(bCardHTML).join('')+'</div>';
   });
-  document.getElementById('bList').innerHTML=html;
+  document.getElementById('bList').innerHTML = html;
 }
-
-function bCardHTML(b){
-  const paxParts=[];
-  if(b.adults>0) paxParts.push(b.adults+' взр');
-  if(b.children>0) paxParts.push(b.children+' дет');
-  if(b.infants>0) paxParts.push(b.infants+' мал');
-  const tom=tomorrowStr();
-  const sc=b.tripStatus==='done'?' s-done':b.tripStatus==='cancelled'?' s-cancelled':b.tripStatus==='waiting_date'?' s-waiting':(b.date&&b.date===tom)?' s-tomorrow':'';
-  const payIcon=b.payStatus==='paid'?'💵':b.payStatus==='refund'?'🤑':'💳';
-  const comm=b.payStatus==='paid'?'$'+(b.commission||0):'';
-
-  // inline calc для этой карточки
-  const tour=TOURS.find(t=>t.key===b.route);
-  let inlineCalc='';
-  if(tour){
-    const tid='bc_'+b.id;
-    const initAdult=b.adults||0, initChild=b.children||0;
-    const rowsHTML=tour.rows.map((r,i)=>`
-      <div class="b-calc-row">
-        <div class="b-calc-label">${r.label}</div>
-        <div class="calc-counter">
-          <button class="calc-btn" onclick="event.stopPropagation();bcChange('${b.id}','r${i}',-1)">−</button>
-          <div class="calc-num" id="${tid}-r${i}">${i===0?initAdult:i===1?initChild:0}</div>
-          <button class="calc-btn" onclick="event.stopPropagation();bcChange('${b.id}','r${i}',1)">+</button>
-        </div>
-      </div>`).join('');
-    let tkHTML='';
-    if(tour.tickets&&tour.tickets.length){
-      tkHTML=`<div class="b-calc-section">Входные билеты</div>`+
-        tour.tickets.map((tk,i)=>`
-          <div class="b-calc-row">
-            <div class="b-calc-label ticket">${tk.label}</div>
-            <div class="calc-counter">
-              <button class="calc-btn" onclick="event.stopPropagation();bcChange('${b.id}','t${i}',-1)">−</button>
-              <div class="calc-num" id="${tid}-t${i}">0</div>
-              <button class="calc-btn" onclick="event.stopPropagation();bcChange('${b.id}','t${i}',1)">+</button>
-            </div>
-          </div>`).join('');
-    }
-    inlineCalc=`<div class="b-calc-block">
-      <div class="b-calc-title">Расчёт поездки</div>
-      ${rowsHTML}${tkHTML}
-      <div class="b-calc-result" id="${tid}-result" style="display:none">
-        <div class="b-calc-curs">
-          <label><input type="checkbox" class="bc-cur" data-bid="${b.id}" value="usd" onchange="bcUpdate('${b.id}')"> USD</label>
-          <label><input type="checkbox" class="bc-cur" data-bid="${b.id}" value="rub" onchange="bcUpdate('${b.id}')"> RUB</label>
-          <label><input type="checkbox" class="bc-cur" data-bid="${b.id}" value="vnd" onchange="bcUpdate('${b.id}')"> VND</label>
-          <label><input type="checkbox" class="bc-cur" data-bid="${b.id}" value="usdt" onchange="bcUpdate('${b.id}')"> USDT</label>
-        </div>
-        <div class="b-calc-total" id="${tid}-total"></div>
-        <div class="b-calc-breakdown" id="${tid}-breakdown"></div>
-        <button class="b-calc-copy" onclick="event.stopPropagation();bcCopy('${b.id}')">Скопировать расчёт</button>
-      </div>
-    </div>`;
-  }
-
+function bCardHTML(b) {
+  const paxParts = [];
+  if (b.adults>0) paxParts.push(b.adults+' взр');
+  if (b.children>0) paxParts.push(b.children+' дет');
+  if (b.infants>0) paxParts.push(b.infants+' мал');
+  const tom = tomorrowStr();
+  const sc = b.tripStatus==='done'?' s-done':b.tripStatus==='cancelled'?' s-cancelled':b.tripStatus==='waiting_date'?' s-waiting':(b.date&&b.date===tom)?' s-tomorrow':'';
+  const payIcon = b.payStatus==='paid'?'💵':b.payStatus==='refund'?'🤑':'💳';
+  const comm = b.payStatus==='paid'?'$'+(b.commission||0):'';
   return `<div class="booking-card${sc}" id="bcard-${b.id}">
     <div class="b-card-main" onclick="bToggle('${b.id}')">
       <div class="b-card-route">${b.route}</div>
       <div class="b-card-pax">${paxParts.join('+')||'—'}</div>
       <div class="b-card-contact">${b.contact||'—'}</div>
-      <span onclick="event.stopPropagation();bCyclePay('${b.id}')" style="cursor:pointer;font-size:15px;line-height:1">${payIcon}</span>
+      <span onclick="event.stopPropagation();bCyclePay('${b.id}')" style="cursor:pointer;font-size:16px">${payIcon}</span>
       <button class="b-action-btn" onclick="event.stopPropagation();bEdit('${b.id}')">✏️</button>
       <div class="b-card-comm">${comm}</div>
     </div>
@@ -806,157 +773,73 @@ function bCardHTML(b){
         <div class="b-exp-item"><label>Валюта</label><span>${b.currency||'—'}</span></div>
         <div class="b-exp-item"><label>Оплата</label><span>${b.payMethod||'—'}</span></div>
         <div class="b-exp-item"><label>Сумма</label><span>${b.totalAmount||'—'}</span></div>
-        <div class="b-exp-item"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
+        <div class="b-exp-item"><label>Комиссия</label><span>$${b.commission||0}</span></div>
       </div>
       ${b.notes?`<div class="b-notes-row"><label>Примечание</label><span>${b.notes}</span></div>`:''}
-      ${inlineCalc}
-      <button class="b-copy-card-btn" onclick="event.stopPropagation();bCopyCard('${b.id}')">Скопировать карточку</button>
+      <button class="b-copy-btn" onclick="bCopyCard('${b.id}')">Скопировать карточку</button>
       <div class="b-status-row">
-        <button class="b-status-btn ${b.tripStatus==='done'?'act-done':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','done')">Ездил</button>
-        <button class="b-status-btn ${b.tripStatus==='cancelled'?'act-cancel':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','cancelled')">Отмена</button>
-        <button class="b-status-btn ${b.tripStatus==='waiting_date'?'act-waiting':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','waiting_date')">Ждёт</button>
+        <button class="b-status-btn ${b.tripStatus==='done'?'act-done':''}" onclick="bSetTrip('${b.id}','done')">Ездил</button>
+        <button class="b-status-btn ${b.tripStatus==='cancelled'?'act-cancel':''}" onclick="bSetTrip('${b.id}','cancelled')">Отмена</button>
+        <button class="b-status-btn ${b.tripStatus==='waiting_date'?'act-waiting':''}" onclick="bSetTrip('${b.id}','waiting_date')">Ждёт</button>
         <button class="b-status-btn" onclick="event.stopPropagation();bDelete('${b.id}')" style="margin-left:auto;color:var(--red);border-color:var(--red)">Удалить</button>
       </div>
     </div>
   </div>`;
 }
-
-function bToggle(id){ document.getElementById('bexp-'+id).classList.toggle('open'); bcUpdateInit(id); }
-
-// Init inline calc counts from booking data
-function bcUpdateInit(id){
-  const b=allBookings.find(x=>x.id==id); if(!b) return;
-  const tour=TOURS.find(t=>t.key===b.route); if(!tour) return;
-  const tid='bc_'+id;
-  if(!calcCounts[tid]) calcCounts[tid]={};
-  // pre-fill from booking pax if not already set
-  if(calcCounts[tid]._init) return;
-  calcCounts[tid]['r0']=b.adults||0;
-  if(tour.rows[1]) calcCounts[tid]['r1']=b.children||0;
-  calcCounts[tid]._init=true;
-  bcUpdate(id);
-}
-
-function bcChange(bid, key, delta){
-  const tid='bc_'+bid;
-  if(!calcCounts[tid]) calcCounts[tid]={};
-  const el=document.getElementById(`${tid}-${key}`);
-  let v=Math.max(0,(parseInt(el.textContent)||0)+delta);
-  el.textContent=v; calcCounts[tid][key]=v;
-  bcUpdate(bid);
-}
-function bcGetCurs(bid){ return Array.from(document.querySelectorAll(`.bc-cur[data-bid="${bid}"]:checked`)).map(c=>c.value); }
-function bcUpdate(bid){
-  const tid='bc_'+bid;
-  const b=allBookings.find(x=>x.id==bid); if(!b) return;
-  const tour=TOURS.find(t=>t.key===b.route); if(!tour||!currentRates) return;
-  const R=currentRates; const cc=calcCounts[tid]||{};
-  let total=zeroP(); let hasAny=false; const rows=[]; const tickets=[];
-  tour.rows.forEach((r,i)=>{
-    const n=cc['r'+i]||0; if(!n) return; hasAny=true;
-    const p=mulP(calcFromUSD(r.usd,R),n); total=addP(total,p);
-    rows.push({label:r.label,n,p});
-  });
-  if(tour.tickets) tour.tickets.forEach((tk,i)=>{
-    const n=cc['t'+i]||0; if(!n) return; hasAny=true;
-    const p=mulP(calcFromVND(tk.vnd_fixed,R),n); total=addP(total,p);
-    tickets.push({label:tk.label,n,p});
-  });
-  const resEl=document.getElementById(`${tid}-result`);
-  if(!hasAny){resEl.style.display='none';return;}
-  resEl.style.display='block';
-  const curs=bcGetCurs(bid); const cF=curs.length?curs:['usd'];
-  document.getElementById(`${tid}-total`).textContent='Итого: '+formatPrice(total,cF);
-  document.getElementById(`${tid}-breakdown`).textContent=
-    [...rows,...tickets].map(r=>r.label+' × '+r.n+' — '+formatPrice(r.p,cF)).join('\n');
-  resEl.dataset.rows=JSON.stringify(rows.map(r=>({label:r.label,n:r.n,...r.p})));
-  resEl.dataset.tickets=JSON.stringify(tickets.map(r=>({label:r.label,n:r.n,...r.p})));
-  Object.assign(resEl.dataset,{tusd:total.usd,trub:total.rub,tvnd:total.vnd,tusdt:total.usdt});
-}
-function bcCopy(bid){
-  const tid='bc_'+bid;
-  const b=allBookings.find(x=>x.id==bid); if(!b) return;
-  const tour=TOURS.find(t=>t.key===b.route);
-  const resEl=document.getElementById(`${tid}-result`);
-  const curs=bcGetCurs(bid); const cF=curs.length?curs:['usd'];
-  const rows=JSON.parse(resEl.dataset.rows||'[]');
-  const tickets=JSON.parse(resEl.dataset.tickets||'[]');
-  const total={usd:+resEl.dataset.tusd,rub:+resEl.dataset.trub,vnd:+resEl.dataset.tvnd,usdt:+resEl.dataset.tusdt};
-  let text=(tour?tour.icon+' ':'')+b.route+'\n\n';
-  rows.forEach(r=>text+=r.label+' × '+r.n+' — '+formatPrice(r,cF)+'\n');
-  if(tickets.length){text+='\nВходные билеты:\n'; tickets.forEach(r=>text+=r.label+' × '+r.n+' — '+formatPrice(r,cF)+'\n');}
-  text+='\nИтого: '+formatPrice(total,cF);
-  copyText(text.trim());
-}
-
-function editComm(id){
-  const el=document.getElementById('comm-'+id);
-  const cur=(el.textContent||'$0').replace('$','').trim();
-  const val=prompt('Комиссия ($):', cur);
-  if(val===null||val.trim()==='') return;
-  const newComm=parseInt(val)||0;
-  el.textContent='$'+newComm;
-  const b=allBookings.find(x=>x.id==id); if(!b) return;
-  b.commission=newComm;
-  gasSave('updateBooking',b).then(()=>bUpdateStats());
-}
-
-function bCopyCard(id){
-  const b=allBookings.find(x=>x.id==id); if(!b) return;
+function bToggle(id) { document.getElementById('bexp-'+id).classList.toggle('open'); }
+function bCopyCard(id) {
+  const b = allBookings.find(x=>x.id==id); if(!b) return;
   const pax=[b.adults?b.adults+' взр':'',b.children?b.children+' дет':'',b.infants?b.infants+' мал':''].filter(Boolean).join(', ');
-  const payLine=[b.payMethod,b.currency].filter(Boolean).join(', ');
-  const amountLine=b.totalAmount?(b.payStatus==='paid'?'Оплачено: '+b.totalAmount:'К оплате: '+b.totalAmount):'';
   const lines=[
-    b.date?formatDateLabel(b.date):'—',
-    b.route||'—',
-    pax||'—',
-    b.contact||'—',
-    b.hotel||'—',
-    payLine||'',
-    amountLine||'',
-    b.notes||''
+    '1. '+(b.date?formatDateLabel(b.date):'—'),
+    '2. '+(b.route||'—'),
+    '3. '+(pax||'—'),
+    '4. '+(b.contact||'—'),
+    '5. '+(b.hotel||'—'),
+    [b.payMethod,b.currency].filter(Boolean).join(', ') ? '6. '+[b.payMethod,b.currency].filter(Boolean).join(', ') : '',
+    b.totalAmount ? '7. '+(b.payStatus==='paid'?'Оплачено: '+b.totalAmount:'К оплате: '+b.totalAmount) : '',
+    b.notes ? '8. '+b.notes : ''
   ].filter(Boolean);
   copyText(lines.join('\n'));
 }
-
-function bUpdateStats(){
-  const tod=todayStr(),tom=tomorrowStr();
-  const nm=new Date().getMonth(),ny=new Date().getFullYear();
-  document.getElementById('bStatToday').textContent=allBookings.filter(b=>b.date===tod&&b.tripStatus!=='cancelled'&&b.tripStatus!=='waiting_date').length;
-  document.getElementById('bStatTomorrow').textContent=allBookings.filter(b=>b.date===tom&&b.tripStatus!=='cancelled'&&b.tripStatus!=='waiting_date').length;
+function bUpdateStats() {
+  const tod=todayStr(), tom=tomorrowStr();
+  const nm=new Date().getMonth(), ny=new Date().getFullYear();
+  document.getElementById('bStatToday').textContent    = allBookings.filter(b=>b.date===tod&&b.tripStatus!=='cancelled'&&b.tripStatus!=='waiting_date').length;
+  document.getElementById('bStatTomorrow').textContent = allBookings.filter(b=>b.date===tom&&b.tripStatus!=='cancelled'&&b.tripStatus!=='waiting_date').length;
   let earn=0;
-  allBookings.forEach(b=>{if(b.tripStatus==='done'&&b.date){const bd=new Date(b.date+'T00:00:00');if(bd.getMonth()===nm&&bd.getFullYear()===ny)earn+=parseInt(b.commission)||0;}});
-  document.getElementById('bStatEarn').textContent='$'+earn;
+  allBookings.forEach(b=>{ if(b.tripStatus==='done'&&b.date){ const bd=new Date(b.date+'T00:00:00'); if(bd.getMonth()===nm&&bd.getFullYear()===ny) earn+=parseInt(b.commission)||0; } });
+  document.getElementById('bStatEarn').textContent = '$'+earn;
 }
 
-// ══════════════════════════════════════
-// BOOKING ACTIONS
-// ══════════════════════════════════════
-async function bCyclePay(id){
+// ═══════════════════════════════════════
+// БРОНЬ — ДЕЙСТВИЯ
+// ═══════════════════════════════════════
+async function bCyclePay(id) {
   const b=allBookings.find(x=>x.id==id); if(!b) return;
-  b.payStatus=b.payStatus==='unpaid'?'paid':b.payStatus==='paid'?'refund':'unpaid';
-  await gasSave('updateBooking',b); bLoad();
+  b.payStatus = b.payStatus==='unpaid'?'paid':b.payStatus==='paid'?'refund':'unpaid';
+  await gasSave('updateBooking', b); bLoad();
 }
-async function bSetTrip(id,status){
+async function bSetTrip(id, status) {
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   b.tripStatus=status;
-  await gasSave('updateBooking',b); bLoad();
+  await gasSave('updateBooking', b); bLoad();
 }
-async function bDelete(id){
-  if(!confirm('Удалить бронирование?')) return;
+async function bDelete(id) {
+  if (!confirm('Удалить бронирование?')) return;
   await gasDelete(id); bLoad();
 }
 
-// ══════════════════════════════════════
+// ═══════════════════════════════════════
 // MODAL
-// ══════════════════════════════════════
-function bOpenModal(){
+// ═══════════════════════════════════════
+function bOpenModal() {
   editingId=null;
   document.getElementById('modalTitle').textContent='Новое бронирование';
   bClearForm(); mSwitchTab('paste');
   document.getElementById('modalOverlay').classList.add('open');
 }
-function bEdit(id){
+function bEdit(id) {
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   editingId=id;
   document.getElementById('modalTitle').textContent='Редактировать';
@@ -975,41 +858,41 @@ function bEdit(id){
   bUpdatePreview();
   document.getElementById('modalOverlay').classList.add('open');
 }
-function bCloseModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
-function bClearForm(){
+function bCloseModal() { document.getElementById('modalOverlay').classList.remove('open'); }
+function bClearForm() {
   ['fDate','fContact','fHotel','fAmount','fNotes','pfDate','pfContact','pfHotel','pfAmount','pfNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['fRoute','pfRoute'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('fAdults').value=1; document.getElementById('fChildren').value=0; document.getElementById('fInfants').value=0;
-  const pa=document.getElementById('pfAdults');
-  if(pa){pa.value=1;document.getElementById('pfChildren').value=0;document.getElementById('pfInfants').value=0;}
+  const pa=document.getElementById('pfAdults'); if(pa){pa.value=1;document.getElementById('pfChildren').value=0;document.getElementById('pfInfants').value=0;}
   document.getElementById('fCurrency').value='VND'; document.getElementById('fPayMethod').value='Наличные';
   document.getElementById('pasteText').value='';
   document.getElementById('parseResult').classList.remove('show');
   document.getElementById('parsedForm').style.display='none';
   bUpdatePreview();
 }
-function mSwitchTab(tab){
+function mSwitchTab(tab) {
   mTab=tab;
   document.getElementById('mTabManual').classList.toggle('active',tab==='manual');
   document.getElementById('mTabPaste').classList.toggle('active',tab==='paste');
   document.getElementById('mPanelManual').style.display=tab==='manual'?'':'none';
   document.getElementById('mPanelPaste').style.display=tab==='paste'?'':'none';
 }
-function bUpdatePreview(){
+function bUpdatePreview() {
   const p=mTab==='manual'?'f':'pf';
   const route=document.getElementById(p+'Route').value;
   const adults=parseInt(document.getElementById(p+'Adults').value)||0;
   const children=parseInt(document.getElementById(p+'Children').value)||0;
   const infants=parseInt(document.getElementById(p+'Infants').value)||0;
-  const rate=COMM_RATES[route]||0;
+  const rate=COMMISSION_RATES[route]||0;
   const comm=Math.round(adults*rate+children*rate*0.5);
-  const sfx=mTab==='manual'?'':'2';
-  const cEl=document.getElementById('previewComm'+sfx);
-  const pEl=document.getElementById('previewPax'+sfx);
+  const paxTotal=adults+children+infants;
+  const pSuffix = mTab==='manual'?'':'2';
+  const cEl=document.getElementById('previewComm'+pSuffix);
+  const pEl=document.getElementById('previewPax'+pSuffix);
   if(cEl) cEl.textContent='$'+comm;
-  if(pEl) pEl.textContent=(adults+children+infants)+' чел.';
+  if(pEl) pEl.textContent=paxTotal+' чел.';
 }
-function bGetFormData(){
+function bGetFormData() {
   const p=mTab==='manual'?'f':'pf';
   return {
     id:editingId,
@@ -1027,96 +910,65 @@ function bGetFormData(){
     notes:document.getElementById(p+'Notes').value
   };
 }
-async function bSave(){
+async function bSave() {
   const data=bGetFormData();
-  if(!data.route){alert('Укажите маршрут');return;}
+  if (!data.route) { alert('Укажите маршрут'); return; }
   const btn=document.getElementById('saveBtn');
   btn.textContent='Сохранение…'; btn.disabled=true;
   try {
-    await gasSave(editingId?'updateBooking':'addBooking',data);
+    await gasSave(editingId?'updateBooking':'addBooking', data);
     bCloseModal(); bClearForm(); await bLoad();
-  } catch(e){ alert('Ошибка сохранения. Попробуйте ещё раз.'); }
+  } catch(e) { alert('Ошибка сохранения'); }
   btn.textContent='Сохранить'; btn.disabled=false;
 }
 
-// ══════════════════════════════════════
-// PARSER
-// ══════════════════════════════════════
-function normalizeRoute(str){
-  if(!str) return '';
-  const s=str.toLowerCase().trim().replace(/ё/g,'е');
-  for(const [r,aliases] of Object.entries(ROUTE_ALIASES)){
-    if(aliases.some(a=>s.includes(a.replace(/ё/g,'е')))) return r;
-  }
-  // fuzzy fallback
-  if(s.match(/хю|хy|хь|hue|hué|huê/)) return 'ХЮЭ';
-  if(s.match(/хой|хаи|хои|hoi|hoian/)) return 'ХОЙАН';
-  if(s.match(/чам|cham/)) return 'ОСТРОВА ЧАМ';
-  if(s.match(/данан|da.?nan|нанг|нан[^ь]/)) return 'ДАНАНГ';
-  if(s.match(/бан|ба.?на|bana|ba.?na|хилл|hill|золот|golden/)) return 'БА НА ХИЛЛС';
-  if(s.match(/горяч|источн|терм|spring|спринг|хот.?с/)) return 'HOT SPRINGS';
-  return '';
+// ═══════════════════════════════════════
+// ПАРСЕР
+// ═══════════════════════════════════════
+function normalizeRoute(str) {
+  if (!str) return '';
+  const s=str.toLowerCase().trim();
+  for (const [r,a] of Object.entries(ROUTE_ALIASES)) { if (a.some(x=>s.includes(x))) return r; }
+  if(s.includes('хю')||s.includes('hue')) return 'ХЮЭ';
+  if(s.includes('хой')||s.includes('hoi')) return 'ХОЙАН';
+  if(s.includes('чам')||s.includes('cham')) return 'ОСТРОВА ЧАМ';
+  if(s.includes('данан')||s.includes('nang')) return 'ДАНАНГ';
+  if(s.includes('бан')||s.includes('bana')||s.includes('хилл')||s.includes('hill')) return 'БА НА ХИЛЛС';
+  if(s.includes('горяч')||s.includes('источ')||s.includes('spring')||s.includes('терм')) return 'HOT SPRINGS';
+  return str.toUpperCase();
 }
-
-function bParseText(){
+function bParseText() {
   const text=document.getElementById('pasteText').value; if(!text.trim()) return;
   const result={adults:0,children:0,infants:0,date:'',route:'',contact:'',hotel:'',notes:'',totalAmount:'',payMethod:'',currency:''};
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
   lines.forEach(line=>{
-    const clean=line.replace(/^[\d]+[):.\s]+/,'').trim();
-    const lower=clean.toLowerCase().replace(/ё/g,'е');
-    // маршрут
+    const clean=line.replace(/^(\d+)[):]\s*/,'').replace(/^(\d+)\.(?=[^\d])/,'$1 ').trim();
+    const lower=clean.toLowerCase();
     const r=normalizeRoute(clean);
-    if(r&&!result.route) result.route=r;
-    // дата
+    if(r&&COMMISSION_RATES[r]&&!result.route) result.route=r;
     if(!result.date){
-      const dm=clean.match(/(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?/);
-      if(dm){
-        const day=dm[1].padStart(2,'0'),mon=dm[2].padStart(2,'0');
-        const yr=dm[3]?(dm[3].length===2?'20'+dm[3]:dm[3]):new Date().getFullYear();
-        if(+mon>=1&&+mon<=12&&+day>=1&&+day<=31) result.date=yr+'-'+mon+'-'+day;
-      }
+      const dm=clean.match(/(\d{1,2})[./](\d{1,2})\.?(\d{4}|\d{2})?/);
+      if(dm){const day=dm[1].padStart(2,'0'),mon=dm[2].padStart(2,'0'),year=dm[3]?(dm[3].length===2?'20'+dm[3]:dm[3]):new Date().getFullYear();if(parseInt(mon)>=1&&parseInt(mon)<=12&&parseInt(day)>=1&&parseInt(day)<=31)result.date=year+'-'+mon+'-'+day;}
     }
-    // количество
-    const numW={один:1,одна:1,one:1,два:2,две:2,two:2,три:3,three:3,четыре:4,four:4,пять:5,five:5,шесть:6,six:6,семь:7,seven:7,восемь:8,eight:8,девять:9,nine:9,десять:10,ten:10};
-    if(lower.match(/взрос|adult|чел(?!овек)|pax|пакс/)){
-      const n=clean.match(/(\d+)/);
-      if(n) result.adults=parseInt(n[1]);
-      else for(const[w,v] of Object.entries(numW)) if(lower.includes(w)){result.adults=v;break;}
+    if(lower.match(/взрос|adult|чел|pax/)){const n=clean.match(/(\d+)/);if(n)result.adults=parseInt(n[1]);}
+    if(lower.match(/дет|ребен|ребён|child/)){const n=clean.match(/(\d+)/);if(n)result.children=parseInt(n[1]);}
+    if(!result.contact&&(clean.match(/\d{6,}/)||clean.match(/@[a-zA-Z]/)||lower.match(/телеграм|telegram|whatsapp|вотс|вайбер/))){
+      if(!lower.match(/hotel|отель|inn|resort|villa/)&&!COMMISSION_RATES[normalizeRoute(clean)]) result.contact=clean;
     }
-    if(lower.match(/дет|ребен|child|малыш/)){
-      const n=clean.match(/(\d+)/);
-      if(n) result.children=parseInt(n[1]);
-      else for(const[w,v] of Object.entries(numW)) if(lower.includes(w)){result.children=v;break;}
-    }
-    if(lower.match(/до\s*3|младенец|infant|грудн/)){
-      const n=clean.match(/(\d+)/); if(n) result.infants=parseInt(n[1]); else result.infants=1;
-    }
-    // контакт — телефон или @ник или мессенджер
-    if(!result.contact&&(clean.match(/[\d()\-\+]{7,}/)||clean.match(/@\w+/)||lower.match(/телеграм|telegram|whatsapp|вотс|вайбер|viber|тел[:\s]/i))){
-      if(!lower.match(/hotel|отель|inn|resort|villa|апарт|комнат|room/)&&!normalizeRoute(clean))
-        result.contact=clean;
-    }
-    // отель
-    if(!result.hotel&&lower.match(/hotel|отель|inn|resort|villa|апарт|комнат|room|garden|ocean|tourane|robin|sands|cocoon|palace|plaza|beach|danang|naman|хотел|boutique|suite/))
-      result.hotel=clean;
-    // оплата
-    if(lower.match(/налич|cash/)) result.payMethod='Наличные';
-    if(lower.match(/донг|vnd/)) result.currency='VND';
-    if(lower.match(/перевод|transfer|онлайн|карт/)) result.payMethod='Перевод';
+    if(!result.hotel&&lower.match(/hotel|отель|inn|resort|villa|комната|room|апарт|garden|ocean|tourane|robin|sands|cocoon|palace|plaza|beach|danang|naman/)) result.hotel=clean;
+    if(lower.match(/наличн|cash/)){result.payMethod='Наличные';}
+    if(lower.match(/донги?|vnd/)){result.currency='VND';}
+    if(lower.match(/перевод|transfer/)) result.payMethod='Перевод';
     if(lower.match(/usdt/i)) result.payMethod='USDT';
     if(lower.match(/руб|rub/)) result.currency='RUB';
-    if(lower.match(/\$|usd/i)) result.currency='USD';
-    // примечание
-    if(!result.notes&&lower.match(/через вас|билет|можем|подъехать|самостоят|удобн|точк|встреч/))
-      result.notes=clean;
-    // итог
+    if(lower.match(/\$/)) result.currency='USD';
+    if(!result.notes&&lower.match(/через вас|билет|можем|подъехать|самостоятельно/)) result.notes=clean;
     const tm=clean.match(/[Ии]того[:\s]+([0-9][0-9\s]*)\s*(₫|vnd|VND|\$|USD|₽|RUB)?/);
     if(tm) result.totalAmount=tm[1].replace(/\s/g,'')+(tm[2]?' '+tm[2]:'');
   });
   if(!result.adults&&!result.children) result.adults=1;
   const pr=document.getElementById('parseResult'); pr.classList.add('show');
-  pr.innerHTML='<strong style="color:var(--accent)">Распознано:</strong><br>'+Object.entries(result).filter(([,v])=>v).map(([k,v])=>k+': '+v).join('<br>');
+  pr.innerHTML='<strong style="color:var(--accent)">Распознано:</strong><br>'+Object.entries(result).filter(([k,v])=>v).map(([k,v])=>k+': '+v).join('<br>');
   document.getElementById('parsedForm').style.display='';
   if(result.date) document.getElementById('pfDate').value=result.date;
   if(result.route) document.getElementById('pfRoute').value=result.route;
@@ -1131,15 +983,22 @@ function bParseText(){
   bUpdatePreview();
 }
 
-// ══════════════════════════════════════
+// ═══════════════════════════════════════
 // INIT
-// ══════════════════════════════════════
-(async()=>{
-  renderPriceCards(null,true);
-  const rates=await fetchRates();
-  currentRates=rates;
+// ═══════════════════════════════════════
+(async () => {
+  // Прайс
+  renderPriceCards(null, true);
+  buildCalcTourSelect();
+  const rates = await fetchRates();
+  currentRates = rates;
   updateStatusBar(rates);
-  renderPriceCards(rates,false);
+  renderPriceCards(rates, false);
+  // Кнопки копирования прайса
+  document.getElementById('price-list').addEventListener('click', e => {
+    const btn = e.target.closest('.copy-card-btn');
+    if (btn) { e.stopPropagation(); return; } // handled by inline onclick
+  });
 })();
 </script>
 </body>
