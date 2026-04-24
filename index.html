@@ -835,7 +835,7 @@ function bCardHTML(b){
     <div class="b-card-main" onclick="bToggle('${b.id}')">
       <div class="b-card-route">${b.route}</div>
       <div class="b-card-pax">${paxParts.join('+')||'—'}</div>
-      <div class="b-card-contact">${(b.inBase?'⭐ ':'')}${b.contact||'—'}</div>
+      <div class="b-card-contact">${(b.inBase?'♥️ ':'')}${b.contact||'—'}</div>
       <span onclick="event.stopPropagation();bCyclePay('${b.id}')" style="cursor:pointer;font-size:15px;line-height:1">${payIcon}</span>
       <button class="b-action-btn" onclick="event.stopPropagation();bEdit('${b.id}')">✏️</button>
       <div class="b-card-comm">${comm}</div>
