@@ -286,22 +286,21 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
             <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Плюс $</div>
             <div style="display:flex;gap:4px">
               <input type="number" id="walletExtraInput" placeholder="0" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:13px;background:var(--surface)">
-              <button onclick="walletAdd('extra')" style="padding:6px 10px;background:none;border:1px solid var(--border);border-radius:6px;font-size:14px;cursor:pointer;color:var(--green)">+</button>
+              <button onclick="walletAdd('extra',1)" style="padding:6px 10px;background:none;border:1px solid var(--border);border-radius:6px;font-size:14px;cursor:pointer;color:var(--green)">+</button>
+              <button onclick="walletAdd('extra',-1)" style="padding:6px 10px;background:none;border:1px solid var(--border);border-radius:6px;font-size:14px;cursor:pointer;color:var(--red)">−</button>
             </div>
             <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
               <div id="walletExtraTotal" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">Накоплено: $0</div>
-              <button onclick="walletReset('extra')" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--red);cursor:pointer;font-size:11px;padding:1px 6px">сброс</button>
             </div>
           </div>
           <div>
             <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Выплачено $</div>
             <div style="display:flex;gap:4px">
               <input type="number" id="walletPaidInput" placeholder="0" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:13px;background:var(--surface)">
-              <button onclick="walletAdd('paid')" style="padding:6px 10px;background:none;border:1px solid var(--border);border-radius:6px;font-size:14px;cursor:pointer;color:var(--red)">−</button>
+              <button onclick="walletAdd('paid',1)" style="padding:6px 10px;background:none;border:1px solid var(--border);border-radius:6px;font-size:14px;cursor:pointer;color:var(--red)">−</button>
             </div>
             <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
               <div id="walletPaidTotal" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">Выплачено: $0</div>
-              <button onclick="walletReset('paid')" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--red);cursor:pointer;font-size:11px;padding:1px 6px">сброс</button>
             </div>
           </div>
           <div>
@@ -1504,12 +1503,12 @@ function toggleWallet(){
   p.style.display=p.style.display==='none'?'block':'none';
   refreshWalletBalance();
 }
-function walletAdd(key){
+function walletAdd(key, sign){
   const inputId=key==='extra'?'walletExtraInput':'walletPaidInput';
   const val=parseFloat(document.getElementById(inputId).value)||0; if(!val) return;
   const lsKey=key==='extra'?'walletExtra':'walletPaid';
   const cur=parseFloat(localStorage.getItem(lsKey))||0;
-  localStorage.setItem(lsKey,Math.round((cur+val)*100)/100);
+  localStorage.setItem(lsKey,Math.round((cur+val*sign)*100)/100);
   document.getElementById(inputId).value='';
   refreshWalletBalance();
   updateTotalEarn();
