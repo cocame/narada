@@ -1172,8 +1172,9 @@ function fUpdateCalc(){
     if(tour.tickets){
       tickSec.style.display='block';
       let tkHTML=''; tour.tickets.forEach((tk,i)=>{
+        const tkPrice=fmtVND(tk.vnd_fixed);
         tkHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2)">
-          <div style="font-size:11px;font-style:italic;color:var(--muted)">${tk.label}</div>
+          <div style="font-size:11px;font-style:italic;color:var(--muted)">${tk.label}<br><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent2)">${tkPrice}</span></div>
           <div style="display:flex;align-items:center;gap:10px">
             <button onclick="fTickChange(${i},-1)" style="width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:16px;cursor:pointer">−</button>
             <span id="ftc-${i}" style="font-family:'DM Mono',monospace;font-size:13px;min-width:20px;text-align:center">0</span>
@@ -1210,7 +1211,13 @@ function fRecalc(){
 }
 function fTickChange(i,d){
   fTickCounts['f_'+i]=Math.max(0,(fTickCounts['f_'+i]||0)+d);
-  fUpdateCalc();
+  const el=document.getElementById('ftc-'+i); if(el) el.textContent=fTickCounts['f_'+i];
+  fRecalc();
+}
+function pfTickChange(i,d){
+  pfTickCounts['pf_'+i]=Math.max(0,(pfTickCounts['pf_'+i]||0)+d);
+  const el=document.getElementById('pftc-'+i); if(el) el.textContent=pfTickCounts['pf_'+i];
+  pfRecalc();
 }
 function fCalcRowHTML(label, p, cur){
   const val=cur==='USD'?fmtUSD(p.usd):cur==='RUB'?fmtRUB(p.rub):cur==='USDT'?fmtUSDT(p.usdt):fmtVND(p.vnd);
@@ -1315,10 +1322,6 @@ function pfRecalc(){
   pfCalcTotal(tour, adults, children, currency, tourUSD);
   const comm=Math.ceil(tourUSD/10*2)/2;
   const cEl=document.getElementById('previewComm2'); if(cEl) cEl.textContent='$'+comm;
-}
-function pfTickChange(i,d){
-  pfTickCounts['pf_'+i]=Math.max(0,(pfTickCounts['pf_'+i]||0)+d);
-  pfUpdateCalc();
 }
 function pfCalcTotal(tour, adults, children, currency, tourUSD){
   const R=currentRates; let total=calcFromUSD(tourUSD,R);
