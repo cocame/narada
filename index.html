@@ -270,7 +270,27 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
       <div class="b-stats">
         <div><div class="b-stat-val" id="bStatToday">0</div><div class="b-stat-label">Сегодня</div></div>
         <div><div class="b-stat-val" id="bStatTomorrow">0</div><div class="b-stat-label">Завтра</div></div>
-        <div><div class="b-stat-val" id="bStatEarn">$0</div><div class="b-stat-label">Комиссия / мес</div></div>
+        <div style="display:flex;align-items:flex-start;gap:6px">
+          <div><div class="b-stat-val" id="bStatEarn">$0</div><div class="b-stat-label">Комиссия / мес</div></div>
+          <button onclick="toggleWallet()" style="background:none;border:none;font-size:20px;cursor:pointer;padding:2px 0;line-height:1" title="Мой кошелёк">💰</button>
+        </div>
+      </div>
+      <!-- КОШЕЛЁК -->
+      <div id="walletPanel" style="display:none;padding:12px 16px;background:var(--note-bg);border-bottom:1px solid var(--border)">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Доп. поступления $</div>
+            <input type="number" id="walletExtra" value="0" oninput="updateWallet()" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:14px;background:var(--surface)">
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Выплачено $</div>
+            <input type="number" id="walletPaid" value="0" oninput="updateWallet()" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:14px;background:var(--surface)">
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Остаток $</div>
+            <div id="walletBalance" style="padding:6px 8px;font-family:'DM Mono',monospace;font-size:14px;color:var(--green);font-weight:600">$0</div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="b-controls">
@@ -279,7 +299,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
         <option value="upcoming" selected>Скоро</option>
         <option value="waiting">Ждут</option>
         <option value="cancelled">Отказ</option>
-        <option value="base">⭐</option>
+        <option value="base">База</option>
       </select>
       <select class="b-filter-select" id="bFilterRoute" onchange="bRender()">
         <option value="">Маршрут</option>
@@ -1447,6 +1467,25 @@ function bParseText(){
   bUpdatePreview();
 }
 
+function toggleWallet(){
+  const p=document.getElementById('walletPanel');
+  p.style.display=p.style.display==='none'?'block':'none';
+  updateWallet();
+}
+function updateWallet(){
+  const earn=parseFloat((document.getElementById('bStatEarn').textContent||'0').replace('$',''))||0;
+  const extra=parseFloat(document.getElementById('walletExtra').value)||0;
+  const paid=parseFloat(document.getElementById('walletPaid').value)||0;
+  const balance=Math.round((earn+extra-paid)*100)/100;
+  document.getElementById('walletBalance').textContent='$'+balance;
+  localStorage.setItem('walletExtra',extra);
+  localStorage.setItem('walletPaid',paid);
+}
+function loadWallet(){
+  const eEl=document.getElementById('walletExtra'); if(eEl) eEl.value=localStorage.getItem('walletExtra')||'0';
+  const pEl=document.getElementById('walletPaid'); if(pEl) pEl.value=localStorage.getItem('walletPaid')||'0';
+}
+
 // ══════════════════════════════════════
 // INIT
 // ══════════════════════════════════════
@@ -1456,6 +1495,7 @@ function bParseText(){
   currentRates=rates;
   updateStatusBar(rates);
   renderPriceCards(rates,false);
+  loadWallet();
 })();
 </script>
 </body>
