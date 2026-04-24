@@ -800,7 +800,7 @@ function bCardHTML(b){
     let rowsHTML=`<div class="b-calc-row">
       <div class="b-calc-label">Взрослый × ${initAdult}</div>
       <div style="display:flex;align-items:center;gap:4px">
-        <input type="number" id="${tid}-priceA" value="${tour.rows[0].usd}" oninput="event.stopPropagation();bcPriceChange('${b.id}')" onclick="event.stopPropagation()" style="width:52px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+        <input type="number" id="${tid}-priceA" value="${b.customPriceAdult||tour.rows[0].usd}" oninput="event.stopPropagation();bcPriceChange('${b.id}')" onclick="event.stopPropagation()" style="width:52px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
         <span style="font-size:10px;color:var(--muted)">$ =</span>
         <span id="${tid}-totA" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${fmtUSD(tour.rows[0].usd*initAdult)}</span>
       </div>
@@ -809,7 +809,7 @@ function bCardHTML(b){
       rowsHTML+=`<div class="b-calc-row">
         <div class="b-calc-label">Ребёнок × ${initChild}</div>
         <div style="display:flex;align-items:center;gap:4px">
-          <input type="number" id="${tid}-priceC" value="${tour.rows[1].usd}" oninput="event.stopPropagation();bcPriceChange('${b.id}')" onclick="event.stopPropagation()" style="width:52px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+          <input type="number" id="${tid}-priceC" value="${b.customPriceChild||tour.rows[1].usd}" oninput="event.stopPropagation();bcPriceChange('${b.id}')" onclick="event.stopPropagation()" style="width:52px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
           <span style="font-size:10px;color:var(--muted)">$ =</span>
           <span id="${tid}-totC" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${fmtUSD(tour.rows[1].usd*initChild)}</span>
         </div>
@@ -1383,6 +1383,8 @@ function bGetFormData(){
     payMethod:document.getElementById(p+'PayMethod').value,
     totalAmount:document.getElementById(p+'Amount').value,
     commission:comm,
+    customPriceAdult: parseFloat(document.getElementById(p+'PriceAdult')?.value)||0,
+    customPriceChild: parseFloat(document.getElementById(p+'PriceChild')?.value)||0,
     payStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.payStatus||'unpaid') : 'unpaid',
     tripStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.tripStatus||'waiting') : 'waiting',
     notes:document.getElementById(p+'Notes').value
