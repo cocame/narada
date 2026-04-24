@@ -298,6 +298,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
         <option value="all">Все</option>
         <option value="upcoming" selected>Скоро</option>
         <option value="waiting">Ждут</option>
+        <option value="done">Ездил</option>
         <option value="cancelled">Отказ</option>
         <option value="base">База</option>
       </select>
@@ -781,6 +782,7 @@ function bRender(){
     if(dateF&&b.date!==dateF) return false;
     if(bFilter==='upcoming') return b.date&&b.date>=tod&&b.tripStatus!=='cancelled'&&b.tripStatus!=='waiting_date';
     if(bFilter==='waiting') return b.tripStatus==='waiting_date';
+    if(bFilter==='done') return b.tripStatus==='done';
     if(bFilter==='cancelled') return b.tripStatus==='cancelled';
     if(bFilter==='base') return !!b.inBase;
     return true;
