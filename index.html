@@ -1021,6 +1021,12 @@ function bClearForm(){
   document.getElementById('pasteText').value='';
   document.getElementById('parseResult').classList.remove('show');
   document.getElementById('parsedForm').style.display='none';
+  // сбросить счётчики билетов
+  Object.keys(fTickCounts).forEach(k=>delete fTickCounts[k]);
+  Object.keys(pfTickCounts).forEach(k=>delete pfTickCounts[k]);
+  // скрыть калькулятор
+  const fb=document.getElementById('fCalcBlock'); if(fb) fb.style.display='none';
+  const pb=document.getElementById('pfCalcBlock'); if(pb) pb.style.display='none';
   bUpdatePreview();
 }
 function mSwitchTab(tab){
@@ -1065,8 +1071,14 @@ function fUpdateCalc(){
   if(!tour||!currentRates||(!adults&&!children)){block.style.display='none';return;}
   block.style.display='block';
   const R=currentRates;
-  const adultUSD=parseFloat(document.getElementById('fPriceAdult')?.value)||tour.rows[0].usd;
-  const childUSD=parseFloat(document.getElementById('fPriceChild')?.value)||(tour.rows[1]?tour.rows[1].usd:0);
+  // читаем цену — если поле есть и маршрут совпадает используем, иначе берём из прайса
+  const priceAdultEl=document.getElementById('fPriceAdult');
+  const priceChildEl=document.getElementById('fPriceChild');
+  const savedRoute=document.getElementById('fCalcBlock').dataset.route;
+  const routeChanged=savedRoute!==route;
+  if(routeChanged) document.getElementById('fCalcBlock').dataset.route=route;
+  const adultUSD=(!routeChanged&&priceAdultEl&&parseFloat(priceAdultEl.value))?parseFloat(priceAdultEl.value):tour.rows[0].usd;
+  const childUSD=(!routeChanged&&priceChildEl&&parseFloat(priceChildEl.value))?parseFloat(priceChildEl.value):(tour.rows[1]?tour.rows[1].usd:0);
   let tourUSD=0;
   if(adults) tourUSD+=adultUSD*adults;
   if(children&&tour.rows[1]) tourUSD+=childUSD*children;
@@ -1160,8 +1172,13 @@ function pfUpdateCalc(){
   if(!tour||!currentRates||(!adults&&!children)){block.style.display='none';return;}
   block.style.display='block';
   const R=currentRates;
-  const adultUSD2=parseFloat(document.getElementById('pfPriceAdult')?.value)||tour.rows[0].usd;
-  const childUSD2=parseFloat(document.getElementById('pfPriceChild')?.value)||(tour.rows[1]?tour.rows[1].usd:0);
+  const pfPriceAdultEl=document.getElementById('pfPriceAdult');
+  const pfPriceChildEl=document.getElementById('pfPriceChild');
+  const savedRoute2=document.getElementById('pfCalcBlock').dataset.route;
+  const routeChanged2=savedRoute2!==route;
+  if(routeChanged2) document.getElementById('pfCalcBlock').dataset.route=route;
+  const adultUSD2=(!routeChanged2&&pfPriceAdultEl&&parseFloat(pfPriceAdultEl.value))?parseFloat(pfPriceAdultEl.value):tour.rows[0].usd;
+  const childUSD2=(!routeChanged2&&pfPriceChildEl&&parseFloat(pfPriceChildEl.value))?parseFloat(pfPriceChildEl.value):(tour.rows[1]?tour.rows[1].usd:0);
   let tourUSD=0;
   if(adults) tourUSD+=adultUSD2*adults;
   if(children&&tour.rows[1]) tourUSD+=childUSD2*children;
