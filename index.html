@@ -113,6 +113,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .b-stat-val{font-size:20px;color:var(--accent);font-weight:700;font-family:'DM Mono',monospace}
 .b-stat-label{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
 .b-controls{padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.b-filter-select{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:12px;flex:1;min-width:80px}
 .b-filter-btn{padding:6px 12px;border:1px solid var(--border);border-radius:20px;background:none;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap}
 .b-filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(139,105,20,.06)}
 .b-add-btn{margin-left:auto;width:34px;height:34px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1}
@@ -273,20 +274,20 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
       </div>
     </div>
     <div class="b-controls">
-      <button class="b-filter-btn active" id="bfUpcoming" onclick="bSetFilter('upcoming')">Скоро</button>
-      <button class="b-filter-btn" id="bfWaiting" onclick="bSetFilter('waiting')">Ждут</button>
-      <button class="b-filter-btn" id="bfAll" onclick="bSetFilter('all')">Все</button>
-      <button class="b-filter-btn" id="bfCancelled" onclick="bSetFilter('cancelled')">Отказ</button>
-      <button class="b-filter-btn" id="bfBase" onclick="bSetFilter('base')">База</button>
-      <button class="b-add-btn" onclick="bOpenModal()">+</button>
-    </div>
-    <div class="b-filter-row">
-      <select class="b-select" id="bFilterRoute" onchange="bRender()">
+      <select class="b-filter-select" id="bFilterStatus" onchange="bSetFilter(this.value)">
+        <option value="all">Все</option>
+        <option value="upcoming" selected>Скоро</option>
+        <option value="waiting">Ждут</option>
+        <option value="cancelled">Отказ</option>
+        <option value="base">⭐</option>
+      </select>
+      <select class="b-filter-select" id="bFilterRoute" onchange="bRender()">
         <option value="">Маршрут</option>
         <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
         <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>HOT SPRINGS</option>
       </select>
-      <input type="date" class="b-select" id="bFilterDate" onchange="bRender()">
+      <input type="date" class="b-filter-select" id="bFilterDate" onchange="bRender()">
+      <button class="b-add-btn" onclick="bOpenModal()">+</button>
     </div>
     <div class="b-list" id="bList"><div class="b-loading">Загрузка…</div></div>
   </div>
@@ -478,7 +479,12 @@ function switchTab(name) {
     document.getElementById('tab'+cap(t)).classList.toggle('active', t===name);
     document.getElementById('tn'+cap(t)).classList.toggle('active', t===name);
   });
-  if (name==='booking' && allBookings.length===0) bLoad();
+  if (name==='booking'){
+    if(allBookings.length===0) bLoad();
+    bFilter='upcoming';
+    const sel=document.getElementById('bFilterStatus'); if(sel) sel.value='upcoming';
+    bRender();
+  }
 }
 function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 
@@ -744,11 +750,6 @@ async function gasDelete(id){
 // ══════════════════════════════════════
 function bSetFilter(f){
   bFilter=f;
-  ['Upcoming','Waiting','All','Cancelled','Base'].forEach(n=>{
-    const el=document.getElementById('bf'+n); if(el) el.classList.remove('active');
-  });
-  const map={upcoming:'Upcoming',waiting:'Waiting',all:'All',cancelled:'Cancelled',base:'Base'};
-  const el=document.getElementById('bf'+map[f]); if(el) el.classList.add('active');
   bRender();
 }
 function bRender(){
@@ -791,60 +792,6 @@ function bCardHTML(b){
   const comm=b.tripStatus==='done'?'$'+(b.commission||0):'';
   const starCol=b.inBase?'#7c5cbf':'#ccc';
 
-  // inline calc для этой карточки
-  const tour=TOURS.find(t=>t.key===b.route);
-  let inlineCalc='';
-  if(tour){
-    const tid='bc_'+b.id;
-    const initAdult=b.adults||0, initChild=b.children||0;
-    let rowsHTML=`<div class="b-calc-row">
-      <div class="b-calc-label">Взрослый × ${initAdult}</div>
-      <div style="display:flex;align-items:center;gap:4px">
-        <input type="number" id="${tid}-priceA" value="${b.customPriceAdult||tour.rows[0].usd}" oninput="event.stopPropagation();bcPriceChange('${b.id}')" onclick="event.stopPropagation()" style="width:52px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
-        <span style="font-size:10px;color:var(--muted)">$ =</span>
-        <span id="${tid}-totA" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${fmtUSD(tour.rows[0].usd*initAdult)}</span>
-      </div>
-    </div>`;
-    if(initChild&&tour.rows[1]){
-      rowsHTML+=`<div class="b-calc-row">
-        <div class="b-calc-label">Ребёнок × ${initChild}</div>
-        <div style="display:flex;align-items:center;gap:4px">
-          <input type="number" id="${tid}-priceC" value="${b.customPriceChild||tour.rows[1].usd}" oninput="event.stopPropagation();bcPriceChange('${b.id}')" onclick="event.stopPropagation()" style="width:52px;padding:3px 5px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
-          <span style="font-size:10px;color:var(--muted)">$ =</span>
-          <span id="${tid}-totC" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)">${fmtUSD(tour.rows[1].usd*initChild)}</span>
-        </div>
-      </div>`;
-    }
-    let tkHTML='';
-    if(tour.tickets&&tour.tickets.length){
-      tkHTML=`<div class="b-calc-section">Входные билеты</div>`+
-        tour.tickets.map((tk,i)=>`
-          <div class="b-calc-row">
-            <div class="b-calc-label ticket">${tk.label}</div>
-            <div class="calc-counter">
-              <button class="calc-btn" onclick="event.stopPropagation();bcChange('${b.id}','t${i}',-1)">−</button>
-              <div class="calc-num" id="${tid}-t${i}">0</div>
-              <button class="calc-btn" onclick="event.stopPropagation();bcChange('${b.id}','t${i}',1)">+</button>
-            </div>
-          </div>`).join('');
-    }
-    inlineCalc=`<div class="b-calc-block">
-      <div class="b-calc-title">Расчёт поездки</div>
-      ${rowsHTML}${tkHTML}
-      <div class="b-calc-result" id="${tid}-result" style="display:none">
-        <div class="b-calc-curs">
-          <label><input type="checkbox" class="bc-cur" data-bid="${b.id}" value="usd" onchange="bcUpdate('${b.id}')"> USD</label>
-          <label><input type="checkbox" class="bc-cur" data-bid="${b.id}" value="rub" onchange="bcUpdate('${b.id}')"> RUB</label>
-          <label><input type="checkbox" class="bc-cur" data-bid="${b.id}" value="vnd" onchange="bcUpdate('${b.id}')"> VND</label>
-          <label><input type="checkbox" class="bc-cur" data-bid="${b.id}" value="usdt" onchange="bcUpdate('${b.id}')"> USDT</label>
-        </div>
-        <div class="b-calc-total" id="${tid}-total"></div>
-        <div class="b-calc-breakdown" id="${tid}-breakdown"></div>
-        <button class="b-calc-copy" onclick="event.stopPropagation();bcCopy('${b.id}')">Скопировать расчёт</button>
-      </div>
-    </div>`;
-  }
-
   return `<div class="booking-card${sc}${baseSc}" id="bcard-${b.id}">
     <div class="b-card-main" onclick="bToggle('${b.id}')">
       <div class="b-card-route">${b.route}</div>
@@ -863,14 +810,16 @@ function bCardHTML(b){
         <div class="b-exp-item"><label>Сумма</label><span>${b.totalAmount||'—'}</span></div>
         <div class="b-exp-item"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
       </div>
-      ${b.notes?`<div class="b-notes-row"><label>Примечание</label><span>${b.notes}</span></div>`:''}
-      ${inlineCalc}
+      <div class="b-notes-row">
+        <label>Примечание</label>
+        <textarea onclick="event.stopPropagation()" onchange="event.stopPropagation();bSaveNote('${b.id}',this.value)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:40px;color:var(--text)">${b.notes||''}</textarea>
+      </div>
       <button class="b-copy-card-btn" onclick="event.stopPropagation();bCopyCard('${b.id}')">Скопировать карточку</button>
       <div class="b-status-row">
         <button class="b-status-btn ${b.tripStatus==='done'?'act-done':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','done')">Ездил</button>
         <button class="b-status-btn ${b.tripStatus==='cancelled'?'act-cancel':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','cancelled')">Отмена</button>
         <button class="b-status-btn ${b.tripStatus==='waiting_date'?'act-waiting':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','waiting_date')">Ждёт</button>
-        <button class="b-status-btn" onclick="event.stopPropagation();bToggleBase('${b.id}')" style="color:${starCol};border-color:${starCol}">⭐ База</button>
+        <button onclick="event.stopPropagation();bToggleBase('${b.id}')" style="background:none;border:none;font-size:22px;cursor:pointer;padding:0 4px;opacity:${b.inBase?1:0.3}">⭐</button>
         <button class="b-status-btn" onclick="event.stopPropagation();bDelete('${b.id}')" style="margin-left:auto;color:var(--red);border-color:var(--red)">Удалить</button>
       </div>
     </div>
@@ -879,12 +828,6 @@ function bCardHTML(b){
 
 function bToggle(id){
   document.getElementById('bexp-'+id).classList.toggle('open');
-  if(!calcCounts['bc_'+id]){
-    calcCounts['bc_'+id]={};
-    const b=allBookings.find(x=>x.id==id);
-    if(b){ calcCounts['bc_'+id]['r0']=b.adults||0; calcCounts['bc_'+id]['r1']=b.children||0; }
-  }
-  bcUpdate(id);
 }
 
 // Init inline calc counts from booking data
@@ -1028,6 +971,11 @@ async function bToggleBase(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   b.inBase=!b.inBase;
   await gasSave('updateBooking',b); bLoad();
+}
+async function bSaveNote(id,val){
+  const b=allBookings.find(x=>x.id==id); if(!b) return;
+  b.notes=val;
+  await gasSave('updateBooking',b);
 }
 async function bCyclePay(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
