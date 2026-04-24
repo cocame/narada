@@ -1156,7 +1156,6 @@ function fCalcTotal(tour, adults, children, currency, tourUSD){
   const comm = Math.ceil(commRaw*2)/2;
   const cEl=document.getElementById('previewComm'); if(cEl) cEl.textContent='$'+comm;
 }
-}
 function fInsertAmount(){
   const val=document.getElementById('fCalcResult').dataset.val||'';
   document.getElementById('fAmount').value=val;
