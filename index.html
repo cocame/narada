@@ -281,18 +281,13 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
       </div>
       <!-- КОШЕЛЁК -->
       <div id="walletPanel" style="display:none;padding:12px 16px;background:var(--note-bg);border-bottom:1px solid var(--border)">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-          <div>
-            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Доп. поступления $</div>
-            <input type="number" id="walletExtra" value="0" oninput="updateWallet()" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:14px;background:var(--surface)">
-          </div>
-          <div>
-            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Выплачено $</div>
-            <input type="number" id="walletPaid" value="0" oninput="updateWallet()" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:14px;background:var(--surface)">
-          </div>
-          <div>
-            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Остаток $</div>
-            <div id="walletBalance" style="padding:6px 0;font-family:'DM Mono',monospace;font-size:16px;color:var(--green);font-weight:600">$0</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <input type="number" id="walletInput" placeholder="Сумма $" style="width:100px;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:14px;background:var(--surface)">
+          <button onclick="walletAdd(1)" style="padding:7px 16px;background:var(--green);color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:14px;cursor:pointer">+ Получила</button>
+          <button onclick="walletAdd(-1)" style="padding:7px 16px;background:var(--red);color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:14px;cursor:pointer">− Выплачено</button>
+          <div style="margin-left:auto;text-align:right">
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em">Остаток</div>
+            <div id="walletBalance" style="font-family:'DM Mono',monospace;font-size:18px;color:var(--green);font-weight:600">$0</div>
           </div>
         </div>
       </div>
@@ -999,12 +994,7 @@ function bUpdateStats(){
   let earn=0;
   allBookings.forEach(b=>{if(b.tripStatus==='done'&&b.date){const bd=new Date(b.date+'T00:00:00');if(bd.getMonth()===nm&&bd.getFullYear()===ny)earn+=parseFloat(b.commission)||0;}});
   document.getElementById('bStatEarn').textContent='$'+(Math.round(earn*100)/100);
-  // обновить итоговую сумму с учётом доп. поступлений
-  const extra=parseFloat(localStorage.getItem('walletExtra'))||0;
-  const total=Math.round((earn+extra)*100)/100;
-  const paid=parseFloat(localStorage.getItem('walletPaid'))||0;
-  document.getElementById('bStatEarnTotal').textContent='$'+total;
-  const balEl=document.getElementById('walletBalance'); if(balEl) balEl.textContent='$'+Math.round((total-paid)*100)/100;
+  updateTotalEarn();
 }
 
 // ══════════════════════════════════════
@@ -1493,24 +1483,34 @@ function bParseText(){
 function toggleWallet(){
   const p=document.getElementById('walletPanel');
   p.style.display=p.style.display==='none'?'block':'none';
-  updateWallet();
+  refreshWalletBalance();
 }
-function updateWallet(){
+function walletAdd(sign){
+  const input=document.getElementById('walletInput');
+  const val=parseFloat(input.value)||0; if(!val) return;
+  const key=sign>0?'walletExtra':'walletPaid';
+  const cur=parseFloat(localStorage.getItem(key))||0;
+  localStorage.setItem(key,Math.round((cur+val)*100)/100);
+  input.value='';
+  refreshWalletBalance();
+  updateTotalEarn();
+}
+function refreshWalletBalance(){
   const earn=parseFloat((document.getElementById('bStatEarn').textContent||'0').replace('$',''))||0;
-  const extra=parseFloat(document.getElementById('walletExtra').value)||0;
-  const paid=parseFloat(document.getElementById('walletPaid').value)||0;
+  const extra=parseFloat(localStorage.getItem('walletExtra'))||0;
+  const paid=parseFloat(localStorage.getItem('walletPaid'))||0;
+  const balance=Math.round((earn+extra-paid)*100)/100;
+  const el=document.getElementById('walletBalance'); if(el) el.textContent='$'+balance;
+}
+function updateWallet(){ refreshWalletBalance(); }
+function updateTotalEarn(){
+  const earn=parseFloat((document.getElementById('bStatEarn').textContent||'0').replace('$',''))||0;
+  const extra=parseFloat(localStorage.getItem('walletExtra'))||0;
   const total=Math.round((earn+extra)*100)/100;
-  const balance=Math.round((total-paid)*100)/100;
-  // обновляем видимую сумму в шапке
-  document.getElementById('bStatEarnTotal').textContent='$'+total;
-  document.getElementById('walletBalance').textContent='$'+balance;
-  localStorage.setItem('walletExtra',extra);
-  localStorage.setItem('walletPaid',paid);
+  const el=document.getElementById('bStatEarnTotal'); if(el) el.textContent='$'+total;
+  refreshWalletBalance();
 }
-function loadWallet(){
-  const eEl=document.getElementById('walletExtra'); if(eEl) eEl.value=localStorage.getItem('walletExtra')||'0';
-  const pEl=document.getElementById('walletPaid'); if(pEl) pEl.value=localStorage.getItem('walletPaid')||'0';
-}
+function loadWallet(){ updateTotalEarn(); }
 
 // ══════════════════════════════════════
 // INIT
