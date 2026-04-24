@@ -830,6 +830,17 @@ function bCardHTML(b){
         <div class="b-exp-item"><label>Сумма</label><span>${b.totalAmount||'—'}</span></div>
         <div class="b-exp-item"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
       </div>
+      ${(()=>{
+        const tour=TOURS.find(t=>t.key===b.route);
+        if(!tour||!currentRates) return '';
+        const R=currentRates;
+        const aPrice=b.customPriceAdult||tour.rows[0].usd;
+        const cPrice=b.customPriceChild||(tour.rows[1]?tour.rows[1].usd:0);
+        let lines='';
+        if(b.adults) lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Взрослый × ${b.adults}</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${b.adults} × ${aPrice} $ = ${fmtUSD(aPrice*b.adults)}</span></div>`;
+        if(b.children&&tour.rows[1]) lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Ребёнок × ${b.children}</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${b.children} × ${cPrice} $ = ${fmtUSD(cPrice*b.children)}</span></div>`;
+        return lines?`<div style="margin-top:8px;padding:8px 10px;background:rgba(0,0,0,.03);border-radius:6px;border:1px dashed var(--border)">${lines}</div>`:'';
+      })()}
       <div class="b-notes-row">
         <label>Примечание</label>
         <textarea onclick="event.stopPropagation()" onchange="event.stopPropagation();bSaveNote('${b.id}',this.value)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:40px;color:var(--text)">${b.notes||''}</textarea>
