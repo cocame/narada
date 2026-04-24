@@ -113,6 +113,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .b-stat-val{font-size:20px;color:var(--accent);font-weight:700;font-family:'DM Mono',monospace}
 .b-stat-label{font-size:9px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
 .b-controls{padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.b-filter-select{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:12px;flex:1;min-width:80px}
 .b-filter-btn{padding:6px 12px;border:1px solid var(--border);border-radius:20px;background:none;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap}
 .b-filter-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(139,105,20,.06)}
 .b-add-btn{margin-left:auto;width:34px;height:34px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1}
@@ -135,6 +136,8 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .booking-card.s-waiting .b-card-exp{background:#daf9e4}
 .booking-card.s-tomorrow{background:#fffbe6;border-color:#f0e0b8}
 .booking-card.s-tomorrow .b-card-exp{background:#f9f3da}
+.booking-card.s-base{background:#f3f0fc;border-color:#c9bfee}
+.booking-card.s-base .b-card-exp{background:#ede8f9}
 .b-card-main{display:grid;grid-template-columns:1.3fr 0.65fr 1fr 22px 22px 50px;gap:5px;padding:12px 14px;align-items:center;cursor:pointer}
 .b-card-route{font-weight:600;font-size:15px}
 .b-card-pax{font-size:12px;color:var(--muted)}
@@ -271,18 +274,20 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
       </div>
     </div>
     <div class="b-controls">
-      <button class="b-filter-btn active" id="bfUpcoming" onclick="bSetFilter('upcoming')">Предстоящие</button>
-      <button class="b-filter-btn" id="bfWaiting" onclick="bSetFilter('waiting')">Ждут</button>
-      <button class="b-filter-btn" id="bfAll" onclick="bSetFilter('all')">Все</button>
-      <button class="b-add-btn" onclick="bOpenModal()">+</button>
-    </div>
-    <div class="b-filter-row">
-      <select class="b-select" id="bFilterRoute" onchange="bRender()">
+      <select class="b-filter-select" id="bFilterStatus" onchange="bSetFilter(this.value)">
+        <option value="all">Все</option>
+        <option value="upcoming" selected>Скоро</option>
+        <option value="waiting">Ждут</option>
+        <option value="cancelled">Отказ</option>
+        <option value="base">⭐</option>
+      </select>
+      <select class="b-filter-select" id="bFilterRoute" onchange="bRender()">
         <option value="">Маршрут</option>
         <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
         <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>HOT SPRINGS</option>
       </select>
-      <input type="date" class="b-select" id="bFilterDate" onchange="bRender()">
+      <input type="date" class="b-filter-select" id="bFilterDate" onchange="bRender()">
+      <button class="b-add-btn" onclick="bOpenModal()">+</button>
     </div>
     <div class="b-list" id="bList"><div class="b-loading">Загрузка…</div></div>
   </div>
@@ -320,15 +325,33 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
           <div class="form-group full"><label>Контакт</label><input type="text" id="fContact" placeholder="Иван, +79001234567"></div>
           <div class="form-group full"><label>Отель</label><input type="text" id="fHotel" placeholder="Tourane Hotel, к. 204"></div>
           <div class="form-group"><label>Валюта</label>
-            <select id="fCurrency"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+            <select id="fCurrency" onchange="fUpdateCalc()"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
           </div>
           <div class="form-group"><label>Оплата</label>
             <select id="fPayMethod"><option>Наличные</option><option>Перевод</option><option>USDT</option></select>
           </div>
-          <div class="form-group full"><label>Сумма оплаты</label><input type="text" id="fAmount" placeholder="4 300 000"></div>
           <div class="form-group full"><label>Примечание</label><textarea id="fNotes"></textarea></div>
         </div>
-        <div class="comm-preview">
+        <!-- КАЛЬКУЛЯТОР В ФОРМЕ -->
+        <div id="fCalcBlock" style="display:none;margin-top:12px;background:var(--note-bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
+          <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:8px">Расчёт стоимости</div>
+          <div id="fCalcRows"></div>
+          <div id="fTicketSection" style="display:none">
+            <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;font-family:'DM Mono',monospace;padding:8px 0 4px;border-top:1px dashed var(--border);margin-top:4px">Входные билеты</div>
+            <div id="fTicketRows"></div>
+          </div>
+          <div id="fCalcResult" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);display:none">
+            <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px">Итого</div>
+            <div id="fCalcTotal" style="font-family:'DM Mono',monospace;font-size:16px;color:var(--green);margin-bottom:8px"></div>
+            <div id="fCalcBreak" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);line-height:1.7;margin-bottom:10px;white-space:pre-line"></div>
+            <button onclick="fInsertAmount()" style="width:100%;padding:8px 0;background:var(--accent);color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer">↓ Вставить сумму</button>
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Сумма оплаты</div>
+          <input type="text" id="fAmount" placeholder="заполнится автоматически" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px">
+        </div>
+        <div class="comm-preview" style="margin-top:10px">
           <div><div class="cv" id="previewComm">$0</div><div class="cl">Ваша комиссия</div></div>
           <div><div class="cv" id="previewPax">0 чел.</div><div class="cl">Состав группы</div></div>
         </div>
@@ -358,15 +381,32 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
             <div class="form-group full"><label>Контакт</label><input type="text" id="pfContact"></div>
             <div class="form-group full"><label>Отель</label><input type="text" id="pfHotel"></div>
             <div class="form-group"><label>Валюта</label>
-              <select id="pfCurrency"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+              <select id="pfCurrency" onchange="pfUpdateCalc()"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
             </div>
             <div class="form-group"><label>Оплата</label>
               <select id="pfPayMethod"><option>Наличные</option><option>Перевод</option><option>USDT</option></select>
             </div>
-            <div class="form-group full"><label>Сумма оплаты</label><input type="text" id="pfAmount"></div>
             <div class="form-group full"><label>Примечание</label><textarea id="pfNotes"></textarea></div>
           </div>
-          <div class="comm-preview">
+          <div id="pfCalcBlock" style="display:none;margin-top:12px;background:var(--note-bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
+            <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:8px">Расчёт стоимости</div>
+            <div id="pfCalcRows"></div>
+            <div id="pfTicketSection" style="display:none">
+              <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;font-family:'DM Mono',monospace;padding:8px 0 4px;border-top:1px dashed var(--border);margin-top:4px">Входные билеты</div>
+              <div id="pfTicketRows"></div>
+            </div>
+            <div id="pfCalcResult" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);display:none">
+              <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px">Итого</div>
+              <div id="pfCalcTotal" style="font-family:'DM Mono',monospace;font-size:16px;color:var(--green);margin-bottom:8px"></div>
+              <div id="pfCalcBreak" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);line-height:1.7;margin-bottom:10px;white-space:pre-line"></div>
+              <button onclick="pfInsertAmount()" style="width:100%;padding:8px 0;background:var(--accent);color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer">↓ Вставить сумму</button>
+            </div>
+          </div>
+          <div style="margin-top:10px">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Сумма оплаты</div>
+            <input type="text" id="pfAmount" placeholder="заполнится автоматически" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px">
+          </div>
+          <div class="comm-preview" style="margin-top:10px">
             <div><div class="cv" id="previewComm2">$0</div><div class="cl">Ваша комиссия</div></div>
             <div><div class="cv" id="previewPax2">0 чел.</div><div class="cl">Состав группы</div></div>
           </div>
@@ -439,7 +479,12 @@ function switchTab(name) {
     document.getElementById('tab'+cap(t)).classList.toggle('active', t===name);
     document.getElementById('tn'+cap(t)).classList.toggle('active', t===name);
   });
-  if (name==='booking' && allBookings.length===0) bLoad();
+  if (name==='booking'){
+    if(allBookings.length===0) bLoad();
+    bFilter='upcoming';
+    const sel=document.getElementById('bFilterStatus'); if(sel) sel.value='upcoming';
+    bRender();
+  }
 }
 function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 
@@ -705,8 +750,6 @@ async function gasDelete(id){
 // ══════════════════════════════════════
 function bSetFilter(f){
   bFilter=f;
-  ['Upcoming','Waiting','All'].forEach(n=>document.getElementById('bf'+n).classList.remove('active'));
-  document.getElementById('bf'+cap(f)).classList.add('active');
   bRender();
 }
 function bRender(){
@@ -718,6 +761,8 @@ function bRender(){
     if(dateF&&b.date!==dateF) return false;
     if(bFilter==='upcoming') return b.date&&b.date>=tod&&b.tripStatus!=='cancelled'&&b.tripStatus!=='waiting_date';
     if(bFilter==='waiting') return b.tripStatus==='waiting_date';
+    if(bFilter==='cancelled') return b.tripStatus==='cancelled';
+    if(bFilter==='base') return !!b.inBase;
     return true;
   });
   filtered.sort((a,b)=>{if(!a.date&&!b.date) return 0;if(!a.date) return 1;if(!b.date) return -1;return a.date.localeCompare(b.date);});
@@ -742,59 +787,16 @@ function bCardHTML(b){
   if(b.infants>0) paxParts.push(b.infants+' мал');
   const tom=tomorrowStr();
   const sc=b.tripStatus==='done'?' s-done':b.tripStatus==='cancelled'?' s-cancelled':b.tripStatus==='waiting_date'?' s-waiting':(b.date&&b.date===tom)?' s-tomorrow':'';
+  const baseSc=b.inBase?' s-base':'';
   const payIcon=b.payStatus==='paid'?'💵':b.payStatus==='refund'?'🤑':'💳';
-  const comm=b.payStatus==='paid'?'$'+(b.commission||0):'';
+  const comm=b.tripStatus==='done'?'$'+(b.commission||0):'';
+  const starCol=b.inBase?'#7c5cbf':'#ccc';
 
-  // inline calc для этой карточки
-  const tour=TOURS.find(t=>t.key===b.route);
-  let inlineCalc='';
-  if(tour){
-    const tid='bc_'+b.id;
-    const initAdult=b.adults||0, initChild=b.children||0;
-    const rowsHTML=tour.rows.map((r,i)=>`
-      <div class="b-calc-row">
-        <div class="b-calc-label">${r.label}</div>
-        <div class="calc-counter">
-          <button class="calc-btn" onclick="event.stopPropagation();bcChange('${b.id}','r${i}',-1)">−</button>
-          <div class="calc-num" id="${tid}-r${i}">${i===0?initAdult:i===1?initChild:0}</div>
-          <button class="calc-btn" onclick="event.stopPropagation();bcChange('${b.id}','r${i}',1)">+</button>
-        </div>
-      </div>`).join('');
-    let tkHTML='';
-    if(tour.tickets&&tour.tickets.length){
-      tkHTML=`<div class="b-calc-section">Входные билеты</div>`+
-        tour.tickets.map((tk,i)=>`
-          <div class="b-calc-row">
-            <div class="b-calc-label ticket">${tk.label}</div>
-            <div class="calc-counter">
-              <button class="calc-btn" onclick="event.stopPropagation();bcChange('${b.id}','t${i}',-1)">−</button>
-              <div class="calc-num" id="${tid}-t${i}">0</div>
-              <button class="calc-btn" onclick="event.stopPropagation();bcChange('${b.id}','t${i}',1)">+</button>
-            </div>
-          </div>`).join('');
-    }
-    inlineCalc=`<div class="b-calc-block">
-      <div class="b-calc-title">Расчёт поездки</div>
-      ${rowsHTML}${tkHTML}
-      <div class="b-calc-result" id="${tid}-result" style="display:none">
-        <div class="b-calc-curs">
-          <label><input type="checkbox" class="bc-cur" data-bid="${b.id}" value="usd" onchange="bcUpdate('${b.id}')"> USD</label>
-          <label><input type="checkbox" class="bc-cur" data-bid="${b.id}" value="rub" onchange="bcUpdate('${b.id}')"> RUB</label>
-          <label><input type="checkbox" class="bc-cur" data-bid="${b.id}" value="vnd" onchange="bcUpdate('${b.id}')"> VND</label>
-          <label><input type="checkbox" class="bc-cur" data-bid="${b.id}" value="usdt" onchange="bcUpdate('${b.id}')"> USDT</label>
-        </div>
-        <div class="b-calc-total" id="${tid}-total"></div>
-        <div class="b-calc-breakdown" id="${tid}-breakdown"></div>
-        <button class="b-calc-copy" onclick="event.stopPropagation();bcCopy('${b.id}')">Скопировать расчёт</button>
-      </div>
-    </div>`;
-  }
-
-  return `<div class="booking-card${sc}" id="bcard-${b.id}">
+  return `<div class="booking-card${sc}${baseSc}" id="bcard-${b.id}">
     <div class="b-card-main" onclick="bToggle('${b.id}')">
       <div class="b-card-route">${b.route}</div>
       <div class="b-card-pax">${paxParts.join('+')||'—'}</div>
-      <div class="b-card-contact">${b.contact||'—'}</div>
+      <div class="b-card-contact">${(b.inBase?'⭐ ':'')}${b.contact||'—'}</div>
       <span onclick="event.stopPropagation();bCyclePay('${b.id}')" style="cursor:pointer;font-size:15px;line-height:1">${payIcon}</span>
       <button class="b-action-btn" onclick="event.stopPropagation();bEdit('${b.id}')">✏️</button>
       <div class="b-card-comm">${comm}</div>
@@ -808,20 +810,25 @@ function bCardHTML(b){
         <div class="b-exp-item"><label>Сумма</label><span>${b.totalAmount||'—'}</span></div>
         <div class="b-exp-item"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
       </div>
-      ${b.notes?`<div class="b-notes-row"><label>Примечание</label><span>${b.notes}</span></div>`:''}
-      ${inlineCalc}
+      <div class="b-notes-row">
+        <label>Примечание</label>
+        <textarea onclick="event.stopPropagation()" onchange="event.stopPropagation();bSaveNote('${b.id}',this.value)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:40px;color:var(--text)">${b.notes||''}</textarea>
+      </div>
       <button class="b-copy-card-btn" onclick="event.stopPropagation();bCopyCard('${b.id}')">Скопировать карточку</button>
       <div class="b-status-row">
         <button class="b-status-btn ${b.tripStatus==='done'?'act-done':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','done')">Ездил</button>
         <button class="b-status-btn ${b.tripStatus==='cancelled'?'act-cancel':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','cancelled')">Отмена</button>
         <button class="b-status-btn ${b.tripStatus==='waiting_date'?'act-waiting':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','waiting_date')">Ждёт</button>
+        <button onclick="event.stopPropagation();bToggleBase('${b.id}')" style="padding:5px 11px;border-radius:5px;border:1px solid ${b.inBase?'#7c5cbf':'var(--border)'};background:${b.inBase?'rgba(124,92,191,.1)':'none'};color:${b.inBase?'#7c5cbf':'var(--muted)'};cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px">База</button>
         <button class="b-status-btn" onclick="event.stopPropagation();bDelete('${b.id}')" style="margin-left:auto;color:var(--red);border-color:var(--red)">Удалить</button>
       </div>
     </div>
   </div>`;
 }
 
-function bToggle(id){ document.getElementById('bexp-'+id).classList.toggle('open'); bcUpdateInit(id); }
+function bToggle(id){
+  document.getElementById('bexp-'+id).classList.toggle('open');
+}
 
 // Init inline calc counts from booking data
 function bcUpdateInit(id){
@@ -846,30 +853,58 @@ function bcChange(bid, key, delta){
   bcUpdate(bid);
 }
 function bcGetCurs(bid){ return Array.from(document.querySelectorAll(`.bc-cur[data-bid="${bid}"]:checked`)).map(c=>c.value); }
+function bcPriceChange(bid){
+  // просто пересчитываем без перерисовки
+  bcUpdate(bid);
+}
 function bcUpdate(bid){
   const tid='bc_'+bid;
   const b=allBookings.find(x=>x.id==bid); if(!b) return;
   const tour=TOURS.find(t=>t.key===b.route); if(!tour||!currentRates) return;
   const R=currentRates; const cc=calcCounts[tid]||{};
-  let total=zeroP(); let hasAny=false; const rows=[]; const tickets=[];
-  tour.rows.forEach((r,i)=>{
-    const n=cc['r'+i]||0; if(!n) return; hasAny=true;
-    const p=mulP(calcFromUSD(r.usd,R),n); total=addP(total,p);
-    rows.push({label:r.label,n,p});
-  });
+
+  // читаем редактируемые цены без перерисовки
+  const paEl=document.getElementById(`${tid}-priceA`);
+  const pcEl=document.getElementById(`${tid}-priceC`);
+  const adultUSD=paEl&&parseFloat(paEl.value)?parseFloat(paEl.value):tour.rows[0].usd;
+  const childUSD=pcEl&&parseFloat(pcEl.value)?parseFloat(pcEl.value):(tour.rows[1]?tour.rows[1].usd:0);
+
+  let total=zeroP(); let hasAny=false; let tourUSD=0;
+  const adultN=cc['r0']||0; const childN=cc['r1']||0;
+  if(adultN){hasAny=true; tourUSD+=adultUSD*adultN; total=addP(total,calcFromUSD(adultUSD*adultN,R));}
+  if(childN&&tour.rows[1]){hasAny=true; tourUSD+=childUSD*childN; total=addP(total,calcFromUSD(childUSD*childN,R));}
+
+  const tickets=[];
   if(tour.tickets) tour.tickets.forEach((tk,i)=>{
     const n=cc['t'+i]||0; if(!n) return; hasAny=true;
     const p=mulP(calcFromVND(tk.vnd_fixed,R),n); total=addP(total,p);
     tickets.push({label:tk.label,n,p});
   });
+
+  // обновить строки цен без перерисовки всего блока
+  if(paEl){
+    const pTot=calcFromUSD(adultUSD*adultN,R);
+    const totEl=document.getElementById(`${tid}-totA`);
+    if(totEl) totEl.textContent=fmtUSD(adultUSD*adultN);
+  }
+  if(pcEl&&childN){
+    const pTot=calcFromUSD(childUSD*childN,R);
+    const totEl=document.getElementById(`${tid}-totC`);
+    if(totEl) totEl.textContent=fmtUSD(childUSD*childN);
+  }
+
   const resEl=document.getElementById(`${tid}-result`);
   if(!hasAny){resEl.style.display='none';return;}
   resEl.style.display='block';
   const curs=bcGetCurs(bid); const cF=curs.length?curs:['usd'];
   document.getElementById(`${tid}-total`).textContent='Итого: '+formatPrice(total,cF);
+  // breakdown только билеты
   document.getElementById(`${tid}-breakdown`).textContent=
-    [...rows,...tickets].map(r=>r.label+' × '+r.n+' — '+formatPrice(r.p,cF)).join('\n');
-  resEl.dataset.rows=JSON.stringify(rows.map(r=>({label:r.label,n:r.n,...r.p})));
+    tickets.map(r=>r.label+' × '+r.n+' — '+formatPrice(r.p,cF)).join('\n');
+  resEl.dataset.rows=JSON.stringify([
+    ...(adultN?[{label:'Взрослый',n:adultN,usd:adultUSD*adultN,rub:calcFromUSD(adultUSD*adultN,R).rub,vnd:calcFromUSD(adultUSD*adultN,R).vnd,usdt:calcFromUSD(adultUSD*adultN,R).usdt}]:[]),
+    ...(childN&&tour.rows[1]?[{label:'Ребёнок',n:childN,usd:childUSD*childN,rub:calcFromUSD(childUSD*childN,R).rub,vnd:calcFromUSD(childUSD*childN,R).vnd,usdt:calcFromUSD(childUSD*childN,R).usdt}]:[])
+  ]);
   resEl.dataset.tickets=JSON.stringify(tickets.map(r=>({label:r.label,n:r.n,...r.p})));
   Object.assign(resEl.dataset,{tusd:total.usd,trub:total.rub,tvnd:total.vnd,tusdt:total.usdt});
 }
@@ -932,6 +967,17 @@ function bUpdateStats(){
 // ══════════════════════════════════════
 // BOOKING ACTIONS
 // ══════════════════════════════════════
+async function bToggleBase(id){
+  const b=allBookings.find(x=>x.id==id); if(!b) return;
+  b.inBase=!b.inBase;
+  try{ await gasSave('updateBooking',b); await bLoad(); }
+  catch(e){ toast('Ошибка сохранения'); }
+}
+async function bSaveNote(id,val){
+  const b=allBookings.find(x=>x.id==id); if(!b) return;
+  b.notes=val;
+  await gasSave('updateBooking',b);
+}
 async function bCyclePay(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   b.payStatus=b.payStatus==='unpaid'?'paid':b.payStatus==='paid'?'refund':'unpaid';
@@ -959,6 +1005,9 @@ function bOpenModal(){
 function bEdit(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   editingId=id;
+  // сбросить счётчики билетов и кэш маршрута
+  Object.keys(fTickCounts).forEach(k=>delete fTickCounts[k]);
+  const fb=document.getElementById('fCalcBlock'); if(fb){fb.style.display='none';delete fb.dataset.route;}
   document.getElementById('modalTitle').textContent='Редактировать';
   mSwitchTab('manual');
   document.getElementById('fDate').value=b.date||'';
@@ -986,6 +1035,13 @@ function bClearForm(){
   document.getElementById('pasteText').value='';
   document.getElementById('parseResult').classList.remove('show');
   document.getElementById('parsedForm').style.display='none';
+  // сбросить счётчики билетов
+  Object.keys(fTickCounts).forEach(k=>delete fTickCounts[k]);
+  Object.keys(pfTickCounts).forEach(k=>delete pfTickCounts[k]);
+  fCalcRoute=''; pfCalcRoute='';
+  // скрыть калькулятор
+  const fb=document.getElementById('fCalcBlock'); if(fb) fb.style.display='none';
+  const pb=document.getElementById('pfCalcBlock'); if(pb) pb.style.display='none';
   bUpdatePreview();
 }
 function mSwitchTab(tab){
@@ -1001,29 +1057,289 @@ function bUpdatePreview(){
   const adults=parseInt(document.getElementById(p+'Adults').value)||0;
   const children=parseInt(document.getElementById(p+'Children').value)||0;
   const infants=parseInt(document.getElementById(p+'Infants').value)||0;
-  const rate=COMM_RATES[route]||0;
-  const comm=Math.round(adults*rate+children*rate*0.5);
+  // Комиссия: цена тура × кол-во ÷ 10, округление вверх до 0.5$
+  const tour=TOURS.find(t=>t.key===route);
+  let commRaw=0;
+  if(tour){
+    commRaw += tour.rows[0].usd * adults / 10;
+    if(tour.rows[1]) commRaw += tour.rows[1].usd * children / 10;
+  }
+  const comm = Math.ceil(commRaw*2)/2; // округление до 0.5
   const sfx=mTab==='manual'?'':'2';
   const cEl=document.getElementById('previewComm'+sfx);
   const pEl=document.getElementById('previewPax'+sfx);
   if(cEl) cEl.textContent='$'+comm;
   if(pEl) pEl.textContent=(adults+children+infants)+' чел.';
+  // обновить калькулятор
+  if(mTab==='manual') fUpdateCalc(); else pfUpdateCalc();
+}
+
+// ── КАЛЬКУЛЯТОР В ФОРМЕ (ручной ввод) ──
+const fTickCounts={};
+let fCalcRoute=''; // запоминаем для какого маршрута нарисованы поля
+
+function fDrawCalcRows(tour, adults, children){
+  // рисуем поля ОДИН РАЗ — только если изменился маршрут или состав
+  let rowsHTML='';
+  if(adults){
+    rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+      <div style="font-size:12px;color:var(--muted);flex-shrink:0">Взрослый × ${adults}</div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <input type="number" id="fPriceAdult" value="${tour.rows[0].usd}" oninput="fRecalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+        <span style="font-size:10px;color:var(--muted)">$ × ${adults} =</span>
+        <span id="fTotAdult" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
+      </div>
+    </div>`;
+  }
+  if(children&&tour.rows[1]){
+    rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+      <div style="font-size:12px;color:var(--muted);flex-shrink:0">Ребёнок × ${children}</div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <input type="number" id="fPriceChild" value="${tour.rows[1].usd}" oninput="fRecalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+        <span style="font-size:10px;color:var(--muted)">$ × ${children} =</span>
+        <span id="fTotChild" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
+      </div>
+    </div>`;
+  }
+  document.getElementById('fCalcRows').innerHTML=rowsHTML;
+}
+
+function fUpdateCalc(){
+  const route=document.getElementById('fRoute').value;
+  const adults=parseInt(document.getElementById('fAdults').value)||0;
+  const children=parseInt(document.getElementById('fChildren').value)||0;
+  const tour=TOURS.find(t=>t.key===route);
+  const block=document.getElementById('fCalcBlock');
+  if(!tour||!currentRates||(!adults&&!children)){block.style.display='none';fCalcRoute='';return;}
+  block.style.display='block';
+  // перерисовываем поля только если изменился маршрут
+  if(fCalcRoute!==route){
+    fCalcRoute=route;
+    fDrawCalcRows(tour,adults,children);
+    // билеты
+    const tickSec=document.getElementById('fTicketSection');
+    if(tour.tickets){
+      tickSec.style.display='block';
+      let tkHTML=''; tour.tickets.forEach((tk,i)=>{
+        const tkPrice=fmtVND(tk.vnd_fixed);
+        tkHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2)">
+          <div style="font-size:11px;font-style:italic;color:var(--muted)">${tk.label}<br><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent2)">${tkPrice}</span></div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button onclick="fTickChange(${i},-1)" style="width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:16px;cursor:pointer">−</button>
+            <span id="ftc-${i}" style="font-family:'DM Mono',monospace;font-size:13px;min-width:20px;text-align:center">0</span>
+            <button onclick="fTickChange(${i},1)" style="width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:16px;cursor:pointer">+</button>
+          </div>
+        </div>`;
+      });
+      document.getElementById('fTicketRows').innerHTML=tkHTML;
+    } else { tickSec.style.display='none'; }
+  }
+  fRecalc();
+}
+
+function fRecalc(){
+  const route=document.getElementById('fRoute').value;
+  const adults=parseInt(document.getElementById('fAdults').value)||0;
+  const children=parseInt(document.getElementById('fChildren').value)||0;
+  const currency=document.getElementById('fCurrency').value;
+  const tour=TOURS.find(t=>t.key===route); if(!tour||!currentRates) return;
+  const R=currentRates;
+  const adultUSD=parseFloat(document.getElementById('fPriceAdult')?.value)||tour.rows[0].usd;
+  const childUSD=parseFloat(document.getElementById('fPriceChild')?.value)||(tour.rows[1]?tour.rows[1].usd:0);
+  let tourUSD=0;
+  if(adults) tourUSD+=adultUSD*adults;
+  if(children&&tour.rows[1]) tourUSD+=childUSD*children;
+  // обновляем только текстовые span без перерисовки полей
+  const fmtVal=(usd)=>currency==='USD'?fmtUSD(usd):currency==='RUB'?fmtRUB(calcFromUSD(usd,R).rub):currency==='USDT'?fmtUSDT(calcFromUSD(usd,R).usdt):fmtVND(calcFromUSD(usd,R).vnd);
+  const tA=document.getElementById('fTotAdult'); if(tA) tA.textContent=fmtVal(adultUSD*adults);
+  const tC=document.getElementById('fTotChild'); if(tC) tC.textContent=fmtVal(childUSD*children);
+  fCalcTotal(tour, adults, children, currency, tourUSD);
+  // комиссия от суммы тура
+  const comm=Math.ceil(tourUSD/10*2)/2;
+  const cEl=document.getElementById('previewComm'); if(cEl) cEl.textContent='$'+comm;
+}
+function fTickChange(i,d){
+  fTickCounts['f_'+i]=Math.max(0,(fTickCounts['f_'+i]||0)+d);
+  const el=document.getElementById('ftc-'+i); if(el) el.textContent=fTickCounts['f_'+i];
+  fRecalc();
+}
+function pfTickChange(i,d){
+  pfTickCounts['pf_'+i]=Math.max(0,(pfTickCounts['pf_'+i]||0)+d);
+  const el=document.getElementById('pftc-'+i); if(el) el.textContent=pfTickCounts['pf_'+i];
+  pfRecalc();
+}
+function fCalcRowHTML(label, p, cur){
+  const val=cur==='USD'?fmtUSD(p.usd):cur==='RUB'?fmtRUB(p.rub):cur==='USDT'?fmtUSDT(p.usdt):fmtVND(p.vnd);
+  return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border2);font-size:12px"><span style="color:var(--muted)">${label}</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${val}</span></div>`;
+}
+function fCalcTotal(tour, adults, children, currency, tourUSD){
+  const R=currentRates; let total=calcFromUSD(tourUSD,R);
+  if(tour.tickets){
+    tour.tickets.forEach((tk,i)=>{
+      const cnt=fTickCounts['f_'+i]||0; if(!cnt) return;
+      const p=mulP(calcFromVND(tk.vnd_fixed,R),cnt);
+      total=addP(total,p);
+    });
+  }
+  const val=currency==='USD'?fmtUSD(total.usd):currency==='RUB'?fmtRUB(total.rub):currency==='USDT'?fmtUSDT(total.usdt):fmtVND(total.vnd);
+  document.getElementById('fCalcTotal').textContent=val;
+  document.getElementById('fCalcBreak').textContent='';
+  document.getElementById('fCalcResult').style.display='block';
+  document.getElementById('fCalcResult').dataset.val=val;
+  document.getElementById('fCalcResult').dataset.usd=total.usd;
+  // пересчитать комиссию: tourUSD / 10, округление до 0.5
+  const commRaw = tourUSD / 10;
+  const comm = Math.ceil(commRaw*2)/2;
+  const cEl=document.getElementById('previewComm'); if(cEl) cEl.textContent='$'+comm;
+}
+function fInsertAmount(){
+  const val=document.getElementById('fCalcResult').dataset.val||'';
+  document.getElementById('fAmount').value=val;
+  // пересчитать комиссию из текущей цены
+  const route=document.getElementById('fRoute').value;
+  const adults=parseInt(document.getElementById('fAdults').value)||0;
+  const children=parseInt(document.getElementById('fChildren').value)||0;
+  const tour=TOURS.find(t=>t.key===route);
+  const adultUSD=parseFloat(document.getElementById('fPriceAdult')?.value)||(tour?tour.rows[0].usd:0);
+  const childUSD=parseFloat(document.getElementById('fPriceChild')?.value)||(tour&&tour.rows[1]?tour.rows[1].usd:0);
+  const tourUSD=adultUSD*adults+childUSD*children;
+  const comm=Math.ceil(tourUSD/10*2)/2;
+  const cEl=document.getElementById('previewComm'); if(cEl) cEl.textContent='$'+comm;
+  toast('✓ Сумма вставлена');
+}
+
+// ── КАЛЬКУЛЯТОР В ФОРМЕ (парсер) ──
+const pfTickCounts={};
+let pfCalcRoute='';
+
+function pfUpdateCalc(){
+  const route=document.getElementById('pfRoute').value;
+  const adults=parseInt(document.getElementById('pfAdults').value)||0;
+  const children=parseInt(document.getElementById('pfChildren').value)||0;
+  const tour=TOURS.find(t=>t.key===route);
+  const block=document.getElementById('pfCalcBlock');
+  if(!tour||!currentRates||(!adults&&!children)){block.style.display='none';pfCalcRoute='';return;}
+  block.style.display='block';
+  if(pfCalcRoute!==route){
+    pfCalcRoute=route;
+    let rowsHTML='';
+    if(adults){
+      rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+        <div style="font-size:12px;color:var(--muted);flex-shrink:0">Взрослый × ${adults}</div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <input type="number" id="pfPriceAdult" value="${tour.rows[0].usd}" oninput="pfRecalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+          <span style="font-size:10px;color:var(--muted)">$ × ${adults} =</span>
+          <span id="pfTotAdult" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
+        </div>
+      </div>`;
+    }
+    if(children&&tour.rows[1]){
+      rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+        <div style="font-size:12px;color:var(--muted);flex-shrink:0">Ребёнок × ${children}</div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <input type="number" id="pfPriceChild" value="${tour.rows[1].usd}" oninput="pfRecalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+          <span style="font-size:10px;color:var(--muted)">$ × ${children} =</span>
+          <span id="pfTotChild" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
+        </div>
+      </div>`;
+    }
+    document.getElementById('pfCalcRows').innerHTML=rowsHTML;
+    const tickSec=document.getElementById('pfTicketSection');
+    if(tour.tickets){
+      tickSec.style.display='block';
+      let tkHTML=''; tour.tickets.forEach((tk,i)=>{
+        tkHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2)">
+          <div style="font-size:11px;font-style:italic;color:var(--muted)">${tk.label}</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button onclick="pfTickChange(${i},-1)" style="width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:16px;cursor:pointer">−</button>
+            <span id="pftc-${i}" style="font-family:'DM Mono',monospace;font-size:13px;min-width:20px;text-align:center">0</span>
+            <button onclick="pfTickChange(${i},1)" style="width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:16px;cursor:pointer">+</button>
+          </div>
+        </div>`;
+      });
+      document.getElementById('pfTicketRows').innerHTML=tkHTML;
+    } else { tickSec.style.display='none'; }
+  }
+  pfRecalc();
+}
+
+function pfRecalc(){
+  const route=document.getElementById('pfRoute').value;
+  const adults=parseInt(document.getElementById('pfAdults').value)||0;
+  const children=parseInt(document.getElementById('pfChildren').value)||0;
+  const currency=document.getElementById('pfCurrency').value;
+  const tour=TOURS.find(t=>t.key===route); if(!tour||!currentRates) return;
+  const R=currentRates;
+  const adultUSD=parseFloat(document.getElementById('pfPriceAdult')?.value)||tour.rows[0].usd;
+  const childUSD=parseFloat(document.getElementById('pfPriceChild')?.value)||(tour.rows[1]?tour.rows[1].usd:0);
+  let tourUSD=0;
+  if(adults) tourUSD+=adultUSD*adults;
+  if(children&&tour.rows[1]) tourUSD+=childUSD*children;
+  const fmtVal=(usd)=>currency==='USD'?fmtUSD(usd):currency==='RUB'?fmtRUB(calcFromUSD(usd,R).rub):currency==='USDT'?fmtUSDT(calcFromUSD(usd,R).usdt):fmtVND(calcFromUSD(usd,R).vnd);
+  const tA=document.getElementById('pfTotAdult'); if(tA) tA.textContent=fmtVal(adultUSD*adults);
+  const tC=document.getElementById('pfTotChild'); if(tC) tC.textContent=fmtVal(childUSD*children);
+  pfCalcTotal(tour, adults, children, currency, tourUSD);
+  const comm=Math.ceil(tourUSD/10*2)/2;
+  const cEl=document.getElementById('previewComm2'); if(cEl) cEl.textContent='$'+comm;
+}
+function pfCalcTotal(tour, adults, children, currency, tourUSD){
+  const R=currentRates; let total=calcFromUSD(tourUSD,R);
+  if(tour.tickets){
+    tour.tickets.forEach((tk,i)=>{
+      const cnt=pfTickCounts['pf_'+i]||0; if(!cnt) return;
+      const p=mulP(calcFromVND(tk.vnd_fixed,R),cnt);
+      total=addP(total,p);
+    });
+  }
+  const val=currency==='USD'?fmtUSD(total.usd):currency==='RUB'?fmtRUB(total.rub):currency==='USDT'?fmtUSDT(total.usdt):fmtVND(total.vnd);
+  document.getElementById('pfCalcTotal').textContent=val;
+  document.getElementById('pfCalcBreak').textContent='';
+  document.getElementById('pfCalcResult').style.display='block';
+  document.getElementById('pfCalcResult').dataset.val=val;
+  const commRaw=tourUSD/10;
+  const comm=Math.ceil(commRaw*2)/2;
+  const cEl=document.getElementById('previewComm2'); if(cEl) cEl.textContent='$'+comm;
+}
+function pfInsertAmount(){
+  const val=document.getElementById('pfCalcResult').dataset.val||'';
+  document.getElementById('pfAmount').value=val;
+  const route=document.getElementById('pfRoute').value;
+  const adults=parseInt(document.getElementById('pfAdults').value)||0;
+  const children=parseInt(document.getElementById('pfChildren').value)||0;
+  const tour=TOURS.find(t=>t.key===route);
+  const adultUSD=parseFloat(document.getElementById('pfPriceAdult')?.value)||(tour?tour.rows[0].usd:0);
+  const childUSD=parseFloat(document.getElementById('pfPriceChild')?.value)||(tour&&tour.rows[1]?tour.rows[1].usd:0);
+  const tourUSD=adultUSD*adults+childUSD*children;
+  const comm=Math.ceil(tourUSD/10*2)/2;
+  const cEl=document.getElementById('previewComm2'); if(cEl) cEl.textContent='$'+comm;
+  toast('✓ Сумма вставлена');
 }
 function bGetFormData(){
   const p=mTab==='manual'?'f':'pf';
+  const route=document.getElementById(p+'Route').value;
+  const adults=parseInt(document.getElementById(p+'Adults').value)||0;
+  const children=parseInt(document.getElementById(p+'Children').value)||0;
+  const tour=TOURS.find(t=>t.key===route);
+  const adultUSD=parseFloat(document.getElementById(p+'PriceAdult')?.value)||(tour?tour.rows[0].usd:0);
+  const childUSD=parseFloat(document.getElementById(p+'PriceChild')?.value)||(tour&&tour.rows[1]?tour.rows[1].usd:0);
+  const tourUSD=adultUSD*adults+childUSD*children;
+  const comm=tourUSD>0?Math.ceil(tourUSD/10*2)/2:0;
   return {
     id:editingId,
     date:document.getElementById(p+'Date').value,
-    route:document.getElementById(p+'Route').value,
-    adults:parseInt(document.getElementById(p+'Adults').value)||0,
-    children:parseInt(document.getElementById(p+'Children').value)||0,
+    route,
+    adults, children,
     infants:parseInt(document.getElementById(p+'Infants').value)||0,
     contact:document.getElementById(p+'Contact').value,
     hotel:document.getElementById(p+'Hotel').value,
     currency:document.getElementById(p+'Currency').value,
     payMethod:document.getElementById(p+'PayMethod').value,
     totalAmount:document.getElementById(p+'Amount').value,
-    payStatus:'unpaid', tripStatus:'waiting',
+    commission:comm,
+    customPriceAdult:adultUSD,
+    customPriceChild:childUSD,
+    payStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.payStatus||'unpaid') : 'unpaid',
+    tripStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.tripStatus||'waiting') : 'waiting',
     notes:document.getElementById(p+'Notes').value
   };
 }
