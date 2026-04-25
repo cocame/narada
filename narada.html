@@ -1461,7 +1461,7 @@ function bParseText(){
       const n=clean.match(/(\d+)/); if(n) result.infants=parseInt(n[1]); else result.infants=1;
     }
     // контакт — телефон или @ник или мессенджер
-    if(!result.contact&&(clean.match(/[\d()\-\+]{7,}/)||clean.match(/@\w+/)||lower.match(/телеграм|telegram|whatsapp|вотс|вайбер|viber|тел[:\s]/i))){
+    if(!result.contact&&(clean.match(/[\d()\-\+][\d\s()\-\+]{5,}/)||clean.match(/@\w+/)||lower.match(/телеграм|telegram|whatsapp|вотс|вайбер|viber|тел[:\s]/i))){
       if(!lower.match(/hotel|отель|inn|resort|villa|апарт|комнат|room/)&&!normalizeRoute(clean))
         result.contact=clean;
     }
