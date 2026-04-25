@@ -454,6 +454,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
     </div>
     <div class="modal-footer">
       <button class="btn-cancel" onclick="bCloseModal()">Отмена</button>
+      <button class="btn-cancel" onclick="bSaveAs('waiting_date')" style="color:var(--accent);border-color:var(--accent)">Сохранить как Ждёт</button>
       <button class="btn-save" id="saveBtn" onclick="bSave()">Сохранить</button>
     </div>
   </div>
@@ -1393,9 +1394,21 @@ function bGetFormData(){
     customPriceAdult:adultUSD,
     customPriceChild:childUSD,
     payStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.payStatus||'unpaid') : 'unpaid',
-    tripStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.tripStatus||'waiting') : 'waiting',
+    tripStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.tripStatus||'waiting') : (document.getElementById(p+'TripStatus')?.value||'waiting'),
     notes:document.getElementById(p+'Notes').value
   };
+}
+async function bSaveAs(tripStatus){
+  const data=bGetFormData();
+  if(!data.route){alert('Укажите маршрут');return;}
+  data.tripStatus=tripStatus;
+  const btn=document.getElementById('saveBtn');
+  btn.textContent='Сохранение…'; btn.disabled=true;
+  try {
+    await gasSave(editingId?'updateBooking':'addBooking',data);
+    bCloseModal(); bClearForm(); await bLoad();
+  } catch(e){ alert('Ошибка сохранения. Попробуйте ещё раз.'); }
+  btn.textContent='Сохранить'; btn.disabled=false;
 }
 async function bSave(){
   const data=bGetFormData();
