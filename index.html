@@ -841,6 +841,7 @@ function bCardHTML(b){
       <div class="b-card-pax">${paxParts.join('+')||'—'}</div>
       <div class="b-card-contact">${(b.inBase?'♥️ ':'')}${b.contact||'—'}</div>
       <span onclick="event.stopPropagation();bCyclePay('${b.id}')" style="cursor:pointer;font-size:15px;line-height:1">${payIcon}</span>
+      <button class="b-action-btn" onclick="event.stopPropagation();bRepeat('${b.id}')" title="Повторить бронь">♻️</button>
       <button class="b-action-btn" onclick="event.stopPropagation();bEdit('${b.id}')">✏️</button>
       <button class="b-action-btn" onclick="event.stopPropagation();bDelete('${b.id}')" style="color:var(--red)">✕</button>
       <div class="b-card-comm">${comm}</div>
@@ -869,13 +870,11 @@ function bCardHTML(b){
         <label>Примечание</label>
         <textarea onclick="event.stopPropagation()" onchange="event.stopPropagation();bSaveNote('${b.id}',this.value)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:40px;color:var(--text)">${b.notes||''}</textarea>
       </div>
-      <button class="b-copy-card-btn" onclick="event.stopPropagation();bRepeat('${b.id}')">Повторить бронь</button>
       <button class="b-copy-card-btn" onclick="event.stopPropagation();bCopyCard('${b.id}')">Скопировать карточку</button>
       <div class="b-status-row">
         <button class="b-status-btn ${b.tripStatus==='done'?'act-done':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','done')">Ездил</button>
         <button class="b-status-btn ${b.tripStatus==='cancelled'?'act-cancel':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','cancelled')">Отмена</button>
         <button class="b-status-btn ${b.tripStatus==='waiting_date'?'act-waiting':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','waiting_date')">Ждёт</button>
-        <button onclick="event.stopPropagation();bToggleBase('${b.id}')" style="padding:5px 11px;border-radius:5px;border:1px solid ${b.inBase?'#7c5cbf':'var(--border)'};background:${b.inBase?'rgba(124,92,191,.1)':'none'};color:${b.inBase?'#7c5cbf':'var(--muted)'};cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px">База</button>
         <button class="b-status-btn" onclick="event.stopPropagation();bDelete('${b.id}')" style="margin-left:auto;color:var(--red);border-color:var(--red)">Удалить</button>
       </div>
     </div>
