@@ -1418,6 +1418,7 @@ function bRepeat(id){
   document.getElementById('fNotes').value='';
   bUpdatePreview();
 }
+async function bSaveAs(tripStatus){
   const data=bGetFormData();
   if(!data.route){alert('Укажите маршрут');return;}
   data.tripStatus=tripStatus;
