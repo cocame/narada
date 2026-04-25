@@ -136,9 +136,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .booking-card.s-waiting .b-card-exp{background:#daf9e4}
 .booking-card.s-tomorrow{background:#fffbe6;border-color:#f0e0b8}
 .booking-card.s-tomorrow .b-card-exp{background:#f9f3da}
-.booking-card.s-base{background:#f3f0fc;border-color:#c9bfee}
-.booking-card.s-base .b-card-exp{background:#ede8f9}
-.b-card-main{display:grid;grid-template-columns:1.3fr 0.65fr 1fr 22px 22px 50px;gap:5px;padding:12px 14px;align-items:center;cursor:pointer}
+.b-card-main{display:grid;grid-template-columns:1.2fr 0.55fr 1fr 20px 20px 20px 20px 45px;gap:4px;padding:12px 14px;align-items:center;cursor:pointer}
 .b-card-route{font-weight:600;font-size:15px}
 .b-card-pax{font-size:12px;color:var(--muted)}
 .b-card-contact{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -318,7 +316,6 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
         <option value="waiting">Ждут</option>
         <option value="done">Ездил</option>
         <option value="cancelled">Отказ</option>
-        <option value="base">База</option>
       </select>
       <select class="b-filter-select" id="bFilterRoute" onchange="bRender()">
         <option value="">Маршрут</option>
