@@ -842,6 +842,7 @@ function bCardHTML(b){
       <div class="b-card-contact">${(b.inBase?'♥️ ':'')}${b.contact||'—'}</div>
       <span onclick="event.stopPropagation();bCyclePay('${b.id}')" style="cursor:pointer;font-size:15px;line-height:1">${payIcon}</span>
       <button class="b-action-btn" onclick="event.stopPropagation();bEdit('${b.id}')">✏️</button>
+      <button class="b-action-btn" onclick="event.stopPropagation();bDelete('${b.id}')" style="color:var(--red)">✕</button>
       <div class="b-card-comm">${comm}</div>
     </div>
     <div class="b-card-exp" id="bexp-${b.id}">
