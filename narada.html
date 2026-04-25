@@ -522,6 +522,7 @@ function switchTab(name) {
     bFilter='upcoming';
     const sel=document.getElementById('bFilterStatus'); if(sel) sel.value='upcoming';
     bRender();
+    loadWallet();
   }
 }
 function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
@@ -1501,15 +1502,20 @@ function bParseText(){
 function toggleWallet(){
   const p=document.getElementById('walletPanel');
   p.style.display=p.style.display==='none'?'block':'none';
-  refreshWalletBalance();
+  if(p.style.display==='block') loadWallet();
 }
-function walletAdd(key, sign){
+async function walletAdd(key, sign){
   const inputId=key==='extra'?'walletExtraInput':'walletPaidInput';
   const val=parseFloat(document.getElementById(inputId).value)||0; if(!val) return;
   const lsKey=key==='extra'?'walletExtra':'walletPaid';
   const cur=parseFloat(localStorage.getItem(lsKey))||0;
-  localStorage.setItem(lsKey,Math.round((cur+val*sign)*100)/100);
+  const newVal=Math.round((cur+val*sign)*100)/100;
+  localStorage.setItem(lsKey, newVal);
   document.getElementById(inputId).value='';
+  // сохранить в Google
+  const extra=parseFloat(localStorage.getItem('walletExtra'))||0;
+  const paid=parseFloat(localStorage.getItem('walletPaid'))||0;
+  await gasSave('saveWallet',{extra,paid});
   refreshWalletBalance();
   updateTotalEarn();
 }
@@ -1530,12 +1536,17 @@ function updateTotalEarn(){
   const el=document.getElementById('bStatEarnTotal'); if(el) el.textContent='$'+total;
   refreshWalletBalance();
 }
-function walletReset(key){
-  localStorage.setItem(key==='extra'?'walletExtra':'walletPaid','0');
-  refreshWalletBalance();
+async function loadWallet(){
+  try{
+    const r=await fetch(GAS_URL+'?action=getWallet',{mode:'cors'});
+    const data=await r.json();
+    if(data&&typeof data.extra!=='undefined'){
+      localStorage.setItem('walletExtra', data.extra||0);
+      localStorage.setItem('walletPaid', data.paid||0);
+    }
+  } catch(e){}
   updateTotalEarn();
 }
-function loadWallet(){ updateTotalEarn(); }
 
 // ══════════════════════════════════════
 // INIT
