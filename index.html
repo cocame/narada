@@ -1472,11 +1472,11 @@ function bParseText(){
       result.hotel=clean;
     // оплата
     if(lower.match(/налич|cash/)) result.payMethod='Наличные';
-    if(lower.match(/донг|vnd/)) result.currency='VND';
+    if(lower.match(/донг|vnd|донгов/)) result.currency='VND';
     if(lower.match(/перевод|transfer|онлайн|карт/)) result.payMethod='Перевод';
     if(lower.match(/usdt/i)) result.payMethod='USDT';
-    if(lower.match(/руб|rub/)) result.currency='RUB';
-    if(lower.match(/\$|usd/i)) result.currency='USD';
+    if(lower.match(/руб|rub|рублей|рубли|рубль/)) result.currency='RUB';
+    if(lower.match(/\$|usd|доллар|долларов|баксов|баксы|бакс|дол\b|дол\.|dlr/i)) result.currency='USD';
     // примечание
     if(!result.notes&&lower.match(/через вас|билет|можем|подъехать|самостоят|удобн|точк|встреч/))
       result.notes=clean;
