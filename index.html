@@ -830,16 +830,15 @@ function bCardHTML(b){
   if(b.infants>0) paxParts.push(b.infants+' мал');
   const tom=tomorrowStr();
   const sc=b.tripStatus==='done'?' s-done':b.tripStatus==='cancelled'?' s-cancelled':b.tripStatus==='waiting_date'?' s-waiting':(b.date&&b.date===tom)?' s-tomorrow':'';
-  const baseSc=b.inBase?' s-base':'';
   const payIcon=b.payStatus==='paid'?'💲':b.payStatus==='refund'?'🤑':'💳';
   const comm=b.tripStatus==='done'?'$'+(parseFloat(b.commission)||0):'';
   const starCol=b.inBase?'#7c5cbf':'#ccc';
 
-  return `<div class="booking-card${sc}${baseSc}" id="bcard-${b.id}">
+  return `<div class="booking-card${sc}" id="bcard-${b.id}">
     <div class="b-card-main" onclick="bToggle('${b.id}')">
       <div class="b-card-route">${b.route}</div>
       <div class="b-card-pax">${paxParts.join('+')||'—'}</div>
-      <div class="b-card-contact">${(b.inBase?'♥️ ':'')}${b.contact||'—'}</div>
+      <div class="b-card-contact">${b.contact||'—'}</div>
       <span onclick="event.stopPropagation();bCyclePay('${b.id}')" style="cursor:pointer;font-size:15px;line-height:1">${payIcon}</span>
       <button class="b-action-btn" onclick="event.stopPropagation();bRepeat('${b.id}')" title="Повторить бронь">♻️</button>
       <button class="b-action-btn" onclick="event.stopPropagation();bEdit('${b.id}')">✏️</button>
