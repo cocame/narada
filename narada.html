@@ -136,7 +136,8 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .booking-card.s-waiting .b-card-exp{background:#daf9e4}
 .booking-card.s-tomorrow{background:#fffbe6;border-color:#f0e0b8}
 .booking-card.s-tomorrow .b-card-exp{background:#f9f3da}
-.b-card-main{display:grid;grid-template-columns:1.2fr 0.55fr 1fr 20px 20px 20px 20px 45px;gap:4px;padding:12px 14px;align-items:center;cursor:pointer}
+.b-card-main{display:grid;grid-template-columns:1.1fr 0.45fr 1fr 20px 20px 20px 20px 50px 45px;gap:3px;padding:10px 12px;align-items:center;cursor:pointer}
+.b-card-amount{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-align:right;white-space:nowrap}
 .b-card-route{font-weight:600;font-size:15px}
 .b-card-pax{font-size:12px;color:var(--muted)}
 .b-card-contact{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -840,6 +841,7 @@ function bCardHTML(b){
       <button class="b-action-btn" onclick="event.stopPropagation();bRepeat('${b.id}')" title="Повторить бронь">♻️</button>
       <button class="b-action-btn" onclick="event.stopPropagation();bEdit('${b.id}')">✏️</button>
       <button class="b-action-btn" onclick="event.stopPropagation();bDelete('${b.id}')" style="color:var(--red)">✕</button>
+      <div class="b-card-amount">${b.customPriceAdult?(b.customPriceAdult*(b.adults||0)+(b.customPriceChild||0)*(b.children||0))+'$':''}</div>
       <div class="b-card-comm">${comm}</div>
     </div>
     <div class="b-card-exp" id="bexp-${b.id}">
