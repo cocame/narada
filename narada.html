@@ -798,7 +798,7 @@ function bRender(){
   let filtered=allBookings.filter(b=>{
     if(routeF&&b.route!==routeF) return false;
     if(dateF&&b.date!==dateF) return false;
-    if(bFilter==='upcoming_waiting') return (b.date&&b.date>=tod&&b.tripStatus!=='cancelled'&&b.tripStatus!=='waiting_date')||b.tripStatus==='waiting_date';
+    if(bFilter==='upcoming_waiting') return (b.date&&b.date>=tod&&b.tripStatus==='waiting')||b.tripStatus==='waiting_date';
     if(bFilter==='upcoming') return b.date&&b.date>=tod&&b.tripStatus!=='cancelled'&&b.tripStatus!=='waiting_date';
     if(bFilter==='waiting') return b.tripStatus==='waiting_date';
     if(bFilter==='done') return b.tripStatus==='done';
