@@ -1474,6 +1474,19 @@ function bParseText(){
         const yr=dm[3]?(dm[3].length===2?'20'+dm[3]:dm[3]):new Date().getFullYear();
         if(+mon>=1&&+mon<=12&&+day>=1&&+day<=31) result.date=yr+'-'+mon+'-'+day;
       }
+      // "27 апреля", "27 апр", "27 мая" и т.д.
+      if(!result.date){
+        const months={янв:1,фев:2,мар:3,апр:4,май:5,мая:5,июн:6,июл:7,авг:8,сен:9,окт:10,ноя:11,дек:12,
+          январ:1,феврал:2,март:3,апрел:4,июнь:6,июль:7,август:8,сентябр:9,октябр:10,ноябр:11,декабр:12};
+        const mkeys=Object.keys(months).join('|');
+        const rm=lower.match(new RegExp('(\\d{1,2})\\s*('+mkeys+')'));
+        if(rm){
+          const day=rm[1].padStart(2,'0');
+          const mon=String(months[Object.keys(months).find(k=>rm[2].startsWith(k))]).padStart(2,'0');
+          const yr=new Date().getFullYear();
+          result.date=yr+'-'+mon+'-'+day;
+        }
+      }
     }
     // количество
     const numW={один:1,одна:1,one:1,два:2,две:2,two:2,три:3,three:3,четыре:4,four:4,пять:5,five:5,шесть:6,six:6,семь:7,seven:7,восемь:8,eight:8,девять:9,nine:9,десять:10,ten:10};
