@@ -1037,6 +1037,7 @@ async function bCyclePay(id){
 }
 async function bSetTrip(id,status){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
+  if(status==='waiting_date'&&b.tripStatus==='waiting_date') status='waiting';
   b.tripStatus=status;
   await gasSave('updateBooking',b); bLoad();
 }
@@ -1428,6 +1429,8 @@ async function bSaveAs(tripStatus){
 async function bSave(){
   const data=bGetFormData();
   if(!data.route){alert('Укажите маршрут');return;}
+  // если статус ждет и дата указана - меняем на обычный
+  if(data.tripStatus==='waiting_date'&&data.date) data.tripStatus='waiting';
   const btn=document.getElementById('saveBtn');
   btn.textContent='Сохранение…'; btn.disabled=true;
   try {
