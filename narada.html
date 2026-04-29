@@ -322,6 +322,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
         <option value="">Маршрут</option>
         <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
         <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>HOT SPRINGS</option>
+        <option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option>
       </select>
       <input type="date" class="b-filter-select" id="bFilterDate" onchange="bRender()">
       <button class="b-add-btn" onclick="bOpenModal()">+</button>
@@ -350,6 +351,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
               <option value="">— выбрать —</option>
               <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
               <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>HOT SPRINGS</option>
+              <option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option>
             </select>
           </div>
           <div class="form-group full"><label>Количество человек</label>
@@ -406,6 +408,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
                 <option value="">— выбрать —</option>
                 <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
                 <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>HOT SPRINGS</option>
+                <option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option>
               </select>
             </div>
             <div class="form-group full"><label>Количество человек</label>
@@ -467,7 +470,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbz4AP9eRBrmH-NKi27CH4nhDPF1WfDrXYH90TJhVqGBn0I1ROqN18KW4JlrpgxzEAtI_w/exec';
 const MARKUP     = { RUB:0.15, VND:0.03, USDT:0.00 };
 const ROUND_STEP = { RUB:100, VND:100000, USDT:1 };
-const COMM_RATES = { 'ХЮЭ':9,'ХОЙАН':9,'ОСТРОВА ЧАМ':6,'ДАНАНГ':7,'БА НА ХИЛЛС':5,'HOT SPRINGS':7 };
+const COMM_RATES = { 'ХЮЭ':9,'ХОЙАН':9,'ОСТРОВА ЧАМ':6,'ДАНАНГ':7,'БА НА ХИЛЛС':5,'HOT SPRINGS':7,'МОРСКАЯ ПРОГУЛКА':7,'VINWONDERS':9 };
 
 const TOURS = [
   { icon:'🏯', name:'Хюэ', key:'ХЮЭ',
@@ -475,7 +478,11 @@ const TOURS = [
   { icon:'🏮', name:'Хойан', key:'ХОЙАН',
     rows:[{label:'Взрослый',usd:58},{label:'Ребёнок до 10',usd:29}] },
   { icon:'🏝', name:'Острова Чам', key:'ОСТРОВА ЧАМ',
-    rows:[{label:'Взрослый',usd:60},{label:'Ребёнок до 10',usd:30},{label:'Морская рыбалка',usd:90}] },
+    rows:[{label:'Взрослый',usd:60},{label:'Ребёнок до 10',usd:30}],
+    options:[
+      {label:'+ Рыбалка',usd:90},
+      {label:'+ Дайвинг',usd:100}
+    ]},
   { icon:'🌉', name:'Обзорный Дананг', key:'ДАНАНГ',
     rows:[{label:'Взрослый',usd:67},{label:'Ребёнок до 10',usd:33.5}] },
   { icon:'⛰', name:'Ба На Хиллс', key:'БА НА ХИЛЛС',
@@ -490,6 +497,10 @@ const TOURS = [
       {id:'hs_adult', label:'Взрослые и дети >140 см', vnd_fixed:500000},
       {id:'hs_child', label:'Дети 100–140 см',          vnd_fixed:300000}
     ]},
+  { icon:'⛵', name:'Морская прогулка', key:'МОРСКАЯ ПРОГУЛКА',
+    rows:[{label:'Взрослый',usd:70},{label:'Ребёнок до 6',usd:35}] },
+  { icon:'🎢', name:'VinWonders', key:'VINWONDERS',
+    rows:[{label:'Взрослый',usd:90}] },
 ];
 
 // Очень расширенный алиас-словарь маршрутов
@@ -499,7 +510,9 @@ const ROUTE_ALIASES = {
   'ОСТРОВА ЧАМ': ['острова чам','чам','cham','чамские','о-ва чам','ова чам','cham island','cham islands','острова','island cham','чамски','cham isl','чам острова','ча м'],
   'ДАНАНГ': ['дананг','да нанг','danang','da nang','да-нанг','дананге','дананга','da-nang','данан','данг','dnang','дананж','да-нан','да нан'],
   'БА НА ХИЛЛС': ['ба на хиллс','банахиллс','бана хиллс','ба на','ba na hills','bana','banahills','ba na','бана','ба-на','ba-na','бана хилс','ба на хилс','банахилс','bana hills','ba na hill','банахилл','ba-na-hills','банахилс','ба на холмы','golden bridge','золотой мост','бана хил','ба на хил','bana hill','ba na hilz','банахильс','бана-хиллс','ба-на-хиллс','банна хиллс','ba na hilss','банахилз'],
-  'HOT SPRINGS': ['hot springs','хот спрингс','горячие источники','горячие','источники','hot spring','термальные','термы','спрингс','хот-спрингс','термальный','hot-springs','горячий источник','термал','терм','хот спринг','источник','hot sprigs','hot spings','hot spirngs','горяч источники','горяч','хот спрингз','hot springz','хот-спринг']
+  'HOT SPRINGS': ['hot springs','хот спрингс','горячие источники','горячие','источники','hot spring','термальные','термы','спрингс','хот-спрингс','термальный','hot-springs','горячий источник','термал','терм','хот спринг','источник','hot sprigs','hot spings','hot spirngs','горяч источники','горяч','хот спрингз','hot springz','хот-спринг'],
+  'МОРСКАЯ ПРОГУЛКА': ['морская прогулка','морская','прогулка','sea trip','sea walk','sea cruise','морской тур','морской круиз','прогулка по морю'],
+  'VINWONDERS': ['vinwonders','вин вондерс','винвондерс','vin wonder','vinwonder','вин вондер','vin wonders']
 };
 
 let currentRates = null;
@@ -1455,6 +1468,8 @@ function normalizeRoute(str){
   if(s.match(/хю|хy|хь|hue|hué|huê/)) return 'ХЮЭ';
   if(s.match(/хой|хаи|хои|hoi|hoian/)) return 'ХОЙАН';
   if(s.match(/чам|cham/)) return 'ОСТРОВА ЧАМ';
+  if(s.match(/морская|прогулка|sea trip|sea walk/)) return 'МОРСКАЯ ПРОГУЛКА';
+  if(s.match(/vinwonders|вин вондер|винвондер/)) return 'VINWONDERS';
   if(s.match(/данан|da.?nan|нанг|нан[^ь]/)) return 'ДАНАНГ';
   if(s.match(/бан|ба.?на|bana|ba.?na|хилл|hill|золот|golden/)) return 'БА НА ХИЛЛС';
   if(s.match(/горяч|источн|терм|spring|спринг|хот.?с/)) return 'HOT SPRINGS';
