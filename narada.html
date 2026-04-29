@@ -494,13 +494,19 @@ const TOURS = [
   { icon:'♨️', name:'Hot Springs', key:'HOT SPRINGS',
     rows:[{label:'Взрослый',usd:72},{label:'Ребёнок до 10',usd:36}],
     tickets:[
-      {id:'hs_adult', label:'Взрослые и дети >140 см', vnd_fixed:500000},
-      {id:'hs_child', label:'Дети 100–140 см',          vnd_fixed:300000}
+      {id:'hs_adult', label:'Взрослые >140 см', vnd_fixed:1400000},
+      {id:'hs_child', label:'Дети 100–140 см',  vnd_fixed:1000000},
+      {id:'hs_elder', label:'Пожилые 60+',      vnd_fixed:1100000}
+    ]},
+  { icon:'🎢', name:'VinWonders', key:'VINWONDERS',
+    rows:[{label:'Взрослый',usd:90},{label:'Ребёнок 100-140 см',usd:45}],
+    tickets:[
+      {id:'vw_adult', label:'Взрослые >140 см', vnd_fixed:1400000},
+      {id:'vw_child', label:'Дети 100–140 см',  vnd_fixed:1000000},
+      {id:'vw_elder', label:'Пожилые 60+',      vnd_fixed:1100000}
     ]},
   { icon:'⛵', name:'Морская прогулка', key:'МОРСКАЯ ПРОГУЛКА',
-    rows:[{label:'Взрослый',usd:70},{label:'Ребёнок до 6',usd:35}] },
-  { icon:'🎢', name:'VinWonders', key:'VINWONDERS',
-    rows:[{label:'Взрослый',usd:90}] },
+    rows:[{label:'Взрослый / >140 см',usd:70},{label:'Ребёнок 100–140 см',usd:35}] },
 ];
 
 // Очень расширенный алиас-словарь маршрутов
