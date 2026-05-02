@@ -700,7 +700,7 @@ function copyPriceCard(idx){
   const t=TOURS[idx]; if(!currentRates){toast('⏳ Загрузка курсов…');return;}
   let text=t.icon+' '+t.name+'\n──────────────\n';
   t.rows.forEach(r=>{const p=calcFromUSD(r.usd,currentRates); text+=r.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});
-  if(t.tickets){text+='\nВходные билеты:\n'; t.tickets.forEach(tk=>{const p=calcFromVND(tk.vnd_fixed,currentRates); text+=tk.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});}
+  if(t.tickets){text+='\nВходные билеты:\n'; t.tickets.forEach(tk=>{const p=calcFromVND(tk.vnd_fixed,currentRates); text+=tk.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVNDticket(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});}
   copyText(text.trim());
 }
 
