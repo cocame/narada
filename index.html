@@ -543,6 +543,7 @@ const ceilTo = (v,s) => Math.ceil(v/s)*s;
 const fmtUSD  = n => Math.ceil(n)+' $';
 const fmtRUB  = n => ceilTo(n,ROUND_STEP.RUB).toLocaleString('ru-RU')+' ₽';
 const fmtVND  = n => ceilTo(n,ROUND_STEP.VND).toLocaleString('ru-RU')+' ₫';
+const fmtVNDticket = n => Math.round(n).toLocaleString('ru-RU')+' ₫';
 const fmtUSDT = n => ceilTo(n,ROUND_STEP.USDT)+' USDT';
 
 function calcFromUSD(usd, R) {
@@ -624,7 +625,7 @@ function priceRowHTML(label, p, isTicket) {
     <div class="${lc}">${label}</div>
     <div class="${tc} usd">${p&&p.usd!=null?fmtUSD(p.usd):'—'}</div>
     <div class="${tc} rub">${p&&p.rub!=null?fmtRUB(p.rub):'—'}</div>
-    <div class="${tc} vnd">${p&&p.vnd!=null?fmtVND(p.vnd):'—'}</div>
+    <div class="${tc} vnd">${p&&p.vnd!=null?(isTicket?Math.round(p.vnd).toLocaleString('ru-RU')+' ₫':fmtVND(p.vnd)):'—'}</div>
     <div class="${tc} usdt">${p&&p.usdt!=null?fmtUSDT(p.usdt):'—'}</div>
   </div>`;
 }
