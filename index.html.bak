@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Narada Tours</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif; background:#F4F4F2; color:#1A1A1A; min-height:100vh; }
+.topbar { background:#fff; border-bottom:2px solid #E8E4DC; padding:12px 20px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+.topbar-logo { font-size:12px; font-weight:700; letter-spacing:3px; color:#C9A84C; text-transform:uppercase; }
+.topbar-user { font-size:13px; font-weight:600; color:#555; padding:6px 12px; background:#F4F4F2; border-radius:8px; border:1px solid #E0DDD8; }
+.tabs { display:flex; border-bottom:2px solid #E8E4DC; background:#fff; padding:0 20px; }
+.tab { padding:12px 24px; font-size:13px; font-weight:600; cursor:pointer; color:#999; border-bottom:2px solid transparent; margin-bottom:-2px; }
+.tab.active { color:#C9A84C; border-bottom-color:#C9A84C; }
+.main { padding:20px 16px; max-width:960px; margin:0 auto; }
+.no-access { text-align:center; padding:100px 20px; color:#AAA; font-size:15px; }
+.loading { text-align:center; padding:60px 20px; color:#AAA; font-size:14px; }
+.admin-panel { background:#fff; border-radius:12px; padding:18px 20px; border:1px solid #E8E4DC; margin-bottom:16px; }
+.admin-panel h4 { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#C9A84C; margin-bottom:12px; }
+.manager-list { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+.manager-tag { display:flex; align-items:center; gap:6px; background:#F4F4F2; border:1px solid #E0DDD8; border-radius:20px; padding:4px 12px; font-size:13px; }
+.manager-tag button { background:none; border:none; color:#C0392B; cursor:pointer; font-size:15px; line-height:1; }
+.add-manager-row { display:flex; gap:8px; }
+.add-manager-row input { flex:1; padding:8px 12px; border:1.5px solid #E0DDD8; border-radius:8px; font-size:13px; outline:none; background:#F4F4F2; }
+.add-manager-row input:focus { border-color:#C9A84C; background:#fff; }
+.add-manager-row button { padding:8px 16px; background:#C9A84C; color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; }
+.new-link { background:#FFFBF0; border:1px solid #C9A84C; border-radius:8px; padding:10px 14px; margin-top:10px; font-size:13px; display:flex; align-items:center; gap:10px; }
+.new-link span { flex:1; word-break:break-all; color:#555; }
+.new-link button { padding:6px 12px; background:#C9A84C; color:#fff; border:none; border-radius:6px; font-size:12px; cursor:pointer; white-space:nowrap; }
+.table-wrap { background:#fff; border-radius:12px; overflow-x:auto; border:1px solid #E8E4DC; margin-bottom:16px; }
+table { width:100%; border-collapse:collapse; }
+thead th { background:#F8F6F2; color:#555; padding:11px 14px; text-align:left; font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; border-bottom:2px solid #E8E4DC; white-space:nowrap; }
+thead th.col-total { background:#FFF8E8; color:#B8860B; text-align:center; }
+thead th.col-mine { background:#FFFBF0; color:#C9A84C; text-align:center; }
+th.sortable { cursor:pointer; }
+th.sortable:hover { background:#EEECEA; }
+th .arr { margin-left:4px; opacity:0.5; }
+th.asc .arr::after { content:'↑'; }
+th.desc .arr::after { content:'↓'; }
+th:not(.asc):not(.desc) .arr::after { content:'↕'; }
+tbody tr { border-bottom:1px solid #F0EDE8; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:#FAFAF7; }
+td { padding:11px 14px; font-size:14px; vertical-align:middle; }
+td.col-date { font-weight:700; font-size:13px; color:#666; white-space:nowrap; }
+td.col-excursion { font-weight:500; }
+td.col-total { text-align:center; font-weight:700; font-size:15px; color:#C9A84C; background:#FFFBF0; }
+td.col-manager { text-align:center; padding:7px 8px; }
+.num-input { width:58px; height:36px; text-align:center; border:1.5px solid #C9A84C; border-radius:8px; font-size:15px; font-weight:600; background:#FFFBF0; color:#1A1A1A; outline:none; -moz-appearance:textfield; }
+.num-input::-webkit-outer-spin-button,.num-input::-webkit-inner-spin-button { -webkit-appearance:none; }
+.num-input:focus { background:#fff; }
+.num-display { font-size:14px; font-weight:600; color:#BBB; }
+.add-row-btn { display:flex; align-items:center; gap:8px; background:none; border:1.5px dashed #C9A84C; color:#C9A84C; padding:9px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; margin:12px 14px; }
+.add-row-btn:hover { background:#FFFBF0; }
+.delete-row-btn { background:none; border:none; color:#DDD; cursor:pointer; font-size:16px; padding:4px 6px; border-radius:4px; }
+.delete-row-btn:hover { color:#C0392B; }
+.empty-state { text-align:center; padding:40px 20px; color:#AAA; font-size:14px; }
+.note-input { width:100%; min-width:120px; padding:6px 8px; border:1.5px solid #E0DDD8; border-radius:6px; font-size:13px; background:#F4F4F2; outline:none; resize:none; min-height:36px; line-height:1.4; font-family:inherit; overflow:hidden; }
+.note-input:focus { border-color:#C9A84C; background:#fff; }
+.date-type-btn { flex:1; padding:8px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; border:1.5px solid #E0DDD8; background:#F4F4F2; color:#888; }
+.date-type-btn.active { background:#C9A84C; color:#fff; border-color:#C9A84C; }
+.tour-checkboxes { display:flex; flex-direction:column; margin-bottom:14px; max-height:220px; overflow-y:auto; background:#F4F4F2; border:1.5px solid #E0DDD8; border-radius:8px; }
+.tour-check { display:flex; flex-direction:row; align-items:center; gap:12px; font-size:14px; cursor:pointer; padding:10px 14px; border-bottom:1px solid #E8E4DC; margin:0; }
+.tour-check:last-child { border-bottom:none; }
+.tour-check input[type="checkbox"] { width:18px; height:18px; min-width:18px; accent-color:#C9A84C; cursor:pointer; margin:0; }
+.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.3); z-index:200; align-items:center; justify-content:center; }
+.overlay.active { display:flex; }
+.modal { background:#fff; border-radius:14px; padding:26px; width:340px; max-width:92vw; box-shadow:0 8px 40px rgba(0,0,0,0.12); }
+.modal h3 { font-size:15px; font-weight:700; margin-bottom:18px; }
+.modal label { display:block; font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#888; margin-bottom:5px; }
+.modal input, .modal select { width:100%; padding:9px 12px; border:1.5px solid #E0DDD8; border-radius:8px; font-size:14px; margin-bottom:14px; outline:none; background:#F4F4F2; }
+.modal input:focus, .modal select:focus { border-color:#C9A84C; background:#fff; }
+.modal-btns { display:flex; gap:10px; }
+.btn { flex:1; padding:10px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; border:none; }
+.btn-primary { background:#C9A84C; color:#fff; }
+.btn-secondary { background:#F0EDE8; color:#1A1A1A; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">Narada Tours</div>
+  <div class="topbar-user" id="userLabel">...</div>
+</div>
+
+<div id="noAccess" class="no-access" style="display:none">Нет доступа. Используй свою ссылку.</div>
+<div id="loadingScreen" class="loading">Загрузка...</div>
+
+<div id="appWrap" style="display:none">
+  <div class="tabs">
+    <div class="tab active" id="tabEdut" onclick="switchTab('edut')">ЕДУТ</div>
+    <div class="tab" id="tabZapros" onclick="switchTab('zapros')">ЗАПРОС</div>
+    <div class="tab" id="tabManagers" onclick="switchTab('managers')" style="display:none">МЕНЕДЖЕРЫ</div>
+  </div>
+  <div class="main">
+
+    <div id="sectionEdut">
+      <div class="table-wrap">
+        <table><thead id="edutHead"></thead><tbody id="edutBody"></tbody></table>
+        <div class="empty-state" id="edutEmpty" style="display:none">Нет записей. Добавь первую строку ↓</div>
+        <button class="add-row-btn" id="edutAddBtn" style="display:none" onclick="openEdutModal()">+ Добавить дату и тур</button>
+      </div>
+    </div>
+
+    <div id="sectionZapros" style="display:none">
+      <div class="table-wrap">
+        <table>
+          <thead id="zaprosHead">
+            <tr>
+              <th class="sortable" id="zaprosDateTh" onclick="toggleZaprosSort()">Дата<span class="arr"></span></th>
+              <th>Тур</th><th>Кол-во</th><th>Менеджер</th><th>Примечание</th>
+              <th id="zaprosDelHead" style="display:none"></th>
+            </tr>
+          </thead>
+          <tbody id="zaprosBody"></tbody>
+        </table>
+        <div class="empty-state" id="zaprosEmpty" style="display:none">Нет запросов.</div>
+        <button class="add-row-btn" onclick="openZaprosModal()">+ Добавить запрос</button>
+      </div>
+    </div>
+
+    <div id="sectionManagers" style="display:none">
+      <div class="admin-panel">
+        <h4>Менеджеры</h4>
+        <div class="manager-list" id="managerList"></div>
+        <div class="add-manager-row">
+          <input type="text" id="newManagerInput" placeholder="Имя нового менеджера" onkeydown="if(event.key==='Enter')addManager()">
+          <button onclick="addManager()">Добавить</button>
+        </div>
+        <div id="newLinkBox" class="new-link" style="display:none">
+          <span id="newLinkText"></span>
+          <button onclick="copyLink()">Копировать</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EDUT MODAL -->
+<div class="overlay" id="edutModal">
+  <div class="modal">
+    <h3>Новая строка</h3>
+    <label>Дата</label>
+    <input type="date" id="edutDate">
+    <label>Тур</label>
+    <select id="edutTour" onchange="toggleEdutCustom(this.value)">
+      <option value="">— выбери —</option>
+      <option>Ба На Хиллс</option><option>Дананг</option><option>Hot Springs</option>
+      <option>Морская прогулка</option><option>Острова Чам</option><option>VinWonders</option>
+      <option>Хой Ан</option><option>Хюэ</option>
+      <option value="__custom__">✏️ Другое...</option>
+    </select>
+    <div id="edutCustomWrap" style="display:none">
+      <label>Название</label>
+      <input type="text" id="edutCustom" placeholder="Введи название">
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="closeEdutModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="submitEdutRow()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ZAPROS MODAL -->
+<div class="overlay" id="zaprosModal">
+  <div class="modal">
+    <h3>Новый запрос</h3>
+    <label>Дата</label>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="date-type-btn active" id="btnSingle" onclick="setDateType('single')">Конкретная</button>
+      <button class="date-type-btn" id="btnRange" onclick="setDateType('range')">Диапазон</button>
+    </div>
+    <div id="singleDateWrap">
+      <input type="date" id="zaprosDateSingle" style="width:100%;padding:9px 12px;border:1.5px solid #E0DDD8;border-radius:8px;font-size:14px;margin-bottom:14px;outline:none;background:#F4F4F2;">
+    </div>
+    <div id="rangeDateWrap" style="display:none">
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <input type="date" id="zaprosDateFrom" style="flex:1;padding:9px 12px;border:1.5px solid #E0DDD8;border-radius:8px;font-size:14px;outline:none;background:#F4F4F2;">
+        <input type="date" id="zaprosDateTo" style="flex:1;padding:9px 12px;border:1.5px solid #E0DDD8;border-radius:8px;font-size:14px;outline:none;background:#F4F4F2;">
+      </div>
+    </div>
+    <label>Тур (можно несколько)</label>
+    <div class="tour-checkboxes">
+      <label class="tour-check"><input type="checkbox" value="Ба На Хиллс"> Ба На Хиллс</label>
+      <label class="tour-check"><input type="checkbox" value="Дананг"> Дананг</label>
+      <label class="tour-check"><input type="checkbox" value="Hot Springs"> Hot Springs</label>
+      <label class="tour-check"><input type="checkbox" value="Морская прогулка"> Морская прогулка</label>
+      <label class="tour-check"><input type="checkbox" value="Острова Чам"> Острова Чам</label>
+      <label class="tour-check"><input type="checkbox" value="VinWonders"> VinWonders</label>
+      <label class="tour-check"><input type="checkbox" value="Хой Ан"> Хой Ан</label>
+      <label class="tour-check"><input type="checkbox" value="Хюэ"> Хюэ</label>
+      <label class="tour-check"><input type="checkbox" value="Любой" onchange="toggleLuboi(this)"> Любой</label>
+    </div>
+    <label>Количество человек</label>
+    <input type="number" id="zaprosCount" min="1" placeholder="0">
+    <div class="modal-btns">
+      <button class="btn btn-secondary" onclick="closeZaprosModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="submitZapros()">Добавить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbx7b5IqL-DyQuYuIKCaesHdcfIYDKH-e6YdJ-mC7_6uHFZGL8fDJ_ZwPQiy6WxY2Ft9/exec';
+
+let token='', user=null, edutData=[], edutManagers=[], zaprosData=[], sortDir='asc', zaprosSort='asc';
+
+async function api(params) {
+  const url = API + '?' + new URLSearchParams({...params, token});
+  const r = await fetch(url);
+  return r.json();
+}
+
+async function init() {
+  token = new URLSearchParams(window.location.search).get('token') || '';
+  if (!token) { showNoAccess(); return; }
+  const res = await api({action:'ping'});
+  if (res.error) { showNoAccess(); return; }
+  user = {name:res.name, role:res.role};
+  document.getElementById('userLabel').textContent = user.name;
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('appWrap').style.display = 'block';
+  const isAdmin = user.role==='Таис'||user.role==='Ленар';
+  if (isAdmin) {
+    document.getElementById('tabManagers').style.display = 'block';
+    document.getElementById('zaprosDelHead').style.display = '';
+  }
+  // All users can add rows
+  document.getElementById('edutAddBtn').style.display = 'flex';
+  await loadEdut();
+}
+
+function showNoAccess() {
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('noAccess').style.display = 'block';
+}
+
+function canEdit(m) {
+  if (user.role==='Таис') return true;
+  if (user.role==='Ленар') return m!=='Таис';
+  return m===user.name;
+}
+function showCol(m) {
+  if (user.role==='Таис'||user.role==='Ленар') return true;
+  return m===user.name;
+}
+
+function switchTab(tab) {
+  ['edut','zapros','managers'].forEach(t => {
+    document.getElementById('section'+cap(t)).style.display = t===tab?'block':'none';
+    document.getElementById('tab'+cap(t)).classList.toggle('active', t===tab);
+  });
+  if (tab==='zapros'&&!zaprosData.length) loadZapros();
+  if (tab==='managers') loadManagers();
+}
+function cap(s) { return s.charAt(0).toUpperCase()+s.slice(1); }
+
+// ── EDUT ──────────────────────────────────────────────────────────────────
+async function loadEdut() {
+  const res = await api({action:'getEdut'});
+  edutData = res.rows || [];
+  // Deduplicate managers — single source of truth
+  edutManagers = [...new Set((res.managers || []).map(m=>String(m).trim()))];
+  renderEdut();
+}
+
+function renderEdut() {
+  const visible = edutManagers.filter(m=>showCol(m));
+  const isAdmin = user.role==='Таис'||user.role==='Ленар';
+
+  let html = `<tr><th class="sortable ${sortDir}" onclick="toggleSort()">Дата<span class="arr"></span></th><th>Тур</th><th class="col-total">Итого</th>`;
+  visible.forEach(m => html += `<th class="${m===user.name?'col-mine':''}">${m}</th>`);
+  if (isAdmin) html += '<th></th>';
+  html += '</tr>';
+  document.getElementById('edutHead').innerHTML = html;
+
+  const body = document.getElementById('edutBody');
+  const empty = document.getElementById('edutEmpty');
+  if (!edutData.length) { body.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  const sorted = [...edutData].sort((a,b)=>{
+    const c = String(a.date).localeCompare(String(b.date));
+    return sortDir==='asc'?c:-c;
+  });
+
+  body.innerHTML = sorted.map(row => {
+    const total = edutManagers.reduce((s,m)=>s+(parseInt(row[m])||0),0);
+    const cells = visible.map(m => {
+      const val = row[m]||'';
+      if (canEdit(m)) return `<td class="col-manager"><input class="num-input" data-row="${row._row}" data-manager="${m}" type="number" min="0" max="999" value="${val}" placeholder="0" oninput="localUpdate(this)" onblur="saveCount(this)"></td>`;
+      return `<td class="col-manager"><span class="num-display">${val||'—'}</span></td>`;
+    }).join('');
+    const del = isAdmin?`<td><button class="delete-row-btn" onclick="deleteEdutRow(${row._row})">✕</button></td>`:'';
+    return `<tr><td class="col-date">${row.date}</td><td class="col-excursion">${row.tour}</td><td class="col-total" id="total-${row._row}">${total||'—'}</td>${cells}${del}</tr>`;
+  }).join('');
+}
+
+function toggleSort() { sortDir=sortDir==='asc'?'desc':'asc'; renderEdut(); }
+
+function localUpdate(input) {
+  const tr = input.closest('tr');
+  const rowNum = input.dataset.row;
+  // Find the row data
+  const rowData = edutData.find(r=>String(r._row)===String(rowNum));
+  if (!rowData) return;
+  // Update the value in rowData
+  rowData[input.dataset.manager] = input.value;
+  // Recalculate total from ALL managers
+  const total = edutManagers.reduce((s,m)=>s+(parseInt(rowData[m])||0),0);
+  tr.querySelector('.col-total').textContent = total||'—';
+}
+
+async function saveCount(input) {
+  const rowNum = input.dataset.row;
+  const managerName = input.dataset.manager;
+  const value = parseInt(input.value)||0;
+  await api({action:'updateCount', rowNum, targetName:managerName, value});
+}
+
+async function deleteEdutRow(rowNum) {
+  if (!confirm('Удалить строку?')) return;
+  await api({action:'deleteRow', rowNum});
+  await loadEdut();
+}
+
+function openEdutModal() {
+  document.getElementById('edutDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('edutTour').value = '';
+  document.getElementById('edutCustomWrap').style.display = 'none';
+  document.getElementById('edutModal').classList.add('active');
+}
+function closeEdutModal() { document.getElementById('edutModal').classList.remove('active'); }
+function toggleEdutCustom(v) { document.getElementById('edutCustomWrap').style.display = v==='__custom__'?'block':'none'; }
+
+async function submitEdutRow() {
+  const rawDate = document.getElementById('edutDate').value;
+  let tour = document.getElementById('edutTour').value;
+  if (tour==='__custom__') tour = document.getElementById('edutCustom').value.trim();
+  if (!rawDate||!tour) { alert('Заполни все поля'); return; }
+  const parts = rawDate.split('-');
+  const date = parts[2]+'.'+parts[1];
+  closeEdutModal();
+  await api({action:'addRow', date, tour});
+  await loadEdut();
+}
+
+// ── ZAPROS ────────────────────────────────────────────────────────────────
+async function loadZapros() {
+  const res = await api({action:'getZapros'});
+  zaprosData = res.rows||[];
+  renderZapros();
+}
+
+function toggleZaprosSort() {
+  zaprosSort = zaprosSort==='asc'?'desc':'asc';
+  document.getElementById('zaprosDateTh').className = 'sortable '+zaprosSort;
+  renderZapros();
+}
+
+function renderZapros() {
+  const body = document.getElementById('zaprosBody');
+  const empty = document.getElementById('zaprosEmpty');
+  const isAdmin = user.role==='Таис'||user.role==='Ленар';
+  if (!zaprosData.length) { body.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  const sorted = [...zaprosData].sort((a,b)=>{
+    const da=String(a.date), db=String(b.date);
+    return zaprosSort==='asc'?da.localeCompare(db):db.localeCompare(da);
+  });
+
+  body.innerHTML = sorted.map(row=>{
+    const note = row.note||'';
+    const isMyRow = row.manager===user.name;
+    const canEditNote = isAdmin || isMyRow;
+    const noteCell = canEditNote
+      ? `<td style="min-width:140px"><textarea class="note-input" data-row="${row._row}" placeholder="—" onblur="saveNote(this)" oninput="autoResize(this)">${note.replace(/</g,'&lt;')}</textarea></td>`
+      : `<td style="font-size:13px;color:#AAA;min-width:100px">—</td>`;
+    const canDelete = isAdmin || isMyRow;
+    const del = canDelete?`<td><button class="delete-row-btn" onclick="deleteZapros(${row._row})">✕</button></td>`:'<td></td>';    return `<tr>
+      <td class="col-date">${row.date}</td>
+      <td>${row.tour}</td>
+      <td style="text-align:center;font-weight:600">${row.count}</td>
+      <td style="font-size:13px;color:#888">${row.manager}</td>
+      ${noteCell}${del}
+    </tr>`;
+  }).join('');
+}
+
+function setDateType(type) {
+  document.getElementById('singleDateWrap').style.display = type==='single'?'block':'none';
+  document.getElementById('rangeDateWrap').style.display = type==='range'?'block':'none';
+  document.getElementById('btnSingle').classList.toggle('active', type==='single');
+  document.getElementById('btnRange').classList.toggle('active', type==='range');
+}
+
+function toggleLuboi(cb) {
+  if (cb.checked) document.querySelectorAll('.tour-check input').forEach(inp=>{ if(inp.value!=='Любой') inp.checked=false; });
+}
+
+function openZaprosModal() {
+  setDateType('single');
+  document.getElementById('zaprosDateSingle').value = new Date().toISOString().split('T')[0];
+  document.getElementById('zaprosDateFrom').value = '';
+  document.getElementById('zaprosDateTo').value = '';
+  document.querySelectorAll('.tour-check input').forEach(inp=>inp.checked=false);
+  document.getElementById('zaprosCount').value = '';
+  document.getElementById('zaprosModal').classList.add('active');
+}
+function closeZaprosModal() { document.getElementById('zaprosModal').classList.remove('active'); }
+
+async function submitZapros() {
+  let date;
+  const isSingle = document.getElementById('btnSingle').classList.contains('active');
+  if (isSingle) {
+    const d = document.getElementById('zaprosDateSingle').value;
+    if (!d) { alert('Выбери дату'); return; }
+    const parts = d.split('-');
+    date = parts[2]+'.'+parts[1];
+  } else {
+    const from = document.getElementById('zaprosDateFrom').value;
+    const to = document.getElementById('zaprosDateTo').value;
+    if (!from||!to) { alert('Выбери даты'); return; }
+    const p1=from.split('-'), p2=to.split('-');
+    date = p1[2]+'.'+p1[1]+'–'+p2[2]+'.'+p2[1];
+  }
+  const checked = [...document.querySelectorAll('.tour-check input:checked')].map(i=>i.value);
+  const tour = checked.join(', ');
+  const count = Number(document.getElementById('zaprosCount').value) || 0;
+  if (!tour||!count) { alert('Заполни все поля'); return; }
+  closeZaprosModal();
+  await api({action:'addZapros', date, tour, count: count});
+  await loadZapros();
+}
+
+async function deleteZapros(rowNum) {
+  if (!confirm('Удалить запрос?')) return;
+  await api({action:'deleteZapros', rowNum});
+  await loadZapros();
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+
+async function saveNote(input) {
+  const rowNum = input.dataset.row;
+  const note = input.value.trim();
+  await api({action:'saveNote', rowNum, note});
+}
+
+// ── MANAGERS ──────────────────────────────────────────────────────────────
+async function loadManagers() {
+  const res = await api({action:'getManagers'});
+  const managers = res.managers||[];
+  const list = document.getElementById('managerList');
+  list.innerHTML = '';
+  managers.filter(m=>m.active).forEach(m=>{
+    const tag = document.createElement('div');
+    tag.className = 'manager-tag';
+    const canDel = m.role!=='Таис' && !(user.role==='Ленар'&&m.role==='Таис');
+    tag.innerHTML = `${m.name}${canDel?` <button onclick="removeManager('${m.token}')">×</button>`:''}`;
+    list.appendChild(tag);
+  });
+}
+
+async function addManager() {
+  const inp = document.getElementById('newManagerInput');
+  const name = inp.value.trim();
+  if (!name) return;
+  document.getElementById('newLinkBox').style.display = 'none';
+  const res = await api({action:'addManager', name});
+  if (res.link) {
+    inp.value = '';
+    document.getElementById('newLinkText').textContent = res.link;
+    document.getElementById('newLinkBox').style.display = 'flex';
+    await loadManagers();
+    await loadEdut();
+  }
+}
+
+async function removeManager(targetToken) {
+  if (!confirm('Отключить менеджера?')) return;
+  await api({action:'removeManager', targetToken});
+  await loadManagers();
+  await loadEdut();
+}
+
+function copyLink() {
+  navigator.clipboard.writeText(document.getElementById('newLinkText').textContent);
+  const btn = document.querySelector('#newLinkBox button');
+  btn.textContent = 'Скопировано!';
+  setTimeout(()=>btn.textContent='Копировать', 2000);
+}
+
+init();
+</script>
+</body>
+</html>
