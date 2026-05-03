@@ -274,28 +274,23 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
             <div class="b-stat-val" id="bStatEarn">$0</div>
             <div class="b-stat-label">Итого / мес</div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:2px;padding-top:2px">
+          <div style="display:flex;flex-direction:row;gap:4px;padding-top:2px">
             <button onclick="toggleWallet()" style="background:none;border:none;font-size:20px;cursor:pointer;padding:0;line-height:1" title="Мой кошелёк">💰</button>
             <button onclick="toggleEarnHistory()" style="background:none;border:none;font-size:16px;cursor:pointer;padding:0;line-height:1" title="История">📅</button>
           </div>
         </div>
       </div>
       <!-- КОШЕЛЁК -->
-      <div id="walletPanel" style="display:none;padding:12px 16px;background:var(--note-bg);border-bottom:1px solid var(--border)">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start">
+      <div id="walletPanel" style="display:none;padding:10px 16px;background:var(--note-bg);border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <input type="number" id="walletPaidInput" placeholder="сумма $" style="width:90px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:13px;background:var(--surface)">
+          <button onclick="walletAdd('paid',1)" style="padding:6px 12px;background:none;border:1px solid var(--border);border-radius:6px;font-size:16px;cursor:pointer;color:var(--red)">−</button>
           <div>
-            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Получила на руки $</div>
-            <div style="display:flex;gap:4px">
-              <input type="number" id="walletPaidInput" placeholder="0" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:13px;background:var(--surface)">
-              <button onclick="walletAdd('paid',1)" style="padding:6px 10px;background:none;border:1px solid var(--border);border-radius:6px;font-size:14px;cursor:pointer;color:var(--red)">−</button>
-            </div>
-            <div id="walletPaidTotal" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px">Выплачено: $0</div>
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px">Остаток у меня</div>
+            <div id="walletBalance" style="font-family:'DM Mono',monospace;font-size:24px;color:var(--green);font-weight:600">$0</div>
           </div>
-          <div>
-            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Остаток у меня</div>
-            <div id="walletBalance" style="padding:4px 0;font-family:'DM Mono',monospace;font-size:22px;color:var(--green);font-weight:600">$0</div>
-            <div id="walletEarnTotal" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:2px">Начислено всего: $0</div>
-          </div>
+          <div id="walletPaidTotal" style="display:none"></div>
+          <div id="walletEarnTotal" style="display:none"></div>
         </div>
       </div>
       <!-- ИСТОРИЯ ПО МЕСЯЦАМ -->
@@ -342,7 +337,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
         <div class="form-grid">
           <div class="form-group"><label>Дата поездки</label><input type="date" id="fDate"></div>
           <div class="form-group"><label>Маршрут</label>
-            <select id="fRoute" onchange="bUpdatePreview()">
+            <select id="fRoute" onchange="switchPaxMode('f')">
               <option value="">— выбрать —</option>
               <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
               <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>HOT SPRINGS</option>
@@ -351,9 +346,15 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
           </div>
           <div class="form-group full"><label>Количество человек</label>
             <div class="pax-grid">
-              <div><div class="pax-sub">Взрослые (10+)</div><input type="number" id="fAdults" min="0" value="1" onchange="bUpdatePreview()"></div>
-              <div><div class="pax-sub">Дети 3–10 лет</div><input type="number" id="fChildren" min="0" value="0" onchange="bUpdatePreview()"></div>
-              <div><div class="pax-sub">До 3 лет</div><input type="number" id="fInfants" min="0" value="0"></div>
+              <div id="fPaxAge" style="display:contents">
+                <div><div class="pax-sub">Взрослые (10+)</div><input type="number" id="fAdults" min="0" value="1" onchange="bUpdatePreview()"></div>
+                <div><div class="pax-sub">Дети 3–10 лет</div><input type="number" id="fChildren" min="0" value="0" onchange="bUpdatePreview()"></div>
+                <div><div class="pax-sub">До 3 лет</div><input type="number" id="fInfants" min="0" value="0"></div>
+              </div>
+              <div id="fPaxHeight" style="display:none">
+                <div><div class="pax-sub">&gt;140 см</div><input type="number" id="fAdultsH" min="0" value="0" onchange="bUpdatePreview()"></div>
+                <div><div class="pax-sub">100–140 см</div><input type="number" id="fChildrenH" min="0" value="0" onchange="bUpdatePreview()"></div>
+              </div>
             </div>
           </div>
           <div class="form-group full"><label>Контакт</label><input type="text" id="fContact" placeholder="Иван, +79001234567"></div>
@@ -399,7 +400,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
           <div class="form-grid">
             <div class="form-group"><label>Дата поездки</label><input type="date" id="pfDate"></div>
             <div class="form-group"><label>Маршрут</label>
-              <select id="pfRoute" onchange="bUpdatePreview()">
+              <select id="pfRoute" onchange="switchPaxMode('pf')">
                 <option value="">— выбрать —</option>
                 <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
                 <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>HOT SPRINGS</option>
@@ -408,9 +409,15 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
             </div>
             <div class="form-group full"><label>Количество человек</label>
               <div class="pax-grid">
-                <div><div class="pax-sub">Взрослые (10+)</div><input type="number" id="pfAdults" min="0" value="1" onchange="bUpdatePreview()"></div>
-                <div><div class="pax-sub">Дети 3–10 лет</div><input type="number" id="pfChildren" min="0" value="0" onchange="bUpdatePreview()"></div>
-                <div><div class="pax-sub">До 3 лет</div><input type="number" id="pfInfants" min="0" value="0"></div>
+                <div id="pfPaxAge" style="display:contents">
+                  <div><div class="pax-sub">Взрослые (10+)</div><input type="number" id="pfAdults" min="0" value="1" onchange="bUpdatePreview()"></div>
+                  <div><div class="pax-sub">Дети 3–10 лет</div><input type="number" id="pfChildren" min="0" value="0" onchange="bUpdatePreview()"></div>
+                  <div><div class="pax-sub">До 3 лет</div><input type="number" id="pfInfants" min="0" value="0"></div>
+                </div>
+                <div id="pfPaxHeight" style="display:none">
+                  <div><div class="pax-sub">&gt;140 см</div><input type="number" id="pfAdultsH" min="0" value="0" onchange="bUpdatePreview()"></div>
+                  <div><div class="pax-sub">100–140 см</div><input type="number" id="pfChildrenH" min="0" value="0" onchange="bUpdatePreview()"></div>
+                </div>
               </div>
             </div>
             <div class="form-group full"><label>Контакт</label><input type="text" id="pfContact"></div>
@@ -465,6 +472,9 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbz4AP9eRBrmH-NKi27CH4nhDPF1WfDrXYH90TJhVqGBn0I1ROqN18KW4JlrpgxzEAtI_w/exec';
 const MARKUP     = { RUB:0.15, VND:0.03, USDT:0.00 };
 const ROUND_STEP = { RUB:100, VND:100000, USDT:1 };
+
+const HEIGHT_ROUTES = ['БА НА ХИЛЛС','HOT SPRINGS','МОРСКАЯ ПРОГУЛКА','VINWONDERS'];
+const isHeightRoute = key => HEIGHT_ROUTES.includes(key);
 const COMM_RATES = { 'ХЮЭ':9,'ХОЙАН':9,'ОСТРОВА ЧАМ':6,'ДАНАНГ':7,'БА НА ХИЛЛС':5,'HOT SPRINGS':7,'МОРСКАЯ ПРОГУЛКА':7,'VINWONDERS':9 };
 
 const TOURS = [
@@ -490,15 +500,14 @@ const TOURS = [
     rows:[{label:'Взрослый / >140 см',usd:72},{label:'Ребёнок 100–140 см',usd:36}],
     tickets:[
       {id:'hs_adult', label:'Взрослые >140 см', vnd_fixed:1400000},
-      {id:'hs_child', label:'Дети 100–140 см',  vnd_fixed:1000000},
-      {id:'hs_elder', label:'Пожилые 60+',      vnd_fixed:1100000}
+      {id:'hs_child', label:'Дети 100–140 см',  vnd_fixed:1100000}
     ]},
   { icon:'🎢', name:'VinWonders', key:'VINWONDERS',
-    rows:[{label:'Взрослый',usd:90},{label:'Ребёнок 100-140 см',usd:45}],
+    rows:[{label:'Взрослый / >140 см',usd:60},{label:'Ребёнок 100–140 см',usd:30}],
     tickets:[
-      {id:'vw_adult', label:'Взрослые >140 см', vnd_fixed:1400000},
-      {id:'vw_child', label:'Дети 100–140 см',  vnd_fixed:1000000},
-      {id:'vw_elder', label:'Пожилые 60+',      vnd_fixed:1100000}
+      {id:'vw_adult', label:'Взрослые и дети >140 см', vnd_fixed:950000},
+      {id:'vw_child', label:'Дети 100–140 см',          vnd_fixed:600000},
+      {id:'vw_elder', label:'Пожилые 70+',              vnd_fixed:1000000}
     ]},
   { icon:'⛵', name:'Морская прогулка', key:'МОРСКАЯ ПРОГУЛКА',
     rows:[{label:'Взрослый / >140 см',usd:70},{label:'Ребёнок 100–140 см',usd:35}] },
@@ -1119,12 +1128,29 @@ function mSwitchTab(tab){
   document.getElementById('mPanelManual').style.display=tab==='manual'?'':'none';
   document.getElementById('mPanelPaste').style.display=tab==='paste'?'':'none';
 }
+function switchPaxMode(p){
+  const route=document.getElementById(p+'Route').value;
+  const isH=isHeightRoute(route);
+  if(p==='f'){
+    document.getElementById('fPaxAge').style.display=isH?'none':'contents';
+    document.getElementById('fPaxHeight').style.display=isH?'contents':'none';
+    if(isH){document.getElementById('fAdults').value=0;document.getElementById('fChildren').value=0;document.getElementById('fInfants').value=0;}
+    else{document.getElementById('fAdultsH').value=0;document.getElementById('fChildrenH').value=0;}
+  } else {
+    document.getElementById('pfPaxAge').style.display=isH?'none':'contents';
+    document.getElementById('pfPaxHeight').style.display=isH?'contents':'none';
+    if(isH){document.getElementById('pfAdults').value=0;document.getElementById('pfChildren').value=0;document.getElementById('pfInfants').value=0;}
+    else{document.getElementById('pfAdultsH').value=0;document.getElementById('pfChildrenH').value=0;}
+  }
+  bUpdatePreview();
+}
 function bUpdatePreview(){
   const p=mTab==='manual'?'f':'pf';
   const route=document.getElementById(p+'Route').value;
-  const adults=parseInt(document.getElementById(p+'Adults').value)||0;
-  const children=parseInt(document.getElementById(p+'Children').value)||0;
-  const infants=parseInt(document.getElementById(p+'Infants').value)||0;
+  const isH=isHeightRoute(route);
+  const adults=isH?(parseInt(document.getElementById(p+'AdultsH').value)||0):(parseInt(document.getElementById(p+'Adults').value)||0);
+  const children=isH?(parseInt(document.getElementById(p+'ChildrenH').value)||0):(parseInt(document.getElementById(p+'Children').value)||0);
+  const infants=isH?0:(parseInt(document.getElementById(p+'Infants').value)||0);
   // Комиссия: цена тура × кол-во ÷ 10, округление вверх до 0.5$
   const tour=TOURS.find(t=>t.key===route);
   let commRaw=0;
@@ -1174,8 +1200,9 @@ function fDrawCalcRows(tour, adults, children){
 
 function fUpdateCalc(){
   const route=document.getElementById('fRoute').value;
-  const adults=parseInt(document.getElementById('fAdults').value)||0;
-  const children=parseInt(document.getElementById('fChildren').value)||0;
+  const isH=isHeightRoute(route);
+  const adults=isH?(parseInt(document.getElementById('fAdultsH').value)||0):(parseInt(document.getElementById('fAdults').value)||0);
+  const children=isH?(parseInt(document.getElementById('fChildrenH').value)||0):(parseInt(document.getElementById('fChildren').value)||0);
   const tour=TOURS.find(t=>t.key===route);
   const block=document.getElementById('fCalcBlock');
   if(!tour||!currentRates||(!adults&&!children)){block.style.display='none';fCalcRoute='';return;}
@@ -1207,8 +1234,9 @@ function fUpdateCalc(){
 
 function fRecalc(){
   const route=document.getElementById('fRoute').value;
-  const adults=parseInt(document.getElementById('fAdults').value)||0;
-  const children=parseInt(document.getElementById('fChildren').value)||0;
+  const isH=isHeightRoute(route);
+  const adults=isH?(parseInt(document.getElementById('fAdultsH').value)||0):(parseInt(document.getElementById('fAdults').value)||0);
+  const children=isH?(parseInt(document.getElementById('fChildrenH').value)||0):(parseInt(document.getElementById('fChildren').value)||0);
   const currency=document.getElementById('fCurrency').value;
   const tour=TOURS.find(t=>t.key===route); if(!tour||!currentRates) return;
   const R=currentRates;
@@ -1265,8 +1293,9 @@ function fInsertAmount(){
   document.getElementById('fAmount').value=val;
   // пересчитать комиссию из текущей цены
   const route=document.getElementById('fRoute').value;
-  const adults=parseInt(document.getElementById('fAdults').value)||0;
-  const children=parseInt(document.getElementById('fChildren').value)||0;
+  const isHi=isHeightRoute(route);
+  const adults=isHi?(parseInt(document.getElementById('fAdultsH').value)||0):(parseInt(document.getElementById('fAdults').value)||0);
+  const children=isHi?(parseInt(document.getElementById('fChildrenH').value)||0):(parseInt(document.getElementById('fChildren').value)||0);
   const tour=TOURS.find(t=>t.key===route);
   const adultUSD=parseFloat(document.getElementById('fPriceAdult')?.value)||(tour?tour.rows[0].usd:0);
   const childUSD=parseFloat(document.getElementById('fPriceChild')?.value)||(tour&&tour.rows[1]?tour.rows[1].usd:0);
@@ -1372,8 +1401,9 @@ function pfInsertAmount(){
   const val=document.getElementById('pfCalcResult').dataset.val||'';
   document.getElementById('pfAmount').value=val;
   const route=document.getElementById('pfRoute').value;
-  const adults=parseInt(document.getElementById('pfAdults').value)||0;
-  const children=parseInt(document.getElementById('pfChildren').value)||0;
+  const _piIsH=isHeightRoute(route);
+  const adults=_piIsH?(parseInt(document.getElementById('pfAdultsH').value)||0):(parseInt(document.getElementById('pfAdults').value)||0);
+  const children=_piIsH?(parseInt(document.getElementById('pfChildrenH').value)||0):(parseInt(document.getElementById('pfChildren').value)||0);
   const tour=TOURS.find(t=>t.key===route);
   const adultUSD=parseFloat(document.getElementById('pfPriceAdult')?.value)||(tour?tour.rows[0].usd:0);
   const childUSD=parseFloat(document.getElementById('pfPriceChild')?.value)||(tour&&tour.rows[1]?tour.rows[1].usd:0);
@@ -1385,8 +1415,9 @@ function pfInsertAmount(){
 function bGetFormData(){
   const p=mTab==='manual'?'f':'pf';
   const route=document.getElementById(p+'Route').value;
-  const adults=parseInt(document.getElementById(p+'Adults').value)||0;
-  const children=parseInt(document.getElementById(p+'Children').value)||0;
+  const _gIsH=isHeightRoute(route);
+  const adults=_gIsH?(parseInt(document.getElementById(p+'AdultsH').value)||0):(parseInt(document.getElementById(p+'Adults').value)||0);
+  const children=_gIsH?(parseInt(document.getElementById(p+'ChildrenH').value)||0):(parseInt(document.getElementById(p+'Children').value)||0);
   const tour=TOURS.find(t=>t.key===route);
   const adultUSD=parseFloat(document.getElementById(p+'PriceAdult')?.value)||(tour?tour.rows[0].usd:0);
   const childUSD=parseFloat(document.getElementById(p+'PriceChild')?.value)||(tour&&tour.rows[1]?tour.rows[1].usd:0);
@@ -1397,7 +1428,7 @@ function bGetFormData(){
     date:document.getElementById(p+'Date').value,
     route,
     adults, children,
-    infants:parseInt(document.getElementById(p+'Infants').value)||0,
+    infants:_gIsH?0:(parseInt(document.getElementById(p+'Infants').value)||0),
     contact:document.getElementById(p+'Contact').value,
     hotel:document.getElementById(p+'Hotel').value,
     currency:document.getElementById(p+'Currency').value,
@@ -1418,9 +1449,17 @@ function bRepeat(id){
   mSwitchTab('manual');
   document.getElementById('fDate').value='';
   document.getElementById('fRoute').value='';
-  document.getElementById('fAdults').value=b.adults||1;
-  document.getElementById('fChildren').value=b.children||0;
-  document.getElementById('fInfants').value=b.infants||0;
+  const _eIsH=isHeightRoute(b.route||'');
+  if(_eIsH){
+    document.getElementById('fAdultsH').value=b.adults||0;
+    document.getElementById('fChildrenH').value=b.children||0;
+    document.getElementById('fAdults').value=0;document.getElementById('fChildren').value=0;document.getElementById('fInfants').value=0;
+  } else {
+    document.getElementById('fAdults').value=b.adults||1;
+    document.getElementById('fChildren').value=b.children||0;
+    document.getElementById('fInfants').value=b.infants||0;
+    document.getElementById('fAdultsH').value=0;document.getElementById('fChildrenH').value=0;
+  }
   document.getElementById('fContact').value=b.contact||'';
   document.getElementById('fHotel').value=b.hotel||'';
   document.getElementById('fCurrency').value=b.currency||'VND';
