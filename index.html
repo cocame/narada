@@ -274,7 +274,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
             <div class="b-stat-val" id="bStatEarn">$0</div>
             <div class="b-stat-label">Итого / мес</div>
           </div>
-          <div style="display:flex;flex-direction:row;gap:6px;padding-top:2px">
+          <div style="display:flex;flex-direction:column;gap:2px;padding-top:2px">
             <button onclick="toggleWallet()" style="background:none;border:none;font-size:20px;cursor:pointer;padding:0;line-height:1" title="Мой кошелёк">💰</button>
             <button onclick="toggleEarnHistory()" style="background:none;border:none;font-size:16px;cursor:pointer;padding:0;line-height:1" title="История">📅</button>
           </div>
@@ -289,12 +289,12 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
               <input type="number" id="walletPaidInput" placeholder="0" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:13px;background:var(--surface)">
               <button onclick="walletAdd('paid',1)" style="padding:6px 10px;background:none;border:1px solid var(--border);border-radius:6px;font-size:14px;cursor:pointer;color:var(--red)">−</button>
             </div>
-            <div id="walletPaidTotal" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px"></div>
+            <div id="walletPaidTotal" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px">Выплачено: $0</div>
           </div>
           <div>
             <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Остаток у меня</div>
             <div id="walletBalance" style="padding:4px 0;font-family:'DM Mono',monospace;font-size:22px;color:var(--green);font-weight:600">$0</div>
-            <div id="walletEarnTotal" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:2px"></div>
+            <div id="walletEarnTotal" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:2px">Начислено всего: $0</div>
           </div>
         </div>
       </div>
@@ -473,7 +473,11 @@ const TOURS = [
   { icon:'🏮', name:'Хойан', key:'ХОЙАН',
     rows:[{label:'Взрослый',usd:58},{label:'Ребёнок до 10',usd:29}] },
   { icon:'🏝', name:'Острова Чам', key:'ОСТРОВА ЧАМ',
-    rows:[{label:'Взрослый',usd:60},{label:'Ребёнок до 10',usd:30},{label:'+ Рыбалка',usd:90},{label:'+ Дайвинг',usd:100}]},
+    rows:[{label:'Взрослый',usd:60},{label:'Ребёнок до 10',usd:30}],
+    options:[
+      {label:'+ Рыбалка',usd:90},
+      {label:'+ Дайвинг',usd:100}
+    ]},
   { icon:'🌉', name:'Обзорный Дананг', key:'ДАНАНГ',
     rows:[{label:'Взрослый',usd:67},{label:'Ребёнок до 10',usd:33.5}] },
   { icon:'⛰', name:'Ба На Хиллс', key:'БА НА ХИЛЛС',
@@ -486,14 +490,15 @@ const TOURS = [
     rows:[{label:'Взрослый / >140 см',usd:72},{label:'Ребёнок 100–140 см',usd:36}],
     tickets:[
       {id:'hs_adult', label:'Взрослые >140 см', vnd_fixed:1400000},
-      {id:'hs_child', label:'Дети 100–140 см',  vnd_fixed:1100000}
+      {id:'hs_child', label:'Дети 100–140 см',  vnd_fixed:1000000},
+      {id:'hs_elder', label:'Пожилые 60+',      vnd_fixed:1100000}
     ]},
   { icon:'🎢', name:'VinWonders', key:'VINWONDERS',
-    rows:[{label:'Взрослый / >140 см',usd:60},{label:'Ребёнок 100–140 см',usd:30}],
+    rows:[{label:'Взрослый',usd:90},{label:'Ребёнок 100-140 см',usd:45}],
     tickets:[
-      {id:'vw_adult', label:'Взрослые и дети >140 см', vnd_fixed:950000},
-      {id:'vw_child', label:'Дети 100–140 см',          vnd_fixed:600000},
-      {id:'vw_elder', label:'Пожилые 70+',              vnd_fixed:600000}
+      {id:'vw_adult', label:'Взрослые >140 см', vnd_fixed:1400000},
+      {id:'vw_child', label:'Дети 100–140 см',  vnd_fixed:1000000},
+      {id:'vw_elder', label:'Пожилые 60+',      vnd_fixed:1100000}
     ]},
   { icon:'⛵', name:'Морская прогулка', key:'МОРСКАЯ ПРОГУЛКА',
     rows:[{label:'Взрослый / >140 см',usd:70},{label:'Ребёнок 100–140 см',usd:35}] },
@@ -543,7 +548,6 @@ const ceilTo = (v,s) => Math.ceil(v/s)*s;
 const fmtUSD  = n => Math.ceil(n)+' $';
 const fmtRUB  = n => ceilTo(n,ROUND_STEP.RUB).toLocaleString('ru-RU')+' ₽';
 const fmtVND  = n => ceilTo(n,ROUND_STEP.VND).toLocaleString('ru-RU')+' ₫';
-const fmtVNDticket = n => Math.round(n).toLocaleString('ru-RU')+' ₫';
 const fmtUSDT = n => ceilTo(n,ROUND_STEP.USDT)+' USDT';
 
 function calcFromUSD(usd, R) {
@@ -625,7 +629,7 @@ function priceRowHTML(label, p, isTicket) {
     <div class="${lc}">${label}</div>
     <div class="${tc} usd">${p&&p.usd!=null?fmtUSD(p.usd):'—'}</div>
     <div class="${tc} rub">${p&&p.rub!=null?fmtRUB(p.rub):'—'}</div>
-    <div class="${tc} vnd">${p&&p.vnd!=null?(isTicket?Math.round(p.vnd).toLocaleString('ru-RU')+' ₫':fmtVND(p.vnd)):'—'}</div>
+    <div class="${tc} vnd">${p&&p.vnd!=null?fmtVND(p.vnd):'—'}</div>
     <div class="${tc} usdt">${p&&p.usdt!=null?fmtUSDT(p.usdt):'—'}</div>
   </div>`;
 }
@@ -700,7 +704,7 @@ function copyPriceCard(idx){
   const t=TOURS[idx]; if(!currentRates){toast('⏳ Загрузка курсов…');return;}
   let text=t.icon+' '+t.name+'\n──────────────\n';
   t.rows.forEach(r=>{const p=calcFromUSD(r.usd,currentRates); text+=r.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});
-  if(t.tickets){text+='\nВходные билеты:\n'; t.tickets.forEach(tk=>{const p=calcFromVND(tk.vnd_fixed,currentRates); text+=tk.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVNDticket(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});}
+  if(t.tickets){text+='\nВходные билеты:\n'; t.tickets.forEach(tk=>{const p=calcFromVND(tk.vnd_fixed,currentRates); text+=tk.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});}
   copyText(text.trim());
 }
 
