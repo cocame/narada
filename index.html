@@ -1293,15 +1293,7 @@ function fInsertAmount(){
   document.getElementById('fAmount').value=val;
   // пересчитать комиссию из текущей цены
   const route=document.getElementById('fRoute').value;
-  const isHi=isHeightRoute(route);
-  const tour=TOURS.find(t=>t.key===route);
-  const adultUSD=parseFloat(document.getElementById('fPriceAdult')?.value)||(tour?tour.rows[0].usd:0);
-  const childUSD=parseFloat(document.getElementById('fPriceChild')?.value)||(tour&&tour.rows[1]?tour.rows[1].usd:0);
-  let tourUSD=0;
-  if(isHi){tourUSD=adultUSD*(fTourTickCounts[0]||0)+childUSD*(fTourTickCounts[1]||0);}
-  else{const adults=parseInt(document.getElementById('fAdults').value)||0;const children=parseInt(document.getElementById('fChildren').value)||0;tourUSD=adultUSD*adults+childUSD*children;}
-  const comm=Math.ceil(tourUSD/10*2)/2;
-  const cEl=document.getElementById('previewComm'); if(cEl) cEl.textContent='$'+comm;
+
   toast('✓ Сумма вставлена');
 }
 
