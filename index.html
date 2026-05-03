@@ -351,8 +351,8 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
           </div>
           <div class="form-group full"><label>Количество человек</label>
             <div class="pax-grid">
-              <div><div class="pax-sub">Взрослые (10+)</div><input type="number" id="fAdults" min="0" value="1" onchange="fCalcRoute='';bUpdatePreview()"></div>
-              <div><div class="pax-sub">Дети 3–10 лет</div><input type="number" id="fChildren" min="0" value="0" onchange="fCalcRoute='';bUpdatePreview()"></div>
+              <div><div class="pax-sub">Взрослые (10+)</div><input type="number" id="fAdults" min="0" value="1" oninput="fCalcRoute='';bUpdatePreview()"></div>
+              <div><div class="pax-sub">Дети 3–10 лет</div><input type="number" id="fChildren" min="0" value="0" oninput="fCalcRoute='';bUpdatePreview()"></div>
               <div><div class="pax-sub">До 3 лет</div><input type="number" id="fInfants" min="0" value="0"></div>
             </div>
           </div>
@@ -1512,7 +1512,7 @@ function bParseText(){
       if(n) result.adults=parseInt(n[1]);
       else for(const[w,v] of Object.entries(numW)) if(lower.includes(w)){result.adults=v;break;}
     }
-    if(lower.match(/дет|ребен|child|малыш/)&&!lower.match(/лет|год|рост|возраст|билет|примечан|купить|удобн/)){
+    if(lower.match(/(?:^|\s|\+|,)(?:дет|ребен)|ребенок|дети|child|малыш/)&&!lower.match(/возраст|билет|примечан|купить|удобн/)){
       const n=clean.match(/(\d+)/);
       if(n) result.children=parseInt(n[1]);
       else for(const[w,v] of Object.entries(numW)) if(lower.includes(w)){result.children=v;break;}
