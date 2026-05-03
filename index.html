@@ -408,8 +408,8 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
             </div>
             <div class="form-group full"><label>Количество человек</label>
               <div class="pax-grid">
-                <div><div class="pax-sub">Взрослые (10+)</div><input type="number" id="pfAdults" min="0" value="1" onchange="bUpdatePreview()"></div>
-                <div><div class="pax-sub">Дети 3–10 лет</div><input type="number" id="pfChildren" min="0" value="0" onchange="bUpdatePreview()"></div>
+                <div><div class="pax-sub">Взрослые (10+)</div><input type="number" id="pfAdults" min="0" value="1" oninput="pfCalcRoute='';bUpdatePreview()"></div>
+                <div><div class="pax-sub">Дети 3–10 лет</div><input type="number" id="pfChildren" min="0" value="0" oninput="pfCalcRoute='';bUpdatePreview()"></div>
                 <div><div class="pax-sub">До 3 лет</div><input type="number" id="pfInfants" min="0" value="0"></div>
               </div>
             </div>
@@ -1284,8 +1284,8 @@ function pfUpdateCalc(){
   const block=document.getElementById('pfCalcBlock');
   if(!tour||!currentRates||(!adults&&!children)){block.style.display='none';pfCalcRoute='';return;}
   block.style.display='block';
-  if(pfCalcRoute!==route){
-    pfCalcRoute=route;
+  const pfCK=route+"|"+adults+","+children; if(pfCalcRoute!==pfCK){
+    pfCalcRoute=pfCK;
     let rowsHTML='';
     if(adults){
       rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
@@ -1513,8 +1513,7 @@ function bParseText(){
       else for(const[w,v] of Object.entries(numW)) if(lower.includes(w)){result.adults=v;break;}
     }
     if(lower.match(/(?:^|\s|\+|,)(?:дет|ребен)|ребенок|дети|child|малыш/)&&!lower.match(/возраст|билет|примечан|купить|удобн/)){
-      const n=clean.match(/(\d+)/);
-      if(n) result.children=parseInt(n[1]);
+      const cm=lower.match(/(?:дет(?:ей|и)?|ребен(?:ок|ка)?)[^\d]*(\d+)|(\d+)[^\d]*(?:дет(?:ей|и)?|ребен(?:ок|ка)?)/); if(cm) result.children=parseInt(cm[1]||cm[2]);
       else for(const[w,v] of Object.entries(numW)) if(lower.includes(w)){result.children=v;break;}
     }
     if(lower.match(/до\s*3|младенец|infant|грудн/)){
