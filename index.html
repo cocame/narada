@@ -1511,7 +1511,7 @@ function bParseText(){
       if(n) result.adults=parseInt(n[1]);
       else for(const[w,v] of Object.entries(numW)) if(lower.includes(w)){result.adults=v;break;}
     }
-    if(lower.match(/дет|ребен|child|малыш/)){
+    if(lower.match(/дет|ребен|child|малыш/)&&!lower.match(/лет|год|рост|возраст|билет|примечан|купить|удобн/)){
       const n=clean.match(/(\d+)/);
       if(n) result.children=parseInt(n[1]);
       else for(const[w,v] of Object.entries(numW)) if(lower.includes(w)){result.children=v;break;}
