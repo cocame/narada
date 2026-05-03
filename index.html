@@ -1177,8 +1177,8 @@ function fUpdateCalc(){
   if(!tour||!currentRates||(!adults&&!children)){block.style.display='none';fCalcRoute='';return;}
   block.style.display='block';
   // перерисовываем поля только если изменился маршрут
-  if(true){
-    fCalcRoute=route;
+  const fCacheKey=route+adults+","+children; if(fCalcRoute!==fCacheKey){
+    fCalcRoute=fCacheKey;
     fDrawCalcRows(tour,adults,children);
     // билеты
     const tickSec=document.getElementById('fTicketSection');
