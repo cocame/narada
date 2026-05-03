@@ -1173,8 +1173,33 @@ const fTickCounts={};
 let fCalcRoute=''; // запоминаем для какого маршрута нарисованы поля
 
 function fDrawCalcRows(tour, adults, children){
-  // рисуем поля ОДИН РАЗ — только если изменился маршрут или состав
+  const isH=isHeightRoute(document.getElementById('fRoute').value);
   let rowsHTML='';
+  if(isH){
+    const r0=tour.rows[0],r1=tour.rows[1];
+    rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+      <div style="font-size:12px;color:var(--muted);flex-shrink:0">&gt;140 см</div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <input type="number" id="fPriceAdult" value="${r0.usd}" oninput="fRecalc()" style="width:50px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+        <span style="font-size:10px;color:var(--muted)">$</span>
+        <button onclick="fTourTickChange(0,-1)" style="width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:16px;cursor:pointer">−</button>
+        <span id="fttc-0" style="font-family:'DM Mono',monospace;font-size:13px;min-width:20px;text-align:center">0</span>
+        <button onclick="fTourTickChange(0,1)" style="width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:16px;cursor:pointer">+</button>
+      </div>
+    </div>`;
+    if(r1){rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+      <div style="font-size:12px;color:var(--muted);flex-shrink:0">100–140 см</div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <input type="number" id="fPriceChild" value="${r1.usd}" oninput="fRecalc()" style="width:50px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+        <span style="font-size:10px;color:var(--muted)">$</span>
+        <button onclick="fTourTickChange(1,-1)" style="width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:16px;cursor:pointer">−</button>
+        <span id="fttc-1" style="font-family:'DM Mono',monospace;font-size:13px;min-width:20px;text-align:center">0</span>
+        <button onclick="fTourTickChange(1,1)" style="width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:16px;cursor:pointer">+</button>
+      </div>
+    </div>`;}
+    document.getElementById('fCalcRows').innerHTML=rowsHTML;
+    return;
+  }
   if(adults){
     rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
       <div style="font-size:12px;color:var(--muted);flex-shrink:0">Взрослый × ${adults}</div>
@@ -1198,6 +1223,12 @@ function fDrawCalcRows(tour, adults, children){
   document.getElementById('fCalcRows').innerHTML=rowsHTML;
 }
 
+const fTourTickCounts={};
+function fTourTickChange(i,d){
+  fTourTickCounts[i]=Math.max(0,(fTourTickCounts[i]||0)+d);
+  const el=document.getElementById('fttc-'+i); if(el) el.textContent=fTourTickCounts[i];
+  fRecalc();
+}
 function fUpdateCalc(){
   const route=document.getElementById('fRoute').value;
   const isH=isHeightRoute(route);
@@ -1205,11 +1236,11 @@ function fUpdateCalc(){
   const children=isH?(parseInt(document.getElementById('fChildrenH').value)||0):(parseInt(document.getElementById('fChildren').value)||0);
   const tour=TOURS.find(t=>t.key===route);
   const block=document.getElementById('fCalcBlock');
-  if(!tour||!currentRates||(!adults&&!children)){block.style.display='none';fCalcRoute='';return;}
+  if(!tour||!currentRates||((!adults&&!children)&&!isH)){block.style.display='none';fCalcRoute='';return;}
   block.style.display='block';
-  // перерисовываем поля только если изменился маршрут
   if(fCalcRoute!==route){
     fCalcRoute=route;
+    fTourTickCounts[0]=0;fTourTickCounts[1]=0;
     fDrawCalcRows(tour,adults,children);
     // билеты
     const tickSec=document.getElementById('fTicketSection');
@@ -1240,17 +1271,23 @@ function fRecalc(){
   const currency=document.getElementById('fCurrency').value;
   const tour=TOURS.find(t=>t.key===route); if(!tour||!currentRates) return;
   const R=currentRates;
-  const adultUSD=parseFloat(document.getElementById('fPriceAdult')?.value)||tour.rows[0].usd;
-  const childUSD=parseFloat(document.getElementById('fPriceChild')?.value)||(tour.rows[1]?tour.rows[1].usd:0);
   let tourUSD=0;
-  if(adults) tourUSD+=adultUSD*adults;
-  if(children&&tour.rows[1]) tourUSD+=childUSD*children;
-  // обновляем только текстовые span без перерисовки полей
-  const fmtVal=(usd)=>currency==='USD'?fmtUSD(usd):currency==='RUB'?fmtRUB(calcFromUSD(usd,R).rub):currency==='USDT'?fmtUSDT(calcFromUSD(usd,R).usdt):fmtVND(calcFromUSD(usd,R).vnd);
-  const tA=document.getElementById('fTotAdult'); if(tA) tA.textContent=fmtVal(adultUSD*adults);
-  const tC=document.getElementById('fTotChild'); if(tC) tC.textContent=fmtVal(childUSD*children);
+  if(isH){
+    const n0=fTourTickCounts[0]||0,n1=fTourTickCounts[1]||0;
+    const p0=parseFloat(document.getElementById('fPriceAdult')?.value)||tour.rows[0].usd;
+    const p1=parseFloat(document.getElementById('fPriceChild')?.value)||(tour.rows[1]?tour.rows[1].usd:0);
+    tourUSD+=(p0*n0);
+    if(tour.rows[1]) tourUSD+=(p1*n1);
+  } else {
+    const adultUSD=parseFloat(document.getElementById('fPriceAdult')?.value)||tour.rows[0].usd;
+    const childUSD=parseFloat(document.getElementById('fPriceChild')?.value)||(tour.rows[1]?tour.rows[1].usd:0);
+    if(adults) tourUSD+=adultUSD*adults;
+    if(children&&tour.rows[1]) tourUSD+=childUSD*children;
+    const fmtVal=(usd)=>currency==='USD'?fmtUSD(usd):currency==='RUB'?fmtRUB(calcFromUSD(usd,R).rub):currency==='USDT'?fmtUSDT(calcFromUSD(usd,R).usdt):fmtVND(calcFromUSD(usd,R).vnd);
+    const tA=document.getElementById('fTotAdult'); if(tA) tA.textContent=fmtVal(adultUSD*adults);
+    const tC=document.getElementById('fTotChild'); if(tC) tC.textContent=fmtVal(childUSD*children);
+  }
   fCalcTotal(tour, adults, children, currency, tourUSD);
-  // комиссия от суммы тура
   const comm=Math.ceil(tourUSD/10*2)/2;
   const cEl=document.getElementById('previewComm'); if(cEl) cEl.textContent='$'+comm;
 }
@@ -1416,8 +1453,8 @@ function bGetFormData(){
   const p=mTab==='manual'?'f':'pf';
   const route=document.getElementById(p+'Route').value;
   const _gIsH=isHeightRoute(route);
-  const adults=_gIsH?(parseInt(document.getElementById(p+'AdultsH').value)||0):(parseInt(document.getElementById(p+'Adults').value)||0);
-  const children=_gIsH?(parseInt(document.getElementById(p+'ChildrenH').value)||0):(parseInt(document.getElementById(p+'Children').value)||0);
+  const adults=_gIsH?(fTourTickCounts[0]||0):(parseInt(document.getElementById(p+'Adults').value)||0);
+  const children=_gIsH?(fTourTickCounts[1]||0):(parseInt(document.getElementById(p+'Children').value)||0);
   const tour=TOURS.find(t=>t.key===route);
   const adultUSD=parseFloat(document.getElementById(p+'PriceAdult')?.value)||(tour?tour.rows[0].usd:0);
   const childUSD=parseFloat(document.getElementById(p+'PriceChild')?.value)||(tour&&tour.rows[1]?tour.rows[1].usd:0);
