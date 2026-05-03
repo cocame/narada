@@ -1477,7 +1477,8 @@ function bParseText(){
   const result={adults:0,children:0,infants:0,date:'',route:'',contact:'',hotel:'',notes:'',totalAmount:'',payMethod:'',currency:''};
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
   lines.forEach((line,lineIdx)=>{
-    if(lineIdx>=5) return; // 7-я строка и дальше — примечание, не читаем
+    const lineNum=((line.match(/^(\d+)[):.\s]/)||[])[1]);
+    if(lineNum&&parseInt(lineNum)>6) return;
     const clean=line.replace(/^[\d]+[):.\s]+/,'').trim();
     const lower=clean.toLowerCase().replace(/ё/g,'е');
     // маршрут
