@@ -317,7 +317,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
         <option value="">Маршрут</option>
         <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
         <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>HOT SPRINGS</option>
-        <option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option>
+        <option>СЕРФИНГ</option><option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option>
       </select>
       <input type="date" class="b-filter-select" id="bFilterDate" onchange="bRender()">
       <button class="b-add-btn" onclick="bOpenModal()">+</button>
@@ -346,7 +346,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
               <option value="">— выбрать —</option>
               <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
               <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>HOT SPRINGS</option>
-              <option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option>
+              <option>СЕРФИНГ</option><option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option>
             </select>
           </div>
           <div class="form-group full"><label>Количество человек</label>
@@ -403,7 +403,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
                 <option value="">— выбрать —</option>
                 <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
                 <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>HOT SPRINGS</option>
-                <option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option>
+                <option>СЕРФИНГ</option><option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option>
               </select>
             </div>
             <div class="form-group full"><label>Количество человек</label>
@@ -465,7 +465,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbxgJuA761KgFjawr9-yFZOdMeYItwvchI8F-Pzro-1HVTeYhwVLR7Vr-R_wrL7DJRqVnw/exec';
 const MARKUP     = { RUB:0.15, VND:0.03, USDT:0.00 };
 const ROUND_STEP = { RUB:100, VND:100000, USDT:1 };
-const COMM_RATES = { 'ХЮЭ':9,'ХОЙАН':9,'ОСТРОВА ЧАМ':6,'ДАНАНГ':7,'БА НА ХИЛЛС':5,'HOT SPRINGS':7,'МОРСКАЯ ПРОГУЛКА':7,'РЫБАЛКА':9,'VINWONDERS':9 };
+const COMM_RATES = { 'ХЮЭ':9,'ХОЙАН':9,'ОСТРОВА ЧАМ':6,'ДАНАНГ':7,'БА НА ХИЛЛС':5,'HOT SPRINGS':7,'МОРСКАЯ ПРОГУЛКА':7,'СЕРФИНГ':9,'РЫБАЛКА':9,'VINWONDERS':9 };
 
 const TOURS = [
   { icon:'🏯', name:'Хюэ', key:'ХЮЭ',
@@ -495,6 +495,8 @@ const TOURS = [
       {id:'vw_child', label:'Дети 100–140 см',          vnd_fixed:600000},
       {id:'vw_elder', label:'Пожилые 70+',              vnd_fixed:600000}
     ]},
+  { icon:'🏄', name:'Серфинг', key:'СЕРФИНГ',
+    rows:[{label:'Групповой',usd:40},{label:'Индивидуально',usd:80},{label:'Сплит для двоих',usd:110}] },
   { icon:'🎣', name:'Рыбалка', key:'РЫБАЛКА',
     rows:[{label:'Взрослый',usd:90},{label:'Лодка',usd:360}] },
   { icon:'⛵', name:'Морская прогулка', key:'МОРСКАЯ ПРОГУЛКА',
