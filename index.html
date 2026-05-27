@@ -1030,7 +1030,8 @@ function bUpdateStats(){
   const nm=new Date().getMonth(),ny=new Date().getFullYear();
   document.getElementById('bStatToday').textContent=allBookings.filter(b=>b.date===tod&&b.tripStatus!=='cancelled'&&b.tripStatus!=='waiting_date').length;
   document.getElementById('bStatTomorrow').textContent=allBookings.filter(b=>b.date===tom&&b.tripStatus!=='cancelled'&&b.tripStatus!=='waiting_date').length;
-  let earn=0;
+  const gasMonth=parseFloat(localStorage.getItem('walletMonthEarned'))||0;
+  let earn=gasMonth;
   allBookings.forEach(b=>{if(b.tripStatus==='done'&&b.date){const bd=new Date(b.date+'T00:00:00');if(bd.getMonth()===nm&&bd.getFullYear()===ny)earn+=parseFloat(b.commission)||0;}});
   document.getElementById('bStatEarn').textContent='$'+(Math.round(earn*100)/100);
 }
@@ -1581,20 +1582,36 @@ function toggleEarnHistory(){
   h.style.display=isOpen?'none':'block';
   if(!isOpen){p.style.display='none';renderEarnHistory();}
 }
-function renderEarnHistory(){
+async function renderEarnHistory(){
   const MNAMES=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  const el=document.getElementById('earnHistoryList');
+  el.innerHTML='<span style="color:var(--muted)">Загрузка…</span>';
+  // Данные из Google Sheets через GAS
   const months={};
+  try{
+    const r=await fetch(GAS_URL+'?action=getHistory',{mode:'cors'});
+    const sheetData=await r.json();
+    if(sheetData&&typeof sheetData==='object'){
+      Object.entries(sheetData).forEach(([key,v])=>{
+        const [y,m]=key.split('-');
+        if(!months[key]) months[key]={earn:0,count:0,label:MNAMES[parseInt(m)-1]+' '+y,fromSheet:true};
+        months[key].earn+=parseFloat(v.earn)||0;
+        months[key].count+=parseInt(v.count)||0;
+      });
+    }
+  } catch(e){}
+  // Локальные бронирования (добавляем только новые — не из листа)
   allBookings.forEach(b=>{
     if(b.tripStatus==='done'&&b.date){
       const d=new Date(b.date+'T00:00:00'); if(isNaN(d)) return;
       const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+      if(months[key]&&months[key].fromSheet) return; // уже есть в листе
       if(!months[key]) months[key]={earn:0,count:0,label:MNAMES[d.getMonth()]+' '+d.getFullYear()};
       months[key].earn+=parseFloat(b.commission)||0;
       months[key].count++;
     }
   });
   const keys=Object.keys(months).sort().reverse();
-  const el=document.getElementById('earnHistoryList');
   if(!keys.length){el.innerHTML='<span style="color:var(--muted)">Нет данных</span>';return;}
   el.innerHTML=keys.map(k=>{
     const m=months[k]; const earn=Math.round(m.earn*100)/100;
@@ -1617,9 +1634,8 @@ async function walletAdd(key, sign){
 }
 function refreshWalletBalance(){
   const gasEarned=parseFloat(localStorage.getItem('walletTotalEarned'))||0;
-  const totalEarned=gasEarned||calcTotalEarned();
+  const totalEarned=Math.round((gasEarned+calcTotalEarned())*100)/100;
   const paid=parseFloat(localStorage.getItem('walletPaid'))||0;
-  const monthEarned=parseFloat(localStorage.getItem('walletMonthEarned'))||0;
   const balance=Math.round((totalEarned-paid)*100)/100;
   const el=document.getElementById('walletBalance'); if(el) el.textContent='$'+balance;
   const pT=document.getElementById('walletPaidTotal'); if(pT) pT.textContent='Выплачено: $'+paid;
@@ -1632,9 +1648,7 @@ async function loadWallet(){
     const data=await r.json();
     if(data&&typeof data.paid!=='undefined') localStorage.setItem('walletPaid',data.paid||0);
     if(data&&typeof data.totalEarned!=='undefined') localStorage.setItem('walletTotalEarned',data.totalEarned||0);
-    if(data&&typeof data.monthEarned!=='undefined') localStorage.setItem('walletMonthEarned',data.monthEarned||0);
-    const earnEl=document.getElementById('bStatEarn');
-    if(earnEl&&data&&parseFloat(data.monthEarned)) earnEl.textContent='$'+data.monthEarned;
+    if(data&&typeof data.monthEarned!=='undefined'){ localStorage.setItem('walletMonthEarned',data.monthEarned||0); bUpdateStats(); }
   } catch(e){}
   refreshWalletBalance();
 }
