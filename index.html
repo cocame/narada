@@ -1632,9 +1632,7 @@ async function loadWallet(){
     if(data&&typeof data.totalEarned!=='undefined') localStorage.setItem('walletTotalEarned',data.totalEarned||0);
     if(data&&typeof data.monthEarned!=='undefined') localStorage.setItem('walletMonthEarned',data.monthEarned||0);
     const earnEl=document.getElementById('bStatEarn');
-    if(earnEl&&earnEl.textContent==='$0'&&data&&parseFloat(data.monthEarned)){
-      earnEl.textContent='$'+data.monthEarned;
-    }
+    if(earnEl&&data&&parseFloat(data.monthEarned)) earnEl.textContent='$'+data.monthEarned;
   } catch(e){}
   refreshWalletBalance();
 }
