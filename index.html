@@ -1614,12 +1614,14 @@ async function walletAdd(key, sign){
   refreshWalletBalance();
 }
 function refreshWalletBalance(){
-  const totalEarned=calcTotalEarned();
+  const gasEarned=parseFloat(localStorage.getItem('walletTotalEarned'))||0;
+  const totalEarned=gasEarned||calcTotalEarned();
   const paid=parseFloat(localStorage.getItem('walletPaid'))||0;
+  const monthEarned=parseFloat(localStorage.getItem('walletMonthEarned'))||0;
   const balance=Math.round((totalEarned-paid)*100)/100;
   const el=document.getElementById('walletBalance'); if(el) el.textContent='$'+balance;
   const pT=document.getElementById('walletPaidTotal'); if(pT) pT.textContent='Выплачено: $'+paid;
-  const eT=document.getElementById('walletEarnTotal'); if(eT) eT.textContent='Начислено всего: $'+totalEarned;
+  const eT=document.getElementById('walletEarnTotal'); if(eT) eT.textContent='Начислено всего: $'+totalEarned+(monthEarned?' · Этот месяц: $'+monthEarned:'');
 }
 function updateWallet(){ refreshWalletBalance(); }
 async function loadWallet(){
@@ -1627,6 +1629,8 @@ async function loadWallet(){
     const r=await fetch(GAS_URL+'?action=getWallet',{mode:'cors'});
     const data=await r.json();
     if(data&&typeof data.paid!=='undefined') localStorage.setItem('walletPaid',data.paid||0);
+    if(data&&typeof data.totalEarned!=='undefined') localStorage.setItem('walletTotalEarned',data.totalEarned||0);
+    if(data&&typeof data.monthEarned!=='undefined') localStorage.setItem('walletMonthEarned',data.monthEarned||0);
   } catch(e){}
   refreshWalletBalance();
 }
