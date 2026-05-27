@@ -1621,7 +1621,7 @@ function refreshWalletBalance(){
   const balance=Math.round((totalEarned-paid)*100)/100;
   const el=document.getElementById('walletBalance'); if(el) el.textContent='$'+balance;
   const pT=document.getElementById('walletPaidTotal'); if(pT) pT.textContent='Выплачено: $'+paid;
-  const eT=document.getElementById('walletEarnTotal'); if(eT) eT.textContent='Начислено всего: $'+totalEarned+(monthEarned?' · Этот месяц: $'+monthEarned:'');
+  const eT=document.getElementById('walletEarnTotal'); if(eT) eT.textContent='Начислено всего: $'+totalEarned;
 }
 function updateWallet(){ refreshWalletBalance(); }
 async function loadWallet(){
