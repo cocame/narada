@@ -229,12 +229,12 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 </header>
 
 <nav class="tab-nav">
-  <button class="tab-btn active" onclick="switchTab('price')" id="tnPrice"><span>💰</span>Прайс</button>
-  <button class="tab-btn" onclick="switchTab('booking')" id="tnBooking"><span>📋</span>Бронь</button>
+  <button class="tab-btn" onclick="switchTab('price')" id="tnPrice"><span>💰</span>Прайс</button>
+  <button class="tab-btn active" onclick="switchTab('booking')" id="tnBooking"><span>📋</span>Бронь</button>
 </nav>
 
 <!-- ══ TAB: ПРАЙС ══ -->
-<div class="tab-panel active" id="tabPrice">
+<div class="tab-panel" id="tabPrice">
   <div id="status-bar">
     <div class="rate-badge" id="rate-status"><div class="dot"></div><span id="status-text">Загрузка курсов…</span></div>
     <div id="last-updated"></div>
@@ -263,7 +263,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 </div>
 
 <!-- ══ TAB: БРОНЬ ══ -->
-<div class="tab-panel" id="tabBooking">
+<div class="tab-panel active" id="tabBooking">
   <div id="booking-wrap">
     <div class="b-header">
       <div class="b-stats">
