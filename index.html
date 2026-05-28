@@ -1586,52 +1586,25 @@ function toggleEarnHistory(){
   h.style.display=isOpen?'none':'block';
   if(!isOpen){p.style.display='none';renderEarnHistory();}
 }
-async function renderEarnHistory(){
+function renderEarnHistory(){
   const MNAMES=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
   const el=document.getElementById('earnHistoryList');
-  el.innerHTML='<span style="color:var(--muted)">Загрузка…</span>';
-  // Данные из Google Sheets через GAS
   const months={};
-  try{
-    const r=await fetch(GAS_URL+'?action=getHistory',{mode:'cors'});
-    const sheetData=await r.json();
-    if(sheetData&&typeof sheetData==='object'){
-      Object.entries(sheetData).forEach(([key,v])=>{
-        const [y,m]=key.split('-');
-        if(!months[key]) months[key]={earn:0,count:0,label:MNAMES[parseInt(m)-1]+' '+y,fromSheet:true};
-        months[key].earn+=parseFloat(v.earn)||0;
-        months[key].count+=parseInt(v.count)||0;
-      });
-    }
-  } catch(e){}
-  // Локальные бронирования: только те, что ещё не записаны в таблицу
   allBookings.forEach(b=>{
     if(b.tripStatus==='done'&&b.date){
-      if(b.walletWritten) return; // уже в таблице — не дублируем
       const d=new Date(b.date+'T00:00:00'); if(isNaN(d)) return;
       const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
       if(!months[key]) months[key]={earn:0,count:0,label:MNAMES[d.getMonth()]+' '+d.getFullYear()};
-      months[key].earn+=parseFloat(b.commission)||0;
+      months[key].earn=Math.round((months[key].earn+(parseFloat(b.commission)||0))*100)/100;
       months[key].count++;
     }
   });
-  // Если данных нет совсем — показываем кошелёк как запасной вариант
-  if(!Object.keys(months).length){
-    const gasMonth=parseFloat(localStorage.getItem('walletMonthEarned'))||0;
-    const gasTotal=parseFloat(localStorage.getItem('walletTotalEarned'))||0;
-    const now=new Date();
-    const curKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-    if(gasMonth>0) months[curKey]={earn:gasMonth,count:0,label:MNAMES[now.getMonth()]+' '+now.getFullYear()};
-    const prevEarn=Math.round((gasTotal-gasMonth)*100)/100;
-    if(prevEarn>0) months['0000-00']={earn:prevEarn,count:0,label:'Ранее'};
-  }
   const keys=Object.keys(months).sort().reverse();
   if(!keys.length){el.innerHTML='<span style="color:var(--muted)">Нет данных</span>';return;}
   el.innerHTML=keys.map(k=>{
-    const m=months[k]; const earn=Math.round(m.earn*100)/100;
+    const m=months[k];
     const s=m.count===1?'тур':m.count<5?'тура':'туров';
-    const countStr=m.count>0?` <span style="color:var(--muted);font-size:10px;font-weight:400">(${m.count} ${s})</span>`:'';
-    return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">${m.label}</span><span style="color:var(--accent);font-weight:600">$${earn}${countStr}</span></div>`;
+    return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">${m.label}</span><span style="color:var(--accent);font-weight:600">$${m.earn} <span style="color:var(--muted);font-size:10px;font-weight:400">(${m.count} ${s})</span></span></div>`;
   }).join('');
 }
 function calcTotalEarned(){
