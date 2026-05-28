@@ -1616,14 +1616,21 @@ async function renderEarnHistory(){
       months[key].count++;
     }
   });
-  // Если таблица недоступна — добавляем walletMonthEarned в текущий месяц (как в bUpdateStats)
+  // Если таблица недоступна — восстанавливаем из walletMonthEarned + walletTotalEarned
   if (!Object.values(months).some(m => m.fromSheet)) {
     const gasMonth = parseFloat(localStorage.getItem('walletMonthEarned')) || 0;
+    const gasTotal = parseFloat(localStorage.getItem('walletTotalEarned')) || 0;
+    const now = new Date();
+    const curKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    // Текущий месяц: walletMonthEarned + локальные done (не записанные в лист)
     if (gasMonth > 0) {
-      const now = new Date();
-      const curKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
       if (!months[curKey]) months[curKey] = {earn: 0, count: 0, label: MNAMES[now.getMonth()] + ' ' + now.getFullYear()};
       months[curKey].earn = Math.round((months[curKey].earn + gasMonth) * 100) / 100;
+    }
+    // Предыдущие периоды: разница totalEarned − monthEarned
+    const prevEarn = Math.round((gasTotal - gasMonth) * 100) / 100;
+    if (prevEarn > 0) {
+      months['0000-00'] = {earn: prevEarn, count: 0, label: 'Ранее'};
     }
   }
   const keys=Object.keys(months).sort().reverse();
@@ -1631,7 +1638,8 @@ async function renderEarnHistory(){
   el.innerHTML=keys.map(k=>{
     const m=months[k]; const earn=Math.round(m.earn*100)/100;
     const s=m.count===1?'тур':m.count<5?'тура':'туров';
-    return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">${m.label}</span><span style="color:var(--accent);font-weight:600">$${earn} <span style="color:var(--muted);font-size:10px;font-weight:400">(${m.count} ${s})</span></span></div>`;
+    const countStr=m.count>0?` <span style="color:var(--muted);font-size:10px;font-weight:400">(${m.count} ${s})</span>`:'';
+    return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">${m.label}</span><span style="color:var(--accent);font-weight:600">$${earn}${countStr}</span></div>`;
   }).join('');
 }
 function calcTotalEarned(){
