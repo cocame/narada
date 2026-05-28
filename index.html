@@ -1604,12 +1604,13 @@ async function renderEarnHistory(){
       });
     }
   } catch(e){}
-  // Локальные бронирования (добавляем только новые — не из листа)
+  // Локальные бронирования: добавляем только те, что ещё не записаны в лист
   allBookings.forEach(b=>{
     if(b.tripStatus==='done'&&b.date){
       const d=new Date(b.date+'T00:00:00'); if(isNaN(d)) return;
       const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-      if(months[key]&&months[key].fromSheet) return; // уже есть в листе
+      // Скипаем только если бронирование явно записано в таблицу (walletWritten===true)
+      if(b.walletWritten&&months[key]&&months[key].fromSheet) return;
       if(!months[key]) months[key]={earn:0,count:0,label:MNAMES[d.getMonth()]+' '+d.getFullYear()};
       months[key].earn+=parseFloat(b.commission)||0;
       months[key].count++;
