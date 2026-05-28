@@ -1675,6 +1675,7 @@ async function loadWallet(){
   updateStatusBar(rates);
   renderPriceCards(rates,false);
 })();
+document.addEventListener('DOMContentLoaded', () => { bLoad(); loadWallet(); });
 </script>
 </body>
 </html>
