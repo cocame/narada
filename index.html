@@ -1616,6 +1616,16 @@ async function renderEarnHistory(){
       months[key].count++;
     }
   });
+  // Если таблица недоступна — добавляем walletMonthEarned в текущий месяц (как в bUpdateStats)
+  if (!Object.values(months).some(m => m.fromSheet)) {
+    const gasMonth = parseFloat(localStorage.getItem('walletMonthEarned')) || 0;
+    if (gasMonth > 0) {
+      const now = new Date();
+      const curKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+      if (!months[curKey]) months[curKey] = {earn: 0, count: 0, label: MNAMES[now.getMonth()] + ' ' + now.getFullYear()};
+      months[curKey].earn = Math.round((months[curKey].earn + gasMonth) * 100) / 100;
+    }
+  }
   const keys=Object.keys(months).sort().reverse();
   if(!keys.length){el.innerHTML='<span style="color:var(--muted)">Нет данных</span>';return;}
   el.innerHTML=keys.map(k=>{
