@@ -1604,45 +1604,26 @@ async function renderEarnHistory(){
       });
     }
   } catch(e){}
-  // Локальные бронирования: добавляем только те, что ещё не записаны в лист
+  // Локальные бронирования: только те, что ещё не записаны в таблицу
   allBookings.forEach(b=>{
     if(b.tripStatus==='done'&&b.date){
+      if(b.walletWritten) return; // уже в таблице — не дублируем
       const d=new Date(b.date+'T00:00:00'); if(isNaN(d)) return;
       const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-      // Скипаем только если бронирование явно записано в таблицу (walletWritten===true)
-      if(b.walletWritten&&months[key]&&months[key].fromSheet) return;
       if(!months[key]) months[key]={earn:0,count:0,label:MNAMES[d.getMonth()]+' '+d.getFullYear()};
       months[key].earn+=parseFloat(b.commission)||0;
       months[key].count++;
     }
   });
-  // Дополняем данными из кошелька (работает всегда — и когда таблица есть, и когда нет)
-  {
-    const gasMonth = parseFloat(localStorage.getItem('walletMonthEarned')) || 0;
-    const gasTotal = parseFloat(localStorage.getItem('walletTotalEarned')) || 0;
-    const now = new Date();
-    const curKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-    // Текущий месяц: добавляем walletMonthEarned
-    if (gasMonth > 0) {
-      if (!months[curKey]) months[curKey] = {earn: 0, count: 0, label: MNAMES[now.getMonth()] + ' ' + now.getFullYear()};
-      months[curKey].earn = Math.round((months[curKey].earn + gasMonth) * 100) / 100;
-    }
-    // Предыдущие периоды (prevEarn = totalEarned − monthEarned)
-    const prevEarn = Math.round((gasTotal - gasMonth) * 100) / 100;
-    if (prevEarn > 0) {
-      // Ищем исторические месяцы из таблицы с earn=0 (испорченные строки — дата есть, комиссия=0)
-      const histKeys = Object.keys(months).filter(k => k < curKey && months[k].fromSheet && months[k].earn === 0);
-      if (histKeys.length > 0) {
-        // Распределяем prevEarn по историческим месяцам пропорционально кол-ву туров
-        const totalCount = histKeys.reduce((s, k) => s + (months[k].count || 1), 0);
-        histKeys.forEach(k => {
-          months[k].earn = Math.round(prevEarn * ((months[k].count || 1) / totalCount) * 100) / 100;
-        });
-      } else if (!Object.values(months).some(m => m.fromSheet)) {
-        // Данных из таблицы нет совсем — показываем "Ранее" как запасной вариант
-        months['0000-00'] = {earn: prevEarn, count: 0, label: 'Ранее'};
-      }
-    }
+  // Если данных нет совсем — показываем кошелёк как запасной вариант
+  if(!Object.keys(months).length){
+    const gasMonth=parseFloat(localStorage.getItem('walletMonthEarned'))||0;
+    const gasTotal=parseFloat(localStorage.getItem('walletTotalEarned'))||0;
+    const now=new Date();
+    const curKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+    if(gasMonth>0) months[curKey]={earn:gasMonth,count:0,label:MNAMES[now.getMonth()]+' '+now.getFullYear()};
+    const prevEarn=Math.round((gasTotal-gasMonth)*100)/100;
+    if(prevEarn>0) months['0000-00']={earn:prevEarn,count:0,label:'Ранее'};
   }
   const keys=Object.keys(months).sort().reverse();
   if(!keys.length){el.innerHTML='<span style="color:var(--muted)">Нет данных</span>';return;}
