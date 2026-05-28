@@ -787,6 +787,7 @@ async function bLoad(){
   try {
     const r=await fetch(GAS_URL+'?action=getBookings',{mode:'cors'});
     const data=await r.json();
+    console.log('GAS response:', data);
     allBookings=Array.isArray(data)?data:[];
     bRender(); bUpdateStats();
   } catch(e){
@@ -1653,6 +1654,7 @@ async function loadWallet(){
   try{
     const r=await fetch(GAS_URL+'?action=getWallet',{mode:'cors'});
     const data=await r.json();
+    console.log('GAS response:', data);
     if(data&&typeof data.paid!=='undefined') localStorage.setItem('walletPaid',data.paid||0);
     if(data&&typeof data.totalEarned!=='undefined') localStorage.setItem('walletTotalEarned',data.totalEarned||0);
     if(data&&typeof data.monthEarned!=='undefined'){ localStorage.setItem('walletMonthEarned',data.monthEarned||0); bUpdateStats(); }
