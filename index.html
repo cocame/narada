@@ -1192,11 +1192,37 @@ function fOtherRecalc(){
   const sum=parseFloat(document.getElementById('fOtherPriceInput').value)||0;
   const comm=Math.ceil(sum/10*2)/2;
   const cEl=document.getElementById('previewComm');if(cEl)cEl.textContent='$'+comm;
+  if(sum>0&&currentRates){
+    const R=currentRates;
+    const currency=document.getElementById('fCurrency').value;
+    const total=calcFromUSD(sum,R);
+    const val=currency==='USD'?fmtUSD(total.usd):currency==='RUB'?fmtRUB(total.rub):currency==='USDT'?fmtUSDT(total.usdt):fmtVND(total.vnd);
+    document.getElementById('fCalcTotal').textContent=val;
+    document.getElementById('fCalcBreak').textContent='';
+    document.getElementById('fCalcResult').style.display='block';
+    document.getElementById('fCalcResult').dataset.val=val;
+    document.getElementById('fCalcResult').dataset.usd=total.usd;
+  } else {
+    document.getElementById('fCalcResult').style.display='none';
+  }
 }
 function pfOtherRecalc(){
   const sum=parseFloat(document.getElementById('pfOtherPriceInput').value)||0;
   const comm=Math.ceil(sum/10*2)/2;
   const cEl=document.getElementById('previewComm2');if(cEl)cEl.textContent='$'+comm;
+  if(sum>0&&currentRates){
+    const R=currentRates;
+    const currency=document.getElementById('pfCurrency').value;
+    const total=calcFromUSD(sum,R);
+    const val=currency==='USD'?fmtUSD(total.usd):currency==='RUB'?fmtRUB(total.rub):currency==='USDT'?fmtUSDT(total.usdt):fmtVND(total.vnd);
+    document.getElementById('pfCalcTotal').textContent=val;
+    document.getElementById('pfCalcBreak').textContent='';
+    document.getElementById('pfCalcResult').style.display='block';
+    document.getElementById('pfCalcResult').dataset.val=val;
+    document.getElementById('pfCalcResult').dataset.usd=total.usd;
+  } else {
+    document.getElementById('pfCalcResult').style.display='none';
+  }
 }
 function fUpdateCalc(){
   const route=document.getElementById('fRoute').value;
