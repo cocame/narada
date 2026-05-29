@@ -350,7 +350,9 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
               <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
               <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>HOT SPRINGS</option>
               <option>СЕРФИНГ</option><option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option><option>ХАЙВАН</option>
+              <option value="ДРУГОЕ">Другое...</option>
             </select>
+            <div id="fOtherBlock" style="display:none"><label>Название</label><input type="text" id="fOtherName"></div>
           </div>
           <div class="form-group full"><label>Количество человек</label>
             <div class="pax-grid">
@@ -372,6 +374,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
         <!-- КАЛЬКУЛЯТОР В ФОРМЕ -->
         <div id="fCalcBlock" style="display:none;margin-top:12px;background:var(--note-bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
           <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:8px">Расчёт стоимости</div>
+          <div id="fOtherPriceSection" style="display:none"><div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2)"><div style="font-size:12px;color:var(--muted)">Стоимость тура $</div><input type="number" id="fOtherPriceInput" min="0" placeholder="0" oninput="fOtherRecalc()" style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)"></div></div>
           <div id="fCalcRows"></div>
           <div id="fTicketSection" style="display:none">
             <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;font-family:'DM Mono',monospace;padding:8px 0 4px;border-top:1px dashed var(--border);margin-top:4px">Входные билеты</div>
@@ -407,7 +410,9 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
                 <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
                 <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>HOT SPRINGS</option>
                 <option>СЕРФИНГ</option><option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option><option>ХАЙВАН</option>
+                <option value="ДРУГОЕ">Другое...</option>
               </select>
+              <div id="pfOtherBlock" style="display:none"><label>Название</label><input type="text" id="pfOtherName"></div>
             </div>
             <div class="form-group full"><label>Количество человек</label>
               <div class="pax-grid">
@@ -428,6 +433,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
           </div>
           <div id="pfCalcBlock" style="display:none;margin-top:12px;background:var(--note-bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
             <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:8px">Расчёт стоимости</div>
+            <div id="pfOtherPriceSection" style="display:none"><div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2)"><div style="font-size:12px;color:var(--muted)">Стоимость тура $</div><input type="number" id="pfOtherPriceInput" min="0" placeholder="0" oninput="pfOtherRecalc()" style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)"></div></div>
             <div id="pfCalcRows"></div>
             <div id="pfTicketSection" style="display:none">
               <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;font-family:'DM Mono',monospace;padding:8px 0 4px;border-top:1px dashed var(--border);margin-top:4px">Входные билеты</div>
@@ -1116,6 +1122,7 @@ function bClearForm(){
   Object.keys(fTickCounts).forEach(k=>delete fTickCounts[k]);
   Object.keys(pfTickCounts).forEach(k=>delete pfTickCounts[k]);
   fCalcRoute=''; pfCalcRoute='';
+  ['fOtherName','pfOtherName','fOtherPriceInput','pfOtherPriceInput'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   // скрыть калькулятор
   const fb=document.getElementById('fCalcBlock'); if(fb) fb.style.display='none';
   const pb=document.getElementById('pfCalcBlock'); if(pb) pb.style.display='none';
@@ -1181,12 +1188,33 @@ function fDrawCalcRows(tour, adults, children){
   document.getElementById('fCalcRows').innerHTML=rowsHTML;
 }
 
+function fOtherRecalc(){
+  const sum=parseFloat(document.getElementById('fOtherPriceInput').value)||0;
+  const comm=Math.ceil(sum/10*2)/2;
+  const cEl=document.getElementById('previewComm');if(cEl)cEl.textContent='$'+comm;
+}
+function pfOtherRecalc(){
+  const sum=parseFloat(document.getElementById('pfOtherPriceInput').value)||0;
+  const comm=Math.ceil(sum/10*2)/2;
+  const cEl=document.getElementById('previewComm2');if(cEl)cEl.textContent='$'+comm;
+}
 function fUpdateCalc(){
   const route=document.getElementById('fRoute').value;
   const adults=parseInt(document.getElementById('fAdults').value)||0;
   const children=parseInt(document.getElementById('fChildren').value)||0;
-  const tour=TOURS.find(t=>t.key===route);
   const block=document.getElementById('fCalcBlock');
+  const otherBlock=document.getElementById('fOtherBlock');
+  if(otherBlock) otherBlock.style.display=route==='ДРУГОЕ'?'':'none';
+  if(route==='ДРУГОЕ'){
+    block.style.display='block';
+    document.getElementById('fOtherPriceSection').style.display='';
+    document.getElementById('fCalcRows').innerHTML='';
+    document.getElementById('fTicketSection').style.display='none';
+    document.getElementById('fCalcResult').style.display='none';
+    fCalcRoute=''; fOtherRecalc(); return;
+  }
+  document.getElementById('fOtherPriceSection').style.display='none';
+  const tour=TOURS.find(t=>t.key===route);
   if(!tour||!currentRates||(!adults&&!children)){block.style.display='none';fCalcRoute='';return;}
   block.style.display='block';
   // перерисовываем поля только если изменился маршрут
@@ -1293,8 +1321,19 @@ function pfUpdateCalc(){
   const route=document.getElementById('pfRoute').value;
   const adults=parseInt(document.getElementById('pfAdults').value)||0;
   const children=parseInt(document.getElementById('pfChildren').value)||0;
-  const tour=TOURS.find(t=>t.key===route);
   const block=document.getElementById('pfCalcBlock');
+  const otherBlock=document.getElementById('pfOtherBlock');
+  if(otherBlock) otherBlock.style.display=route==='ДРУГОЕ'?'':'none';
+  if(route==='ДРУГОЕ'){
+    block.style.display='block';
+    document.getElementById('pfOtherPriceSection').style.display='';
+    document.getElementById('pfCalcRows').innerHTML='';
+    document.getElementById('pfTicketSection').style.display='none';
+    document.getElementById('pfCalcResult').style.display='none';
+    pfCalcRoute=''; pfOtherRecalc(); return;
+  }
+  document.getElementById('pfOtherPriceSection').style.display='none';
+  const tour=TOURS.find(t=>t.key===route);
   if(!tour||!currentRates||(!adults&&!children)){block.style.display='none';pfCalcRoute='';return;}
   block.style.display='block';
   const pfCK=route+"|"+adults+","+children; if(pfCalcRoute!==pfCK){
@@ -1397,14 +1436,22 @@ function bGetFormData(){
   const adults=parseInt(document.getElementById(p+'Adults').value)||0;
   const children=parseInt(document.getElementById(p+'Children').value)||0;
   const tour=TOURS.find(t=>t.key===route);
-  const adultUSD=parseFloat(document.getElementById(p+'PriceAdult')?.value)||(tour?tour.rows[0].usd:0);
-  const childUSD=parseFloat(document.getElementById(p+'PriceChild')?.value)||(tour&&tour.rows[1]?tour.rows[1].usd:0);
-  const tourUSD=adultUSD*adults+childUSD*children;
-  const comm=tourUSD>0?Math.ceil(tourUSD/10*2)/2:0;
+  let routeName=route, adultUSD=0, childUSD=0, comm=0;
+  if(route==='ДРУГОЕ'){
+    const on=document.getElementById(p+'OtherName')?.value.trim();
+    if(on) routeName=on.toUpperCase();
+    const sum=parseFloat(document.getElementById(p+'OtherPriceInput')?.value)||0;
+    comm=sum>0?Math.ceil(sum/10*2)/2:0;
+  } else {
+    adultUSD=parseFloat(document.getElementById(p+'PriceAdult')?.value)||(tour?tour.rows[0].usd:0);
+    childUSD=parseFloat(document.getElementById(p+'PriceChild')?.value)||(tour&&tour.rows[1]?tour.rows[1].usd:0);
+    const tourUSD=adultUSD*adults+childUSD*children;
+    comm=tourUSD>0?Math.ceil(tourUSD/10*2)/2:0;
+  }
   return {
     id:editingId,
     date:document.getElementById(p+'Date').value,
-    route,
+    route:routeName,
     adults, children,
     infants:parseInt(document.getElementById(p+'Infants').value)||0,
     contact:document.getElementById(p+'Contact').value,
@@ -1413,8 +1460,8 @@ function bGetFormData(){
     payMethod:document.getElementById(p+'PayMethod').value,
     totalAmount:document.getElementById(p+'Amount').value,
     commission:comm,
-    customPriceAdult:adultUSD,
-    customPriceChild:childUSD,
+    customPriceAdult:route==='ДРУГОЕ'?0:adultUSD,
+    customPriceChild:route==='ДРУГОЕ'?0:childUSD,
     payStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.payStatus||'unpaid') : 'unpaid',
     tripStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.tripStatus||'waiting') : (document.getElementById(p+'TripStatus')?.value||'waiting'),
     notes:document.getElementById(p+'Notes').value
