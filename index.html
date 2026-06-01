@@ -1705,7 +1705,8 @@ async function walletAdd(key, sign){
   refreshWalletBalance();
 }
 function refreshWalletBalance(){
-  const totalEarned=Math.round(calcTotalEarned()*100)/100;
+  const gasEarned=parseFloat(localStorage.getItem('walletTotalEarned'))||0;
+  const totalEarned=Math.round((gasEarned+calcTotalEarned())*100)/100;
   const paid=parseFloat(localStorage.getItem('walletPaid'))||0;
   const balance=Math.round((totalEarned-paid)*100)/100;
   const el=document.getElementById('walletBalance'); if(el) el.textContent='$'+balance;
