@@ -1041,8 +1041,7 @@ function bUpdateStats(){
   const nm=new Date().getMonth(),ny=new Date().getFullYear();
   document.getElementById('bStatToday').textContent=allBookings.filter(b=>b.date===tod&&b.tripStatus!=='cancelled'&&b.tripStatus!=='waiting_date').length;
   document.getElementById('bStatTomorrow').textContent=allBookings.filter(b=>b.date===tom&&b.tripStatus!=='cancelled'&&b.tripStatus!=='waiting_date').length;
-  const gasMonth=parseFloat(localStorage.getItem('walletMonthEarned'))||0;
-  let earn=gasMonth;
+  let earn=0;
   allBookings.forEach(b=>{if(b.tripStatus==='done'&&b.date){const bd=new Date(b.date+'T00:00:00');if(bd.getMonth()===nm&&bd.getFullYear()===ny)earn+=parseFloat(b.commission)||0;}});
   document.getElementById('bStatEarn').textContent='$'+(Math.round(earn*100)/100);
 }
@@ -1706,8 +1705,7 @@ async function walletAdd(key, sign){
   refreshWalletBalance();
 }
 function refreshWalletBalance(){
-  const gasEarned=parseFloat(localStorage.getItem('walletTotalEarned'))||0;
-  const totalEarned=Math.round((gasEarned+calcTotalEarned())*100)/100;
+  const totalEarned=Math.round(calcTotalEarned()*100)/100;
   const paid=parseFloat(localStorage.getItem('walletPaid'))||0;
   const balance=Math.round((totalEarned-paid)*100)/100;
   const el=document.getElementById('walletBalance'); if(el) el.textContent='$'+balance;
