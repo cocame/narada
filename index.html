@@ -1690,13 +1690,9 @@ function renderEarnHistory(){
   }).join('');
 }
 function calcTotalEarned(){
-  const nm=new Date().getMonth(),ny=new Date().getFullYear();
   let t=0;
   allBookings.forEach(b=>{
-    if(b.tripStatus==='done'&&b.date){
-      const bd=new Date(b.date+'T00:00:00');
-      if(bd.getMonth()===nm&&bd.getFullYear()===ny) t+=parseFloat(b.commission)||0;
-    }
+    if(b.tripStatus==='done'&&b.date) t+=parseFloat(b.commission)||0;
   });
   return Math.round(t*100)/100;
 }
