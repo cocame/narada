@@ -1681,12 +1681,15 @@ function renderEarnHistory(){
     }
   });
   const keys=Object.keys(months).sort().reverse();
-  if(!keys.length){el.innerHTML='<span style="color:var(--muted)">Нет данных</span>';return;}
-  el.innerHTML=keys.map(k=>{
+  const gasEarned=parseFloat(localStorage.getItem('walletTotalEarned'))||0;
+  if(!keys.length&&!gasEarned){el.innerHTML='<span style="color:var(--muted)">Нет данных</span>';return;}
+  const rows=keys.map(k=>{
     const m=months[k];
     const s=m.count===1?'тур':m.count<5?'тура':'туров';
     return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">${m.label}</span><span style="color:var(--accent);font-weight:600">$${m.earn} <span style="color:var(--muted);font-size:10px;font-weight:400">(${m.count} ${s})</span></span></div>`;
-  }).join('');
+  });
+  if(gasEarned>0) rows.push(`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Архив</span><span style="color:var(--accent);font-weight:600">$${gasEarned}</span></div>`);
+  el.innerHTML=rows.join('');
 }
 function calcTotalEarned(){
   let t=0;
