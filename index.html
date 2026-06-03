@@ -486,7 +486,7 @@ const TOURS = [
   { icon:'🌉', name:'Обзорный Дананг', key:'ДАНАНГ',
     rows:[{label:'Взрослый',usd:64},{label:'Ребёнок до 10',usd:32}] },
   { icon:'⛰', name:'Ба На Хиллс', key:'БА НА ХИЛЛС',
-    rows:[{label:'Взрослый / >140 см',usd:48},{label:'Ребёнок 100–140 см',usd:24},{label:'Индивидуально',usd:192}],
+    rows:[{label:'Взрослый / >140 см',usd:48},{label:'Ребёнок 100–140 см',usd:24},{label:'Индивидуально',usd:192,flat:true}],
     tickets:[
       {id:'bana_adult_day',   label:'Утро — Взрослые >140 см',     vnd_fixed:1300000},
       {id:'bana_child_day',   label:'Утро — Дети 100–140 см',      vnd_fixed:1000000},
@@ -494,7 +494,7 @@ const TOURS = [
       {id:'bana_child_eve',   label:'Вечер — Дети 100–140 см',     vnd_fixed:900000}
     ]},
   { icon:'🌆', name:'БХ Вечер', key:'БХ ВЕЧЕР',
-    rows:[{label:'Индивидуально',usd:192}],
+    rows:[{label:'Индивидуально',usd:192,flat:true}],
     tickets:[
       {id:'bh_eve_adult', label:'Вечер — Взрослые >140 см', vnd_fixed:1100000},
       {id:'bh_eve_child', label:'Вечер — Дети 100–140 см',  vnd_fixed:900000}
@@ -1176,14 +1176,23 @@ function fDrawCalcRows(tour, adults, children){
     const totId=`fTotRow${i}`;
     if(i===0&&!adults) return;
     if(i===1&&(!children||!tour.rows[1])) return;
-    if(i>=2){
+    if(row.flat&&i>=2){
+      rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;flex-shrink:0">
+          <input type="checkbox" id="fFlatCheck${i}" onchange="fRecalc()" style="accent-color:var(--accent)"> ${row.label}
+        </label>
+        <div style="display:flex;align-items:center;gap:4px">
+          <input type="number" id="${priceId}" value="${row.usd}" oninput="fRecalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+          <span style="font-size:10px;color:var(--muted)">$ =</span>
+          <span id="${totId}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
+        </div>
+      </div>`;
+    } else if(row.flat&&i===0){
       rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
         <div style="font-size:12px;color:var(--muted);flex-shrink:0">${row.label}</div>
         <div style="display:flex;align-items:center;gap:4px">
           <input type="number" id="${priceId}" value="${row.usd}" oninput="fRecalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
-          <span style="font-size:10px;color:var(--muted)">$ × </span>
-          <input type="number" id="fCountRow${i}" value="0" min="0" oninput="fRecalc()" style="width:40px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
-          <span style="font-size:10px;color:var(--muted)"> =</span>
+          <span style="font-size:10px;color:var(--muted)">$ =</span>
           <span id="${totId}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
         </div>
       </div>`;
@@ -1292,7 +1301,12 @@ function fRecalc(){
   let tourUSD=0;
   tour.rows.forEach((row,i)=>{
     const price=parseFloat(document.getElementById(`fPriceRow${i}`)?.value)||row.usd;
-    const count=i===0?adults:i===1?children:parseInt(document.getElementById(`fCountRow${i}`)?.value)||0;
+    let count;
+    if(row.flat){
+      count=i>=2?(document.getElementById(`fFlatCheck${i}`)?.checked?1:0):1;
+    } else {
+      count=i===0?adults:i===1?children:parseInt(document.getElementById(`fCountRow${i}`)?.value)||0;
+    }
     const sub=price*count;
     tourUSD+=sub;
     const tot=document.getElementById(`fTotRow${i}`); if(tot) tot.textContent=fmtVal(sub);
@@ -1375,14 +1389,23 @@ function pfUpdateCalc(){
       const totId=`pfTotRow${i}`;
       if(i===0&&!adults) return;
       if(i===1&&(!children||!tour.rows[1])) return;
-      if(i>=2){
+      if(row.flat&&i>=2){
+        rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;flex-shrink:0">
+            <input type="checkbox" id="pfFlatCheck${i}" onchange="pfRecalc()" style="accent-color:var(--accent)"> ${row.label}
+          </label>
+          <div style="display:flex;align-items:center;gap:4px">
+            <input type="number" id="${priceId}" value="${row.usd}" oninput="pfRecalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+            <span style="font-size:10px;color:var(--muted)">$ =</span>
+            <span id="${totId}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
+          </div>
+        </div>`;
+      } else if(row.flat&&i===0){
         rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
           <div style="font-size:12px;color:var(--muted);flex-shrink:0">${row.label}</div>
           <div style="display:flex;align-items:center;gap:4px">
             <input type="number" id="${priceId}" value="${row.usd}" oninput="pfRecalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
-            <span style="font-size:10px;color:var(--muted)">$ × </span>
-            <input type="number" id="pfCountRow${i}" value="0" min="0" oninput="pfRecalc()" style="width:40px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
-            <span style="font-size:10px;color:var(--muted)"> =</span>
+            <span style="font-size:10px;color:var(--muted)">$ =</span>
             <span id="${totId}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
           </div>
         </div>`;
@@ -1428,7 +1451,12 @@ function pfRecalc(){
   let tourUSD=0;
   tour.rows.forEach((row,i)=>{
     const price=parseFloat(document.getElementById(`pfPriceRow${i}`)?.value)||row.usd;
-    const count=i===0?adults:i===1?children:parseInt(document.getElementById(`pfCountRow${i}`)?.value)||0;
+    let count;
+    if(row.flat){
+      count=i>=2?(document.getElementById(`pfFlatCheck${i}`)?.checked?1:0):1;
+    } else {
+      count=i===0?adults:i===1?children:parseInt(document.getElementById(`pfCountRow${i}`)?.value)||0;
+    }
     const sub=price*count;
     tourUSD+=sub;
     const tot=document.getElementById(`pfTotRow${i}`); if(tot) tot.textContent=fmtVal(sub);
