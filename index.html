@@ -1096,6 +1096,7 @@ function bEdit(id){
   editingId=id;
   // сбросить счётчики билетов и кэш маршрута
   Object.keys(fTickCounts).forEach(k=>delete fTickCounts[k]);
+  fCalcRoute=''; pfCalcRoute='';
   const fb=document.getElementById('fCalcBlock'); if(fb){fb.style.display='none';delete fb.dataset.route;}
   document.getElementById('modalTitle').textContent='Редактировать';
   mSwitchTab('manual');
