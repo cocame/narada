@@ -876,7 +876,7 @@ function bCardHTML(b){
       <button class="b-action-btn" onclick="event.stopPropagation();bRepeat('${b.id}')" title="Повторить бронь">♻️</button>
       <button class="b-action-btn" onclick="event.stopPropagation();bEdit('${b.id}')">✏️</button>
       <button class="b-action-btn" onclick="event.stopPropagation();bDelete('${b.id}')" style="color:var(--red)">✕</button>
-      <div class="b-card-amount">${b.customPriceAdult?(b.customPriceAdult*(b.adults||0)+(b.customPriceChild||0)*(b.children||0))+'$':''}</div>
+      <div class="b-card-amount">${(()=>{if(!b.customPriceAdult)return '';const _t=TOURS.find(x=>x.key===b.route);const _f=_t&&_t.rows[0]&&_t.rows[0].flat;return _f?b.customPriceAdult+'$':(b.customPriceAdult*(b.adults||0)+(b.customPriceChild||0)*(b.children||0))+'$';})()}</div>
       <div class="b-card-comm">${comm}</div>
     </div>
     <div class="b-card-exp" id="bexp-${b.id}">
@@ -894,9 +894,16 @@ function bCardHTML(b){
         const R=currentRates;
         const aPrice=b.customPriceAdult||tour.rows[0].usd;
         const cPrice=b.customPriceChild||(tour.rows[1]?tour.rows[1].usd:0);
+        const flatRow0=tour.rows[0].flat;
         let lines='';
-        if(b.adults) lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Взрослый × ${b.adults}</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${b.adults} × ${aPrice} $ = ${fmtUSD(aPrice*b.adults)}</span></div>`;
-        if(b.children&&tour.rows[1]) lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Ребёнок × ${b.children}</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${b.children} × ${cPrice} $ = ${fmtUSD(cPrice*b.children)}</span></div>`;
+        if(b.adults){
+          if(flatRow0){
+            lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Индивидуально</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${aPrice} $ = ${fmtUSD(aPrice)}</span></div>`;
+          } else {
+            lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Взрослый × ${b.adults}</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${b.adults} × ${aPrice} $ = ${fmtUSD(aPrice*b.adults)}</span></div>`;
+          }
+        }
+        if(b.children&&tour.rows[1]&&!flatRow0) lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Ребёнок × ${b.children}</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${b.children} × ${cPrice} $ = ${fmtUSD(cPrice*b.children)}</span></div>`;
         return lines?`<div style="margin-top:8px;padding:8px 10px;background:rgba(0,0,0,.03);border-radius:6px;border:1px dashed var(--border)">${lines}</div>`:'';
       })()}
       <div class="b-notes-row">
@@ -1506,7 +1513,8 @@ function bGetFormData(){
   } else {
     adultUSD=parseFloat(document.getElementById(p+'PriceRow0')?.value)||(tour?tour.rows[0].usd:0);
     childUSD=parseFloat(document.getElementById(p+'PriceRow1')?.value)||(tour&&tour.rows[1]?tour.rows[1].usd:0);
-    let tourUSD=adultUSD*adults+childUSD*children;
+    const flatRow0=tour&&tour.rows[0]&&tour.rows[0].flat;
+    let tourUSD=flatRow0?adultUSD:(adultUSD*adults+childUSD*children);
     if(tour) tour.rows.forEach((row,i)=>{
       if(i<2) return;
       const extra=parseInt(document.getElementById(p+'CountRow'+i)?.value)||0;
