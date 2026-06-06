@@ -320,7 +320,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
         <option value="">Маршрут</option>
         <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
         <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>БХ ВЕЧЕР</option><option>HOT SPRINGS</option>
-        <option>СЕРФИНГ</option><option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option><option>ХАЙВАН</option><option>ДУН ЗЯНГ</option>
+        <option>СЕРФИНГ</option><option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option><option>ХАЙВАН</option><option>ДОНГ ЗЯНГ</option>
       </select>
       <input type="date" class="b-filter-select" id="bFilterDate" onchange="bRender()">
       <button class="b-add-btn" onclick="bOpenModal()">+</button>
@@ -349,7 +349,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
               <option value="">— выбрать —</option>
               <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
               <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>БХ ВЕЧЕР</option><option>HOT SPRINGS</option>
-              <option>СЕРФИНГ</option><option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option><option>ХАЙВАН</option><option>ДУН ЗЯНГ</option>
+              <option>СЕРФИНГ</option><option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option><option>ХАЙВАН</option><option>ДОНГ ЗЯНГ</option>
               <option value="ДРУГОЕ">Другое...</option>
             </select>
             <div id="fOtherBlock" style="display:none"><label>Название</label><input type="text" id="fOtherName"></div>
@@ -409,7 +409,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
                 <option value="">— выбрать —</option>
                 <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
                 <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>БХ ВЕЧЕР</option><option>HOT SPRINGS</option>
-                <option>СЕРФИНГ</option><option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option><option>ХАЙВАН</option><option>ДУН ЗЯНГ</option>
+                <option>СЕРФИНГ</option><option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option><option>ХАЙВАН</option><option>ДОНГ ЗЯНГ</option>
                 <option value="ДРУГОЕ">Другое...</option>
               </select>
               <div id="pfOtherBlock" style="display:none"><label>Название</label><input type="text" id="pfOtherName"></div>
@@ -513,7 +513,7 @@ const TOURS = [
   { icon:'⛵', name:'Морская прогулка', key:'МОРСКАЯ ПРОГУЛКА',
     rows:[{label:'Взрослый / >140 см',usd:70},{label:'Ребёнок 100–140 см',usd:35}] },
   { icon:'🌊', name:'Хайван', key:'ХАЙВАН', rows:[{label:'Взрослый',usd:65},{label:'Ребёнок до 10',usd:33}] },
-  { icon:'🏯', name:'Дун Зянг', key:'ДУН ЗЯНГ',
+  { icon:'🏯', name:'Донг Зянг', key:'ДОНГ ЗЯНГ',
     rows:[{label:'Групповой (за чел.)',usd:65},{label:'Индивидуально (до 4 чел)',usd:260,flat:true}] },
 ];
 
@@ -528,7 +528,7 @@ const ROUTE_ALIASES = {
   'МОРСКАЯ ПРОГУЛКА': ['морская прогулка','морская','прогулка','sea trip','sea walk','sea cruise','морской тур','морской круиз','прогулка по морю'],
   'VINWONDERS': ['vinwonders','вин вондерс','винвондерс','vin wonder','vinwonder','вин вондер','vin wonders'],
   'ХАЙВАН': ['хайван','hai van','haivan','хай ван','перевал хайван','водопады','водопад','купание в водопадах','hai-van','хай-ван'],
-  'ДУН ЗЯНГ': ['донг зянг','дун зян','дун зянг','dong giang','донг-зянг','небесные врата','небесные ворота','dong-giang','конг трой','cong troi']
+  'ДОНГ ЗЯНГ': ['донг зянг','дун зян','дун зянг','dong giang','донг-зянг','небесные врата','небесные ворота','dong-giang','конг трой','cong troi']
 };
 
 let currentRates = null;
