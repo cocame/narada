@@ -907,6 +907,19 @@ function bCardHTML(b){
           }
         }
         if(b.children&&tour.rows[1]&&!flatRow0) lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Ребёнок × ${b.children}</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${b.children} × ${cPrice} $ = ${fmtUSD(cPrice*b.children)}</span></div>`;
+        if(tour.tickets&&tour.tickets.length){
+          let tkLines='';
+          tour.tickets.forEach(tk=>{
+            const isChild=/детск|дети/i.test(tk.label);
+            const pax=flatRow0?null:(isChild?b.children:b.adults);
+            if(!flatRow0&&!pax) return;
+            const unitFmt=fmtVNDticket(tk.vnd_fixed);
+            const label=flatRow0?tk.label:`${tk.label} × ${pax}`;
+            const total=flatRow0?unitFmt:fmtVNDticket(tk.vnd_fixed*pax);
+            tkLines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted);font-style:italic">${label}</span><span style="font-family:'DM Mono',monospace;color:var(--accent2)">${total}</span></div>`;
+          });
+          if(tkLines) lines+=`<div style="margin-top:4px;padding-top:4px;border-top:1px dashed var(--border2)"><div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;font-family:'DM Mono',monospace;padding:2px 0">Входные билеты</div>${tkLines}</div>`;
+        }
         return lines?`<div style="margin-top:8px;padding:8px 10px;background:rgba(0,0,0,.03);border-radius:6px;border:1px dashed var(--border)">${lines}</div>`:'';
       })()}
       <div class="b-notes-row">
