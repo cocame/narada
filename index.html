@@ -1185,12 +1185,12 @@ function fDrawCalcRows(tour, adults, children){
     const count=i===0?adults:i===1?children:0;
     const priceId=`fPriceRow${i}`;
     const totId=`fTotRow${i}`;
-    if(i===0&&!adults) return;
+    if(i===0&&!adults&&!row.flat) return;
     if(i===1&&(!children||!tour.rows[1])) return;
     if(row.flat&&i>=2){
-      rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+      rowsHTML+=`<div id="fCalcRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
         <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;flex-shrink:0">
-          <input type="checkbox" id="fFlatCheck${i}" onchange="fRecalc()" style="accent-color:var(--accent)"> ${row.label}
+          <input type="checkbox" id="fFlatCheck${i}" onchange="fFlatToggle(${i})" style="accent-color:var(--accent)"> ${row.label}
         </label>
         <div style="display:flex;align-items:center;gap:4px">
           <input type="number" id="${priceId}" value="${row.usd}" oninput="fRecalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
@@ -1199,7 +1199,7 @@ function fDrawCalcRows(tour, adults, children){
         </div>
       </div>`;
     } else if(row.flat&&i===0){
-      rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+      rowsHTML+=`<div id="fCalcRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
         <div style="font-size:12px;color:var(--muted);flex-shrink:0">${row.label}</div>
         <div style="display:flex;align-items:center;gap:4px">
           <input type="number" id="${priceId}" value="${row.usd}" oninput="fRecalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
@@ -1208,7 +1208,7 @@ function fDrawCalcRows(tour, adults, children){
         </div>
       </div>`;
     } else {
-      rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+      rowsHTML+=`<div id="fCalcRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
         <div style="font-size:12px;color:var(--muted);flex-shrink:0">${row.label} × ${count}</div>
         <div style="display:flex;align-items:center;gap:4px">
           <input type="number" id="${priceId}" value="${row.usd}" oninput="fRecalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
@@ -1219,6 +1219,14 @@ function fDrawCalcRows(tour, adults, children){
     }
   });
   document.getElementById('fCalcRows').innerHTML=rowsHTML;
+}
+function fFlatToggle(i){
+  const checked=document.getElementById(`fFlatCheck${i}`)?.checked;
+  [0,1].forEach(j=>{
+    const el=document.getElementById(`fCalcRow${j}`);
+    if(el){el.style.opacity=checked?'0.35':'1';el.style.pointerEvents=checked?'none':'';}
+  });
+  fRecalc();
 }
 
 function fOtherRecalc(){
@@ -1274,7 +1282,8 @@ function fUpdateCalc(){
   }
   document.getElementById('fOtherPriceSection').style.display='none';
   const tour=TOURS.find(t=>t.key===route);
-  if(!tour||!currentRates||(!adults&&!children)){block.style.display='none';fCalcRoute='';return;}
+  const fAllFlat=tour&&tour.rows.every(r=>r.flat);
+  if(!tour||!currentRates||((!adults&&!children)&&!fAllFlat)){block.style.display='none';fCalcRoute='';return;}
   block.style.display='block';
   // перерисовываем поля только если изменился маршрут
   const fCacheKey=route+adults+","+children; if(fCalcRoute!==fCacheKey){
@@ -1309,14 +1318,16 @@ function fRecalc(){
   const tour=TOURS.find(t=>t.key===route); if(!tour||!currentRates) return;
   const R=currentRates;
   const fmtVal=(usd)=>currency==='USD'?fmtUSD(usd):currency==='RUB'?fmtRUB(calcFromUSD(usd,R).rub):currency==='USDT'?fmtUSDT(calcFromUSD(usd,R).usdt):fmtVND(calcFromUSD(usd,R).vnd);
+  const hasFlatChecked=tour.rows.some((row,i)=>i>=2&&row.flat&&document.getElementById(`fFlatCheck${i}`)?.checked);
   let tourUSD=0;
   tour.rows.forEach((row,i)=>{
-    const price=parseFloat(document.getElementById(`fPriceRow${i}`)?.value)||row.usd;
+    const el=document.getElementById(`fPriceRow${i}`);
+    const price=el&&el.value!==''?(parseFloat(el.value)||0):row.usd;
     let count;
     if(row.flat){
       count=i>=2?(document.getElementById(`fFlatCheck${i}`)?.checked?1:0):1;
     } else {
-      count=i===0?adults:i===1?children:parseInt(document.getElementById(`fCountRow${i}`)?.value)||0;
+      count=hasFlatChecked?0:(i===0?adults:i===1?children:parseInt(document.getElementById(`fCountRow${i}`)?.value)||0);
     }
     const sub=price*count;
     tourUSD+=sub;
@@ -1389,7 +1400,8 @@ function pfUpdateCalc(){
   }
   document.getElementById('pfOtherPriceSection').style.display='none';
   const tour=TOURS.find(t=>t.key===route);
-  if(!tour||!currentRates||(!adults&&!children)){block.style.display='none';pfCalcRoute='';return;}
+  const pfAllFlat=tour&&tour.rows.every(r=>r.flat);
+  if(!tour||!currentRates||((!adults&&!children)&&!pfAllFlat)){block.style.display='none';pfCalcRoute='';return;}
   block.style.display='block';
   const pfCK=route+"|"+adults+","+children; if(pfCalcRoute!==pfCK){
     pfCalcRoute=pfCK;
@@ -1398,12 +1410,12 @@ function pfUpdateCalc(){
       const count=i===0?adults:i===1?children:0;
       const priceId=`pfPriceRow${i}`;
       const totId=`pfTotRow${i}`;
-      if(i===0&&!adults) return;
+      if(i===0&&!adults&&!row.flat) return;
       if(i===1&&(!children||!tour.rows[1])) return;
       if(row.flat&&i>=2){
-        rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+        rowsHTML+=`<div id="pfCalcRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;flex-shrink:0">
-            <input type="checkbox" id="pfFlatCheck${i}" onchange="pfRecalc()" style="accent-color:var(--accent)"> ${row.label}
+            <input type="checkbox" id="pfFlatCheck${i}" onchange="pfFlatToggle(${i})" style="accent-color:var(--accent)"> ${row.label}
           </label>
           <div style="display:flex;align-items:center;gap:4px">
             <input type="number" id="${priceId}" value="${row.usd}" oninput="pfRecalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
@@ -1412,7 +1424,7 @@ function pfUpdateCalc(){
           </div>
         </div>`;
       } else if(row.flat&&i===0){
-        rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+        rowsHTML+=`<div id="pfCalcRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
           <div style="font-size:12px;color:var(--muted);flex-shrink:0">${row.label}</div>
           <div style="display:flex;align-items:center;gap:4px">
             <input type="number" id="${priceId}" value="${row.usd}" oninput="pfRecalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
@@ -1421,7 +1433,7 @@ function pfUpdateCalc(){
           </div>
         </div>`;
       } else {
-        rowsHTML+=`<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+        rowsHTML+=`<div id="pfCalcRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
           <div style="font-size:12px;color:var(--muted);flex-shrink:0">${row.label} × ${count}</div>
           <div style="display:flex;align-items:center;gap:4px">
             <input type="number" id="${priceId}" value="${row.usd}" oninput="pfRecalc()" style="width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
@@ -1451,6 +1463,14 @@ function pfUpdateCalc(){
   pfRecalc();
 }
 
+function pfFlatToggle(i){
+  const checked=document.getElementById(`pfFlatCheck${i}`)?.checked;
+  [0,1].forEach(j=>{
+    const el=document.getElementById(`pfCalcRow${j}`);
+    if(el){el.style.opacity=checked?'0.35':'1';el.style.pointerEvents=checked?'none':'';}
+  });
+  pfRecalc();
+}
 function pfRecalc(){
   const route=document.getElementById('pfRoute').value;
   const adults=parseInt(document.getElementById('pfAdults').value)||0;
@@ -1459,14 +1479,16 @@ function pfRecalc(){
   const tour=TOURS.find(t=>t.key===route); if(!tour||!currentRates) return;
   const R=currentRates;
   const fmtVal=(usd)=>currency==='USD'?fmtUSD(usd):currency==='RUB'?fmtRUB(calcFromUSD(usd,R).rub):currency==='USDT'?fmtUSDT(calcFromUSD(usd,R).usdt):fmtVND(calcFromUSD(usd,R).vnd);
+  const hasFlatChecked=tour.rows.some((row,i)=>i>=2&&row.flat&&document.getElementById(`pfFlatCheck${i}`)?.checked);
   let tourUSD=0;
   tour.rows.forEach((row,i)=>{
-    const price=parseFloat(document.getElementById(`pfPriceRow${i}`)?.value)||row.usd;
+    const el=document.getElementById(`pfPriceRow${i}`);
+    const price=el&&el.value!==''?(parseFloat(el.value)||0):row.usd;
     let count;
     if(row.flat){
       count=i>=2?(document.getElementById(`pfFlatCheck${i}`)?.checked?1:0):1;
     } else {
-      count=i===0?adults:i===1?children:parseInt(document.getElementById(`pfCountRow${i}`)?.value)||0;
+      count=hasFlatChecked?0:(i===0?adults:i===1?children:parseInt(document.getElementById(`pfCountRow${i}`)?.value)||0);
     }
     const sub=price*count;
     tourUSD+=sub;
