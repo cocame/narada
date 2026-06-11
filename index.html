@@ -234,6 +234,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 <nav class="tab-nav">
   <button class="tab-btn" onclick="switchTab('price')" id="tnPrice"><span>💰</span>Прайс</button>
   <button class="tab-btn active" onclick="switchTab('booking')" id="tnBooking"><span>📋</span>Бронь</button>
+  <button class="tab-btn" onclick="switchTab('sputnik')" id="tnSputnik"><span>✈️</span>Спутник</button>
 </nav>
 
 <!-- ══ TAB: ПРАЙС ══ -->
@@ -326,6 +327,16 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
       <button class="b-add-btn" onclick="bOpenModal()">+</button>
     </div>
     <div class="b-list" id="bList"><div class="b-loading">Загрузка…</div></div>
+  </div>
+</div>
+
+<!-- ══ TAB: СПУТНИК ══ -->
+<div class="tab-panel" id="tabSputnik">
+  <div style="max-width:700px;margin:0 auto;padding:16px 12px 0">
+    <div style="background:var(--note-bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.04em">
+      Цены для Спутника · комиссия 24% · формула: моя цена ÷ 0.76
+    </div>
+    <div id="sputnik-list"></div>
   </div>
 </div>
 
@@ -548,7 +559,7 @@ const calcCounts = {};
 // TABS
 // ══════════════════════════════════════
 function switchTab(name) {
-  ['price','booking'].forEach(t => {
+  ['price','booking','sputnik'].forEach(t => {
     document.getElementById('tab'+cap(t)).classList.toggle('active', t===name);
     document.getElementById('tn'+cap(t)).classList.toggle('active', t===name);
   });
@@ -559,6 +570,7 @@ function switchTab(name) {
     bRender();
     loadWallet();
   }
+  if (name==='sputnik') renderSputnikCards();
 }
 function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
 
@@ -720,6 +732,37 @@ function renderPriceCards(rates, skeleton) {
     </div>`;
   }).join('');
   document.getElementById('price-list').innerHTML=colH+cards;
+}
+
+function renderSputnikCards() {
+  const COMM = 0.24;
+  const cards = TOURS.map((t, idx) => {
+    const rows = t.rows.map(r => {
+      const sp = Math.ceil(r.usd / (1 - COMM));
+      return `<div class="price-row">
+        <div class="row-label">${r.label}</div>
+        <div class="price-cell usd" style="font-weight:500;color:var(--accent)">${sp} $</div>
+        <div class="price-cell rub" style="color:var(--muted);font-size:10px">мои ${r.usd} $</div>
+      </div>`;
+    }).join('');
+    return `<div class="tour-card">
+      <div class="tour-header"><div class="tour-icon">${t.icon}</div><div class="tour-name">${t.name}</div></div>
+      <div class="price-rows">${rows}</div>
+      <button class="copy-price-btn" onclick="copySputnikCard(${idx})">Скопировать</button>
+    </div>`;
+  }).join('');
+  document.getElementById('sputnik-list').innerHTML = cards;
+}
+
+function copySputnikCard(idx) {
+  const t = TOURS[idx];
+  const COMM = 0.24;
+  let text = t.icon + ' ' + t.name + '\n──────────────\n';
+  t.rows.forEach(r => {
+    const sp = Math.ceil(r.usd / (1 - COMM));
+    text += r.label + ': ' + sp + ' $\n';
+  });
+  copyText(text.trim());
 }
 
 function copyPriceCard(idx){
