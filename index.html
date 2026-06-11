@@ -380,6 +380,10 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
             <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;font-family:'DM Mono',monospace;padding:8px 0 4px;border-top:1px dashed var(--border);margin-top:4px">Входные билеты</div>
             <div id="fTicketRows"></div>
           </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0 5px;border-top:1px dashed var(--border);margin-top:6px">
+            <div style="font-size:12px;color:var(--muted)">Трансфер $</div>
+            <input type="number" id="fTransfer" min="0" placeholder="0" oninput="fRecalc()" style="width:70px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)">
+          </div>
           <div id="fCalcResult" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);display:none">
             <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px">Итого</div>
             <div id="fCalcTotal" style="font-family:'DM Mono',monospace;font-size:16px;color:var(--green);margin-bottom:8px"></div>
@@ -438,6 +442,10 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
             <div id="pfTicketSection" style="display:none">
               <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;font-family:'DM Mono',monospace;padding:8px 0 4px;border-top:1px dashed var(--border);margin-top:4px">Входные билеты</div>
               <div id="pfTicketRows"></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0 5px;border-top:1px dashed var(--border);margin-top:6px">
+              <div style="font-size:12px;color:var(--muted)">Трансфер $</div>
+              <input type="number" id="pfTransfer" min="0" placeholder="0" oninput="pfRecalc()" style="width:70px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)">
             </div>
             <div id="pfCalcResult" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);display:none">
               <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px">Итого</div>
@@ -687,6 +695,10 @@ function buildPriceCalc(t, idx) {
       </div>`).join('') : '';
   return `<div class="calc-block" id="pcb-${idx}">
     ${rows}${trows}
+    <div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border)" class="calc-row-p">
+      <div class="calc-label-p" style="font-size:11px;color:var(--muted)">Трансфер $</div>
+      <input type="number" id="pc-${idx}-transfer" min="0" placeholder="0" oninput="pCalcUpdate(${idx})" style="width:64px;padding:3px 8px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)">
+    </div>
     <div class="calc-total" id="pct-${idx}" style="display:none">
       <div class="calc-total-label">Итого</div>
       <div class="calc-total-usd" id="pcu-${idx}"></div>
@@ -764,6 +776,9 @@ function pCalcUpdate(idx){
     const p=mulP(calcFromVND(tk.vnd_fixed,R),n); total=addP(total,p);
     tickets.push({label:tk.label,n,p});
   });
+  const transferEl=document.getElementById(`pc-${idx}-transfer`);
+  const transferUSD=transferEl?(parseFloat(transferEl.value)||0):0;
+  if(transferUSD){hasAny=true; total=addP(total,calcFromUSD(transferUSD,R));}
   const totalEl=document.getElementById(`pct-${idx}`);
   if(!hasAny){totalEl.style.display='none';return;}
   totalEl.style.display='block';
@@ -773,6 +788,7 @@ function pCalcUpdate(idx){
   // store for copy
   totalEl.dataset.rows=JSON.stringify(rows.map(r=>({label:r.label,n:r.n,...r.p})));
   totalEl.dataset.tickets=JSON.stringify(tickets.map(r=>({label:r.label,n:r.n,...r.p})));
+  totalEl.dataset.transfer=transferUSD;
   Object.assign(totalEl.dataset,{tusd:total.usd,trub:total.rub,tvnd:total.vnd,tusdt:total.usdt,tidx:idx});
 }
 function pCalcCopy(idx){
@@ -781,10 +797,12 @@ function pCalcCopy(idx){
   const curs=pCalcGetCurs(idx); const cursF=curs.length?curs:['usd'];
   const rows=JSON.parse(totalEl.dataset.rows||'[]');
   const tickets=JSON.parse(totalEl.dataset.tickets||'[]');
+  const transferUSD=parseFloat(totalEl.dataset.transfer)||0;
   const total={usd:+totalEl.dataset.tusd,rub:+totalEl.dataset.trub,vnd:+totalEl.dataset.tvnd,usdt:+totalEl.dataset.tusdt};
   let text=t.icon+' '+t.name+'\n\n';
   rows.forEach(r=>text+=r.label+' × '+r.n+' — '+formatPrice(r,cursF)+'\n');
   if(tickets.length){text+='\nВходные билеты:\n'; tickets.forEach(r=>text+=r.label+' × '+r.n+' — '+formatPrice(r,cursF)+'\n');}
+  if(transferUSD) text+='\nТрансфер — '+formatPrice(calcFromUSD(transferUSD,currentRates),cursF)+'\n';
   text+='\nИтого: '+formatPrice(total,cursF);
   copyText(text.trim());
 }
@@ -1152,7 +1170,7 @@ function bClearForm(){
   Object.keys(fTickCounts).forEach(k=>delete fTickCounts[k]);
   Object.keys(pfTickCounts).forEach(k=>delete pfTickCounts[k]);
   fCalcRoute=''; pfCalcRoute='';
-  ['fOtherName','pfOtherName','fOtherPriceInput','pfOtherPriceInput'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fOtherName','pfOtherName','fOtherPriceInput','pfOtherPriceInput','fTransfer','pfTransfer'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   // скрыть калькулятор
   const fb=document.getElementById('fCalcBlock'); if(fb) fb.style.display='none';
   const pb=document.getElementById('pfCalcBlock'); if(pb) pb.style.display='none';
@@ -1246,10 +1264,11 @@ function fOtherRecalc(){
   const sum=parseFloat(document.getElementById('fOtherPriceInput').value)||0;
   const comm=Math.ceil(sum/10*2)/2;
   const cEl=document.getElementById('previewComm');if(cEl)cEl.textContent='$'+comm;
-  if(sum>0&&currentRates){
+  const transferUSD=parseFloat(document.getElementById('fTransfer')?.value)||0;
+  if((sum>0||transferUSD)&&currentRates){
     const R=currentRates;
     const currency=document.getElementById('fCurrency').value;
-    const total=calcFromUSD(sum,R);
+    let total=calcFromUSD(sum+transferUSD,R);
     const val=currency==='USD'?fmtUSD(total.usd):currency==='RUB'?fmtRUB(total.rub):currency==='USDT'?fmtUSDT(total.usdt):fmtVND(total.vnd);
     document.getElementById('fCalcTotal').textContent=val;
     document.getElementById('fCalcBreak').textContent='';
@@ -1264,10 +1283,11 @@ function pfOtherRecalc(){
   const sum=parseFloat(document.getElementById('pfOtherPriceInput').value)||0;
   const comm=Math.ceil(sum/10*2)/2;
   const cEl=document.getElementById('previewComm2');if(cEl)cEl.textContent='$'+comm;
-  if(sum>0&&currentRates){
+  const transferUSD=parseFloat(document.getElementById('pfTransfer')?.value)||0;
+  if((sum>0||transferUSD)&&currentRates){
     const R=currentRates;
     const currency=document.getElementById('pfCurrency').value;
-    const total=calcFromUSD(sum,R);
+    let total=calcFromUSD(sum+transferUSD,R);
     const val=currency==='USD'?fmtUSD(total.usd):currency==='RUB'?fmtRUB(total.rub):currency==='USDT'?fmtUSDT(total.usdt):fmtVND(total.vnd);
     document.getElementById('pfCalcTotal').textContent=val;
     document.getElementById('pfCalcBreak').textContent='';
@@ -1373,13 +1393,16 @@ function fCalcTotal(tour, adults, children, currency, tourUSD){
       total=addP(total,p);
     });
   }
+  // трансфер: добавляем к итогу, но НЕ к tourUSD (не влияет на комиссию)
+  const transferUSD=parseFloat(document.getElementById('fTransfer')?.value)||0;
+  if(transferUSD) total=addP(total,calcFromUSD(transferUSD,R));
   const val=currency==='USD'?fmtUSD(total.usd):currency==='RUB'?fmtRUB(total.rub):currency==='USDT'?fmtUSDT(total.usdt):fmtVND(total.vnd);
   document.getElementById('fCalcTotal').textContent=val;
   document.getElementById('fCalcBreak').textContent='';
   document.getElementById('fCalcResult').style.display='block';
   document.getElementById('fCalcResult').dataset.val=val;
   document.getElementById('fCalcResult').dataset.usd=total.usd;
-  // пересчитать комиссию: tourUSD / 10, округление до 0.5
+  // комиссия только от tourUSD (без трансфера)
   const commRaw = tourUSD / 10;
   const comm = Math.ceil(commRaw*2)/2;
   const cEl=document.getElementById('previewComm'); if(cEl) cEl.textContent='$'+comm;
@@ -1520,11 +1543,15 @@ function pfCalcTotal(tour, adults, children, currency, tourUSD){
       total=addP(total,p);
     });
   }
+  // трансфер: добавляем к итогу, но НЕ к tourUSD (не влияет на комиссию)
+  const transferUSD=parseFloat(document.getElementById('pfTransfer')?.value)||0;
+  if(transferUSD) total=addP(total,calcFromUSD(transferUSD,R));
   const val=currency==='USD'?fmtUSD(total.usd):currency==='RUB'?fmtRUB(total.rub):currency==='USDT'?fmtUSDT(total.usdt):fmtVND(total.vnd);
   document.getElementById('pfCalcTotal').textContent=val;
   document.getElementById('pfCalcBreak').textContent='';
   document.getElementById('pfCalcResult').style.display='block';
   document.getElementById('pfCalcResult').dataset.val=val;
+  // комиссия только от tourUSD (без трансфера)
   const commRaw=tourUSD/10;
   const comm=Math.ceil(commRaw*2)/2;
   const cEl=document.getElementById('previewComm2'); if(cEl) cEl.textContent='$'+comm;
