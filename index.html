@@ -234,6 +234,8 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 <nav class="tab-nav">
   <button class="tab-btn" onclick="switchTab('price')" id="tnPrice"><span>💰</span>Прайс</button>
   <button class="tab-btn active" onclick="switchTab('booking')" id="tnBooking"><span>📋</span>Бронь</button>
+  <button class="tab-btn admin-only" onclick="switchTab('sputnik')" id="tnSputnik" style="display:none"><span>✈️</span>Спутник</button>
+  <button class="tab-btn admin-only" onclick="switchTab('tripster')" id="tnTripster" style="display:none"><span>🌐</span>Трипстер</button>
 </nav>
 
 <!-- ══ TAB: ПРАЙС ══ -->
@@ -326,6 +328,26 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
       <button class="b-add-btn" onclick="bOpenModal()">+</button>
     </div>
     <div class="b-list" id="bList"><div class="b-loading">Загрузка…</div></div>
+  </div>
+</div>
+
+<!-- ══ TAB: СПУТНИК ══ -->
+<div class="tab-panel" id="tabSputnik">
+  <div style="max-width:700px;margin:0 auto;padding:16px 12px 0">
+    <div style="background:var(--note-bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.04em">
+      Спутник · комиссия 24% · цена = моя ÷ 0.76
+    </div>
+    <div id="sputnik-list"></div>
+  </div>
+</div>
+
+<!-- ══ TAB: ТРИПСТЕР ══ -->
+<div class="tab-panel" id="tabTripster">
+  <div style="max-width:700px;margin:0 auto;padding:16px 12px 0">
+    <div style="background:var(--note-bg);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:.04em">
+      Трипстер · комиссия 22% · цена = моя ÷ 0.78
+    </div>
+    <div id="tripster-list"></div>
   </div>
 </div>
 
@@ -548,9 +570,11 @@ const calcCounts = {};
 // TABS
 // ══════════════════════════════════════
 function switchTab(name) {
-  ['price','booking'].forEach(t => {
-    document.getElementById('tab'+cap(t)).classList.toggle('active', t===name);
-    document.getElementById('tn'+cap(t)).classList.toggle('active', t===name);
+  ['price','booking','sputnik','tripster'].forEach(t => {
+    const panel=document.getElementById('tab'+cap(t));
+    const btn=document.getElementById('tn'+cap(t));
+    if(panel) panel.classList.toggle('active', t===name);
+    if(btn) btn.classList.toggle('active', t===name);
   });
   if (name==='booking'){
     if(allBookings.length===0) bLoad();
@@ -559,8 +583,42 @@ function switchTab(name) {
     bRender();
     loadWallet();
   }
+  if (name==='sputnik') renderPartnerCards('sputnik-list', 0.76);
+  if (name==='tripster') renderPartnerCards('tripster-list', 0.78);
 }
 function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+
+function renderPartnerCards(containerId, factor) {
+  const cards = TOURS.map((t, idx) => {
+    const rows = t.rows.map(r => {
+      const sp = Math.ceil(r.usd / factor);
+      return `<div class="price-row">
+        <div class="row-label">${r.label}</div>
+        <div class="price-cell usd" style="font-weight:500;color:var(--accent)">${sp} $</div>
+        <div class="price-cell rub" style="color:var(--muted);font-size:10px">мои ${r.usd} $</div>
+      </div>`;
+    }).join('');
+    return `<div class="tour-card">
+      <div class="tour-header"><div class="tour-icon">${t.icon}</div><div class="tour-name">${t.name}</div></div>
+      <div class="price-rows">${rows}</div>
+      <button class="copy-price-btn" onclick="copyPartnerCard(${idx},${factor})">Скопировать</button>
+    </div>`;
+  }).join('');
+  document.getElementById(containerId).innerHTML = cards;
+}
+
+function copyPartnerCard(idx, factor) {
+  const t = TOURS[idx];
+  let text = t.icon + ' ' + t.name + '\n──────────────\n';
+  t.rows.forEach(r => { text += r.label + ': ' + Math.ceil(r.usd / factor) + ' $\n'; });
+  copyText(text.trim());
+}
+
+function initAdminMode() {
+  if (new URLSearchParams(window.location.search).get('admin') === '1') {
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+  }
+}
 
 // ══════════════════════════════════════
 // UTILS
@@ -1818,7 +1876,7 @@ async function loadWallet(){
   updateStatusBar(rates);
   renderPriceCards(rates,false);
 })();
-document.addEventListener('DOMContentLoaded', () => { bLoad(); loadWallet(); });
+document.addEventListener('DOMContentLoaded', () => { bLoad(); loadWallet(); initAdminMode(); });
 </script>
 </body>
 </html>
