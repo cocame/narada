@@ -1256,6 +1256,15 @@ function fDrawCalcRows(tour, adults, children){
     }
   });
   document.getElementById('fCalcRows').innerHTML=rowsHTML;
+  // Восстановить flat-состояние после перерисовки (если pax-чекбокс был активен)
+  if(document.getElementById('fIndividual')?.checked){
+    tour.rows.forEach((row,i)=>{
+      if(i>=1&&row.flat&&/индивидуально/i.test(row.label)){
+        const cb=document.getElementById(`fFlatCheck${i}`); if(cb) cb.checked=true;
+        Array.from({length:i},(_,j)=>j).forEach(j=>{const el=document.getElementById(`fCalcRow${j}`);if(el){el.style.opacity='0.35';el.style.pointerEvents='none';}});
+      }
+    });
+  }
 }
 function fFlatToggle(i){
   const checked=document.getElementById(`fFlatCheck${i}`)?.checked;
@@ -1509,6 +1518,14 @@ function pfUpdateCalc(){
       }
     });
     document.getElementById('pfCalcRows').innerHTML=rowsHTML;
+    if(document.getElementById('pfIndividual')?.checked){
+      tour.rows.forEach((row,i)=>{
+        if(i>=1&&row.flat&&/индивидуально/i.test(row.label)){
+          const cb=document.getElementById(`pfFlatCheck${i}`); if(cb) cb.checked=true;
+          Array.from({length:i},(_,j)=>j).forEach(j=>{const el=document.getElementById(`pfCalcRow${j}`);if(el){el.style.opacity='0.35';el.style.pointerEvents='none';}});
+        }
+      });
+    }
     const tickSec=document.getElementById('pfTicketSection');
     if(tour.tickets){
       tickSec.style.display='block';
@@ -1607,15 +1624,25 @@ function bGetFormData(){
     comm=sum>0?Math.ceil(sum/10*2)/2:0;
   } else {
     adultUSD=parseFloat(document.getElementById(p+'PriceRow0')?.value)||(tour?tour.rows[0].usd:0);
-    childUSD=parseFloat(document.getElementById(p+'PriceRow1')?.value)||(tour&&tour.rows[1]?tour.rows[1].usd:0);
+    const row1=tour&&tour.rows[1];
+    childUSD=parseFloat(document.getElementById(p+'PriceRow1')?.value)||(row1&&!row1.flat?row1.usd:0);
     const flatRow0=tour&&tour.rows[0]&&tour.rows[0].flat;
     let tourUSD=flatRow0?adultUSD:(adultUSD*adults+childUSD*children);
-    if(tour) tour.rows.forEach((row,i)=>{
-      if(i<2) return;
-      const extra=parseInt(document.getElementById(p+'CountRow'+i)?.value)||0;
-      const price=parseFloat(document.getElementById(p+'PriceRow'+i)?.value)||row.usd;
-      tourUSD+=extra*price;
-    });
+    // Индивидуально в приоритете: если отмечен flat-чекбокс (i>=1) — заменяем tourUSD
+    if(tour){
+      let flatActive=false; let flatSum=0;
+      tour.rows.forEach((row,i)=>{
+        if(i<1) return;
+        if(row.flat){
+          const cb=document.getElementById(p+'FlatCheck'+i);
+          if(cb&&cb.checked){flatSum+=(parseFloat(document.getElementById(p+'PriceRow'+i)?.value)||row.usd); flatActive=true;}
+        } else if(i>=2){
+          const extra=parseInt(document.getElementById(p+'CountRow'+i)?.value)||0;
+          tourUSD+=(extra*(parseFloat(document.getElementById(p+'PriceRow'+i)?.value)||row.usd));
+        }
+      });
+      if(flatActive) tourUSD=flatSum;
+    }
     comm=tourUSD>0?Math.ceil(tourUSD/10*2)/2:0;
   }
   return {
