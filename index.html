@@ -525,7 +525,7 @@ const TOURS = [
       {id:'vw_elder', label:'Пожилые 70+',              vnd_fixed:600000}
     ]},
   { icon:'🏄', name:'Серфинг', key:'СЕРФИНГ',
-    rows:[{label:'Групповой (до 3 человек)',usd:40},{label:'Индивидуально 1/1',usd:80},{label:'Сплит для двоих',usd:110}] },
+    rows:[{label:'Групповой (до 3 человек)',usd:40},{label:'Индивидуально 1/1',usd:80,flat:true},{label:'Сплит для двоих',usd:110,flat:true}] },
   { icon:'🎣', name:'Рыбалка', key:'РЫБАЛКА',
     rows:[{label:'Взрослый',usd:90},{label:'Лодка',usd:360},{label:'Индивидуально',usd:360,flat:true}] },
   { icon:'⛵', name:'Морская прогулка', key:'МОРСКАЯ ПРОГУЛКА',
@@ -1223,8 +1223,8 @@ function fDrawCalcRows(tour, adults, children){
     const priceId=`fPriceRow${i}`;
     const totId=`fTotRow${i}`;
     if(i===0&&!adults&&!row.flat) return;
-    if(i===1&&(!children||!tour.rows[1])) return;
-    if(row.flat&&i>=2){
+    if(i===1&&!row.flat&&(!children||!tour.rows[1])) return;
+    if(row.flat&&i>=1){
       rowsHTML+=`<div id="fCalcRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
         <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;flex-shrink:0">
           <input type="checkbox" id="fFlatCheck${i}" onchange="fFlatToggle(${i})" style="accent-color:var(--accent)"> ${row.label}
@@ -1259,7 +1259,7 @@ function fDrawCalcRows(tour, adults, children){
 }
 function fFlatToggle(i){
   const checked=document.getElementById(`fFlatCheck${i}`)?.checked;
-  [0,1].forEach(j=>{
+  Array.from({length:i},(_,j)=>j).forEach(j=>{
     const el=document.getElementById(`fCalcRow${j}`);
     if(el){el.style.opacity=checked?'0.35':'1';el.style.pointerEvents=checked?'none':'';}
   });
@@ -1271,7 +1271,7 @@ function fIndividualToggle(){
   const tour=TOURS.find(t=>t.key===route); if(!tour) return;
   const checked=document.getElementById('fIndividual').checked;
   tour.rows.forEach((row,i)=>{
-    if(i>=2&&row.flat){
+    if(i>=1&&row.flat&&/индивидуально/i.test(row.label)){
       const cb=document.getElementById(`fFlatCheck${i}`); if(cb){cb.checked=checked; fFlatToggle(i);}
     }
   });
@@ -1281,7 +1281,7 @@ function pfIndividualToggle(){
   const tour=TOURS.find(t=>t.key===route); if(!tour) return;
   const checked=document.getElementById('pfIndividual').checked;
   tour.rows.forEach((row,i)=>{
-    if(i>=2&&row.flat){
+    if(i>=1&&row.flat&&/индивидуально/i.test(row.label)){
       const cb=document.getElementById(`pfFlatCheck${i}`); if(cb){cb.checked=checked; pfFlatToggle(i);}
     }
   });
@@ -1379,14 +1379,14 @@ function fRecalc(){
   const tour=TOURS.find(t=>t.key===route); if(!tour||!currentRates) return;
   const R=currentRates;
   const fmtVal=(usd)=>currency==='USD'?fmtUSD(usd):currency==='RUB'?fmtRUB(calcFromUSD(usd,R).rub):currency==='USDT'?fmtUSDT(calcFromUSD(usd,R).usdt):fmtVND(calcFromUSD(usd,R).vnd);
-  const hasFlatChecked=tour.rows.some((row,i)=>i>=2&&row.flat&&document.getElementById(`fFlatCheck${i}`)?.checked);
+  const hasFlatChecked=tour.rows.some((row,i)=>i>=1&&row.flat&&document.getElementById(`fFlatCheck${i}`)?.checked);
   let tourUSD=0;
   tour.rows.forEach((row,i)=>{
     const el=document.getElementById(`fPriceRow${i}`);
     const price=el&&el.value!==''?(parseFloat(el.value)||0):row.usd;
     let count;
     if(row.flat){
-      count=i>=2?(document.getElementById(`fFlatCheck${i}`)?.checked?1:0):1;
+      count=i>=1?(document.getElementById(`fFlatCheck${i}`)?.checked?1:0):1;
     } else {
       count=hasFlatChecked?0:(i===0?adults:i===1?children:parseInt(document.getElementById(`fCountRow${i}`)?.value)||0);
     }
@@ -1476,8 +1476,8 @@ function pfUpdateCalc(){
       const priceId=`pfPriceRow${i}`;
       const totId=`pfTotRow${i}`;
       if(i===0&&!adults&&!row.flat) return;
-      if(i===1&&(!children||!tour.rows[1])) return;
-      if(row.flat&&i>=2){
+      if(i===1&&!row.flat&&(!children||!tour.rows[1])) return;
+      if(row.flat&&i>=1){
         rowsHTML+=`<div id="pfCalcRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;flex-shrink:0">
             <input type="checkbox" id="pfFlatCheck${i}" onchange="pfFlatToggle(${i})" style="accent-color:var(--accent)"> ${row.label}
@@ -1530,7 +1530,7 @@ function pfUpdateCalc(){
 
 function pfFlatToggle(i){
   const checked=document.getElementById(`pfFlatCheck${i}`)?.checked;
-  [0,1].forEach(j=>{
+  Array.from({length:i},(_,j)=>j).forEach(j=>{
     const el=document.getElementById(`pfCalcRow${j}`);
     if(el){el.style.opacity=checked?'0.35':'1';el.style.pointerEvents=checked?'none':'';}
   });
@@ -1545,14 +1545,14 @@ function pfRecalc(){
   const tour=TOURS.find(t=>t.key===route); if(!tour||!currentRates) return;
   const R=currentRates;
   const fmtVal=(usd)=>currency==='USD'?fmtUSD(usd):currency==='RUB'?fmtRUB(calcFromUSD(usd,R).rub):currency==='USDT'?fmtUSDT(calcFromUSD(usd,R).usdt):fmtVND(calcFromUSD(usd,R).vnd);
-  const hasFlatChecked=tour.rows.some((row,i)=>i>=2&&row.flat&&document.getElementById(`pfFlatCheck${i}`)?.checked);
+  const hasFlatChecked=tour.rows.some((row,i)=>i>=1&&row.flat&&document.getElementById(`pfFlatCheck${i}`)?.checked);
   let tourUSD=0;
   tour.rows.forEach((row,i)=>{
     const el=document.getElementById(`pfPriceRow${i}`);
     const price=el&&el.value!==''?(parseFloat(el.value)||0):row.usd;
     let count;
     if(row.flat){
-      count=i>=2?(document.getElementById(`pfFlatCheck${i}`)?.checked?1:0):1;
+      count=i>=1?(document.getElementById(`pfFlatCheck${i}`)?.checked?1:0):1;
     } else {
       count=hasFlatChecked?0:(i===0?adults:i===1?children:parseInt(document.getElementById(`pfCountRow${i}`)?.value)||0);
     }
