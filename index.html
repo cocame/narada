@@ -139,6 +139,8 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .booking-card.s-waiting .b-card-exp{background:#daf9e4}
 .booking-card.s-tomorrow{background:#fffbe6;border-color:#f0e0b8}
 .booking-card.s-tomorrow .b-card-exp{background:#f9f3da}
+.booking-card.s-individual{background:#fde8f5;border-color:#f0b8de}
+.booking-card.s-individual .b-card-exp{background:#f9d9ee}
 .b-card-main{display:grid;grid-template-columns:1.1fr 0.45fr 1fr 20px 20px 20px 20px 50px 45px;gap:3px;padding:10px 12px;align-items:center;cursor:pointer}
 .b-card-amount{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-align:right;white-space:nowrap}
 .b-card-route{font-weight:600;font-size:15px}
@@ -884,11 +886,12 @@ function bCardHTML(b){
   if(b.infants>0) paxParts.push(b.infants+' мал');
   const tom=tomorrowStr();
   const sc=b.tripStatus==='done'?' s-done':b.tripStatus==='cancelled'?' s-cancelled':b.tripStatus==='waiting_date'?' s-waiting':(b.date&&b.date===tom)?' s-tomorrow':'';
+  const scInd=b.isIndividual?' s-individual':'';
   const payIcon=b.payStatus==='paid'?'💲':b.payStatus==='refund'?'🤑':'💳';
   const comm=b.tripStatus==='done'?'$'+(parseFloat(b.commission)||0):'';
   const starCol=b.inBase?'#7c5cbf':'#ccc';
 
-  return `<div class="booking-card${sc}" id="bcard-${b.id}">
+  return `<div class="booking-card${sc}${scInd}" id="bcard-${b.id}">
     <div class="b-card-main" onclick="bToggle('${b.id}')">
       <div class="b-card-route">${b.route}</div>
       <div class="b-card-pax">${paxParts.join('+')||'—'}</div>
@@ -1570,7 +1573,7 @@ function bGetFormData(){
   const adults=parseInt(document.getElementById(p+'Adults').value)||0;
   const children=parseInt(document.getElementById(p+'Children').value)||0;
   const tour=TOURS.find(t=>t.key===route);
-  let routeName=route, adultUSD=0, childUSD=0, comm=0;
+  let routeName=route, adultUSD=0, childUSD=0, comm=0, isIndividual=false;
   if(route==='ДРУГОЕ'){
     const on=document.getElementById(p+'OtherName')?.value.trim();
     if(on) routeName=on.toUpperCase();
@@ -1595,7 +1598,7 @@ function bGetFormData(){
           tourUSD+=(extra*(parseFloat(document.getElementById(p+'PriceRow'+i)?.value)||row.usd));
         }
       });
-      if(flatActive) tourUSD=flatSum;
+      if(flatActive){tourUSD=flatSum; isIndividual=true;}
     }
     comm=tourUSD>0?Math.ceil(tourUSD/10*2)/2:0;
   }
@@ -1611,6 +1614,7 @@ function bGetFormData(){
     payMethod:document.getElementById(p+'PayMethod').value,
     totalAmount:document.getElementById(p+'Amount').value,
     commission:comm,
+    isIndividual,
     customPriceAdult:route==='ДРУГОЕ'?0:adultUSD,
     customPriceChild:route==='ДРУГОЕ'?0:childUSD,
     payStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.payStatus||'unpaid') : 'unpaid',
