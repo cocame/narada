@@ -886,7 +886,7 @@ function bCardHTML(b){
   if(b.infants>0) paxParts.push(b.infants+' мал');
   const tom=tomorrowStr();
   const sc=b.tripStatus==='done'?' s-done':b.tripStatus==='cancelled'?' s-cancelled':b.tripStatus==='waiting_date'?' s-waiting':(b.date&&b.date===tom)?' s-tomorrow':'';
-  const scInd=b.isIndividual?' s-individual':'';
+  const scInd=(b.isIndividual||(b.notes||'').endsWith('​'))?' s-individual':'';
   const payIcon=b.payStatus==='paid'?'💲':b.payStatus==='refund'?'🤑':'💳';
   const comm=b.tripStatus==='done'?'$'+(parseFloat(b.commission)||0):'';
   const starCol=b.inBase?'#7c5cbf':'#ccc';
@@ -945,7 +945,7 @@ function bCardHTML(b){
       })()}
       <div class="b-notes-row">
         <label>Примечание</label>
-        <textarea onclick="event.stopPropagation()" onchange="event.stopPropagation();bSaveNote('${b.id}',this.value)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:40px;color:var(--text)">${b.notes||''}</textarea>
+        <textarea onclick="event.stopPropagation()" onchange="event.stopPropagation();bSaveNote('${b.id}',this.value)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:40px;color:var(--text)">${(b.notes||'').replace(/​/g,'')}</textarea>
       </div>
       <button class="b-copy-card-btn" onclick="event.stopPropagation();bCopyCard('${b.id}')">Скопировать карточку</button>
       <div class="b-status-row">
@@ -1081,7 +1081,7 @@ function bCopyCard(id){
     b.hotel||'—',
     payLine||'',
     amountLine||'',
-    b.notes||''
+    (b.notes||'').replace(/​/g,'')
   ].filter(Boolean);
   copyText(lines.join('\n'));
 }
@@ -1107,7 +1107,8 @@ async function bToggleBase(id){
 }
 async function bSaveNote(id,val){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
-  b.notes=val;
+  const isInd=(b.notes||'').endsWith('​')||b.isIndividual;
+  b.notes=val.replace(/​/g,'')+(isInd?'​':'');
   await gasSave('updateBooking',b);
 }
 async function bCyclePay(id){
@@ -1154,7 +1155,7 @@ function bEdit(id){
   document.getElementById('fCurrency').value=b.currency||'VND';
   document.getElementById('fPayMethod').value=b.payMethod||'Наличные';
   document.getElementById('fAmount').value=b.totalAmount||'';
-  document.getElementById('fNotes').value=b.notes||'';
+  document.getElementById('fNotes').value=(b.notes||'').replace(/​/g,'');
   bUpdatePreview();
   document.getElementById('modalOverlay').classList.add('open');
 }
@@ -1619,7 +1620,7 @@ function bGetFormData(){
     customPriceChild:route==='ДРУГОЕ'?0:childUSD,
     payStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.payStatus||'unpaid') : 'unpaid',
     tripStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.tripStatus||'waiting') : (document.getElementById(p+'TripStatus')?.value||'waiting'),
-    notes:document.getElementById(p+'Notes').value
+    notes:(document.getElementById(p+'Notes').value||'').replace(/​/g,'')+(isIndividual?'​':'')
   };
 }
 function bRepeat(id){
