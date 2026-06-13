@@ -199,9 +199,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .form-group input,.form-group select,.form-group textarea{background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--accent)}
 .form-group textarea{resize:vertical;min-height:56px}
-.pax-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
-.pax-individual{display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer}
-.pax-individual input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent);cursor:pointer;margin-top:4px}
+.pax-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .pax-sub{font-size:9.5px;color:var(--muted);margin-bottom:3px}
 .paste-area{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:10px 12px;min-height:110px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);resize:vertical}
 .parse-btn{margin-top:8px;padding:8px 20px;background:none;border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);cursor:pointer}
@@ -361,7 +359,6 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
               <div><div class="pax-sub">Взрослые (10+)</div><input type="number" id="fAdults" min="0" value="1" oninput="fCalcRoute='';bUpdatePreview()"></div>
               <div><div class="pax-sub">Дети 3–10 лет</div><input type="number" id="fChildren" min="0" value="0" oninput="fCalcRoute='';bUpdatePreview()"></div>
               <div><div class="pax-sub">До 3 лет</div><input type="number" id="fInfants" min="0" value="0"></div>
-              <label class="pax-individual"><div class="pax-sub">Индивидуально</div><input type="checkbox" id="fIndividual" onchange="fIndividualToggle()"></label>
             </div>
           </div>
           <div class="form-group full"><label>Контакт</label><input type="text" id="fContact" placeholder="Иван, +79001234567"></div>
@@ -426,7 +423,6 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
                 <div><div class="pax-sub">Взрослые (10+)</div><input type="number" id="pfAdults" min="0" value="1" oninput="pfCalcRoute='';bUpdatePreview()"></div>
                 <div><div class="pax-sub">Дети 3–10 лет</div><input type="number" id="pfChildren" min="0" value="0" oninput="pfCalcRoute='';bUpdatePreview()"></div>
                 <div><div class="pax-sub">До 3 лет</div><input type="number" id="pfInfants" min="0" value="0"></div>
-                <label class="pax-individual"><div class="pax-sub">Индивидуально</div><input type="checkbox" id="pfIndividual" onchange="pfIndividualToggle()"></label>
               </div>
             </div>
             <div class="form-group full"><label>Контакт</label><input type="text" id="pfContact"></div>
@@ -1178,8 +1174,6 @@ function bClearForm(){
   // скрыть калькулятор
   const fb=document.getElementById('fCalcBlock'); if(fb) fb.style.display='none';
   const pb=document.getElementById('pfCalcBlock'); if(pb) pb.style.display='none';
-  const fi=document.getElementById('fIndividual'); if(fi) fi.checked=false;
-  const pfi=document.getElementById('pfIndividual'); if(pfi) pfi.checked=false;
   bUpdatePreview();
 }
 function mSwitchTab(tab){
@@ -1214,7 +1208,7 @@ function bUpdatePreview(){
 
 // ── КАЛЬКУЛЯТОР В ФОРМЕ (ручной ввод) ──
 const fTickCounts={};
-let fCalcRoute=''; let fCalcLastRoute=''; // запоминаем для какого маршрута нарисованы поля
+let fCalcRoute=''; // запоминаем для какого маршрута нарисованы поля
 
 function fDrawCalcRows(tour, adults, children){
   let rowsHTML='';
@@ -1256,15 +1250,6 @@ function fDrawCalcRows(tour, adults, children){
     }
   });
   document.getElementById('fCalcRows').innerHTML=rowsHTML;
-  // Восстановить flat-состояние после перерисовки (если pax-чекбокс был активен)
-  if(document.getElementById('fIndividual')?.checked){
-    tour.rows.forEach((row,i)=>{
-      if(i>=1&&row.flat&&/индивидуально/i.test(row.label)){
-        const cb=document.getElementById(`fFlatCheck${i}`); if(cb) cb.checked=true;
-        Array.from({length:i},(_,j)=>j).forEach(j=>{const el=document.getElementById(`fCalcRow${j}`);if(el){el.style.opacity='0.35';el.style.pointerEvents='none';}});
-      }
-    });
-  }
 }
 function fFlatToggle(i){
   const checked=document.getElementById(`fFlatCheck${i}`)?.checked;
@@ -1272,29 +1257,9 @@ function fFlatToggle(i){
     const el=document.getElementById(`fCalcRow${j}`);
     if(el){el.style.opacity=checked?'0.35':'1';el.style.pointerEvents=checked?'none':'';}
   });
-  const fi=document.getElementById('fIndividual'); if(fi) fi.checked=!!checked;
   fRecalc();
 }
-function fIndividualToggle(){
-  const route=document.getElementById('fRoute').value;
-  const tour=TOURS.find(t=>t.key===route); if(!tour) return;
-  const checked=document.getElementById('fIndividual').checked;
-  tour.rows.forEach((row,i)=>{
-    if(i>=1&&row.flat&&/индивидуально/i.test(row.label)){
-      const cb=document.getElementById(`fFlatCheck${i}`); if(cb){cb.checked=checked; fFlatToggle(i);}
-    }
-  });
-}
-function pfIndividualToggle(){
-  const route=document.getElementById('pfRoute').value;
-  const tour=TOURS.find(t=>t.key===route); if(!tour) return;
-  const checked=document.getElementById('pfIndividual').checked;
-  tour.rows.forEach((row,i)=>{
-    if(i>=1&&row.flat&&/индивидуально/i.test(row.label)){
-      const cb=document.getElementById(`pfFlatCheck${i}`); if(cb){cb.checked=checked; pfFlatToggle(i);}
-    }
-  });
-}
+
 
 function fOtherRecalc(){
   const sum=parseFloat(document.getElementById('fOtherPriceInput').value)||0;
@@ -1354,7 +1319,6 @@ function fUpdateCalc(){
   const fAllFlat=tour&&tour.rows.every(r=>r.flat);
   if(!tour||!currentRates||((!adults&&!children)&&!fAllFlat)){block.style.display='none';fCalcRoute='';return;}
   block.style.display='block';
-  if(route!==fCalcLastRoute){fCalcLastRoute=route;const fi=document.getElementById('fIndividual');if(fi)fi.checked=false;}
   // перерисовываем поля только если изменился маршрут
   const fCacheKey=route+adults+","+children; if(fCalcRoute!==fCacheKey){
     fCalcRoute=fCacheKey;
@@ -1454,7 +1418,7 @@ function fInsertAmount(){
 
 // ── КАЛЬКУЛЯТОР В ФОРМЕ (парсер) ──
 const pfTickCounts={};
-let pfCalcRoute=''; let pfCalcLastRoute='';
+let pfCalcRoute='';
 
 function pfUpdateCalc(){
   const route=document.getElementById('pfRoute').value;
@@ -1476,7 +1440,6 @@ function pfUpdateCalc(){
   const pfAllFlat=tour&&tour.rows.every(r=>r.flat);
   if(!tour||!currentRates||((!adults&&!children)&&!pfAllFlat)){block.style.display='none';pfCalcRoute='';return;}
   block.style.display='block';
-  if(route!==pfCalcLastRoute){pfCalcLastRoute=route;const pfi=document.getElementById('pfIndividual');if(pfi)pfi.checked=false;}
   const pfCK=route+"|"+adults+","+children; if(pfCalcRoute!==pfCK){
     pfCalcRoute=pfCK;
     let rowsHTML='';
@@ -1518,14 +1481,6 @@ function pfUpdateCalc(){
       }
     });
     document.getElementById('pfCalcRows').innerHTML=rowsHTML;
-    if(document.getElementById('pfIndividual')?.checked){
-      tour.rows.forEach((row,i)=>{
-        if(i>=1&&row.flat&&/индивидуально/i.test(row.label)){
-          const cb=document.getElementById(`pfFlatCheck${i}`); if(cb) cb.checked=true;
-          Array.from({length:i},(_,j)=>j).forEach(j=>{const el=document.getElementById(`pfCalcRow${j}`);if(el){el.style.opacity='0.35';el.style.pointerEvents='none';}});
-        }
-      });
-    }
     const tickSec=document.getElementById('pfTicketSection');
     if(tour.tickets){
       tickSec.style.display='block';
@@ -1551,7 +1506,6 @@ function pfFlatToggle(i){
     const el=document.getElementById(`pfCalcRow${j}`);
     if(el){el.style.opacity=checked?'0.35':'1';el.style.pointerEvents=checked?'none':'';}
   });
-  const pfi=document.getElementById('pfIndividual'); if(pfi) pfi.checked=!!checked;
   pfRecalc();
 }
 function pfRecalc(){
