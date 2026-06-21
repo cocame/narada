@@ -723,6 +723,11 @@ function buildPriceCalc(t, idx) {
     <div class="calc-total" id="pct-${idx}" style="display:none">
       <div class="calc-total-label">Итого</div>
       <div class="calc-total-usd" id="pcu-${idx}"></div>
+      <div class="plat-section">
+        <div class="plat-header">Итого на платформе</div>
+        <div class="plat-row"><span class="plat-name">Tripster</span><span class="plat-vals" id="cplat-trip-${idx}">—</span></div>
+        <div class="plat-row"><span class="plat-name">Sputnik8</span><span class="plat-vals" id="cplat-sp8-${idx}">—</span></div>
+      </div>
       <div class="calc-currencies">
         <label><input type="checkbox" class="pc-cur" data-idx="${idx}" value="usd" onchange="pCalcUpdate(${idx})"> USD</label>
         <label><input type="checkbox" class="pc-cur" data-idx="${idx}" value="rub" onchange="pCalcUpdate(${idx})"> RUB</label>
@@ -815,6 +820,13 @@ function pCalcUpdate(idx){
   const curs=pCalcGetCurs(idx);
   const cursF=curs.length?curs:['usd'];
   document.getElementById(`pcu-${idx}`).textContent=formatPrice(total,cursF);
+  PLATFORMS.forEach(pl=>{
+    let platTotal=0;
+    t.rows.forEach((r,i)=>{const n=cc['r'+i]||0; if(n) platTotal+=Math.ceil(r.usd/(1-pl.rate))*n;});
+    const key=pl.name==='Tripster'?'trip':'sp8';
+    const el=document.getElementById(`cplat-${key}-${idx}`);
+    if(el) el.textContent=platTotal?platTotal+'$':'—';
+  });
   // store for copy
   totalEl.dataset.rows=JSON.stringify(rows.map(r=>({label:r.label,n:r.n,...r.p})));
   totalEl.dataset.tickets=JSON.stringify(tickets.map(r=>({label:r.label,n:r.n,...r.p})));
@@ -1403,7 +1415,7 @@ function fRecalc(){
   const comm=Math.ceil(tourUSD/10*2)/2;
   const cEl=document.getElementById('previewComm'); if(cEl) cEl.textContent='$'+comm;
   const spEl=document.getElementById('previewSputnik');
-  if(spEl&&tour&&tour.rows[0]) spEl.textContent=Math.ceil(tour.rows[0].usd/0.76)+'$';
+  if(spEl&&tour){let sp8=0; tour.rows.forEach((row,i)=>{let cnt=row.flat?(i>=1?(document.getElementById(`fFlatCheck${i}`)?.checked?1:0):1):(hasFlatChecked?0:(i===0?adults:i===1?children:parseInt(document.getElementById(`fCountRow${i}`)?.value)||0)); sp8+=Math.ceil(row.usd/0.76)*cnt;}); spEl.textContent=sp8?sp8+'$':'—';}
 }
 function fTickChange(i,d){
   fTickCounts['f_'+i]=Math.max(0,(fTickCounts['f_'+i]||0)+d);
@@ -1569,7 +1581,7 @@ function pfRecalc(){
   const comm=Math.ceil(tourUSD/10*2)/2;
   const cEl=document.getElementById('previewComm2'); if(cEl) cEl.textContent='$'+comm;
   const spEl2=document.getElementById('previewSputnik2');
-  if(spEl2&&tour&&tour.rows[0]) spEl2.textContent=Math.ceil(tour.rows[0].usd/0.76)+'$';
+  if(spEl2&&tour){let sp8=0; tour.rows.forEach((row,i)=>{let cnt=row.flat?(i>=1?(document.getElementById(`pfFlatCheck${i}`)?.checked?1:0):1):(hasFlatChecked?0:(i===0?adults:i===1?children:parseInt(document.getElementById(`pfCountRow${i}`)?.value)||0)); sp8+=Math.ceil(row.usd/0.76)*cnt;}); spEl2.textContent=sp8?sp8+'$':'—';}
 }
 function pfCalcTotal(tour, adults, children, currency, tourUSD){
   const R=currentRates; let total=calcFromUSD(tourUSD,R);
