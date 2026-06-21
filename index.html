@@ -212,13 +212,6 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .comm-preview{margin-top:14px;padding:12px 16px;background:var(--note-bg);border:1px solid var(--border);border-radius:8px;display:flex;gap:20px;flex-wrap:wrap}
 .comm-preview .cv{font-size:20px;color:var(--accent);font-weight:600;font-family:'DM Mono',monospace}
 .comm-preview .cl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
-.plat-section{border-top:1px dashed var(--border2)}
-.plat-grid{display:grid;grid-template-columns:1fr auto auto;gap:2px 14px;padding:6px 16px 10px;font-family:'DM Mono',monospace}
-.plat-head{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right;padding-bottom:3px}
-.plat-head:first-child{text-align:left}
-.plat-lbl{color:var(--muted);font-size:11px}
-.plat-trip{color:var(--green);text-align:right;font-size:11px}
-.plat-sp8{color:var(--accent);text-align:right;font-size:11px}
 .modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--surface)}
 .btn-save{padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer}
 .btn-cancel{padding:10px 18px;background:none;border:1px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--muted);cursor:pointer}
@@ -727,8 +720,8 @@ function buildPriceCalc(t, idx) {
       <div class="calc-total-usd" id="pcu-${idx}"></div>
       <div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border2)">
         <div class="calc-total-label">Платформы</div>
-        <div style="display:flex;justify-content:space-between;margin-top:2px"><span style="color:var(--muted);font-size:10px;font-family:'DM Mono',monospace">Tripster</span><span class="calc-total-usd" style="font-size:13px" id="cplat-trip-${idx}">—</span></div>
-        <div style="display:flex;justify-content:space-between;margin-top:1px"><span style="color:var(--muted);font-size:10px;font-family:'DM Mono',monospace">Sputnik8</span><span class="calc-total-usd" style="font-size:13px;color:var(--accent)" id="cplat-sp8-${idx}">—</span></div>
+        <div style="margin-top:3px"><div style="color:var(--muted);font-size:10px;font-family:'DM Mono',monospace">Tripster</div><div class="calc-total-usd" style="font-size:12px;line-height:1.5;word-break:break-word" id="cplat-trip-${idx}">—</div></div>
+        <div style="margin-top:5px"><div style="color:var(--muted);font-size:10px;font-family:'DM Mono',monospace">Sputnik8</div><div class="calc-total-usd" style="font-size:12px;line-height:1.5;word-break:break-word;color:var(--accent)" id="cplat-sp8-${idx}">—</div></div>
       </div>
       <div class="calc-currencies">
         <label><input type="checkbox" class="pc-cur" data-idx="${idx}" value="usd" onchange="pCalcUpdate(${idx})"> USD</label>
@@ -741,14 +734,20 @@ function buildPriceCalc(t, idx) {
   </div>`;
 }
 
-function platformPricesHTML(t) {
+function platformPricesHTML(t, rates, skeleton) {
   const lbl = s => s.replace('Взрослый / >140 см','Взрослый').replace('Ребёнок до 10','Дети').replace('Ребёнок 100–140 см','Дети').replace('Индивидуально (до 4 чел)','Инд.').replace('Индивидуально','Инд.').replace('Групповой (за чел.)','Групп.').replace('Групповой (до 3 человек)','Групп.');
-  const rows = t.rows.slice(0, 4);
-  const header = `<div class="plat-head"></div><div class="plat-head">Tripster</div><div class="plat-head">Sputnik8</div>`;
-  const dataRows = rows.map(r =>
-    `<span class="plat-lbl">${lbl(r.label)}</span><span class="plat-trip">${Math.ceil(r.usd/0.78)}$</span><span class="plat-sp8">${Math.ceil(r.usd/0.76)}$</span>`
-  ).join('');
-  return `<div class="plat-section"><div class="plat-grid">${header}${dataRows}</div></div>`;
+  const mainRows = t.rows.slice(0, 4);
+  let html = '';
+  PLATFORMS.forEach(pl => {
+    html += `<div class="ticket-section-label">${pl.name} −${Math.round(pl.rate*100)}%</div><div class="price-rows" style="padding-top:0">`;
+    mainRows.forEach(r => {
+      const platUSD = Math.ceil(r.usd / (1 - pl.rate));
+      const p = rates ? calcFromUSD(platUSD, rates) : null;
+      html += skeleton ? skelRowHTML(true) : priceRowHTML(lbl(r.label), p, true);
+    });
+    html += '</div>';
+  });
+  return html;
 }
 
 function renderPriceCards(rates, skeleton) {
@@ -764,7 +763,7 @@ function renderPriceCards(rates, skeleton) {
       <div class="tour-header"><div class="tour-icon">${t.icon}</div><div class="tour-name">${t.name}</div></div>
       <div class="price-rows">${mainRows}</div>
       ${ticketRows}
-      ${platformPricesHTML(t)}
+      ${platformPricesHTML(t, rates, skeleton)}
       <button class="copy-price-btn" onclick="copyPriceCard(${idx})">Скопировать прайс</button>
       <button class="calc-toggle" onclick="this.nextElementSibling.classList.toggle('open');this.textContent=this.nextElementSibling.classList.contains('open')?'▲ Закрыть калькулятор':'▼ Калькулятор группы'">▼ Калькулятор группы</button>
       ${buildPriceCalc(t,idx)}
@@ -825,11 +824,11 @@ function pCalcUpdate(idx){
   const cursF=curs.length?curs:['usd'];
   document.getElementById(`pcu-${idx}`).textContent=formatPrice(total,cursF);
   PLATFORMS.forEach(pl=>{
-    let platTotal=0;
-    t.rows.forEach((r,i)=>{const n=cc['r'+i]||0; if(n) platTotal+=Math.ceil(r.usd/(1-pl.rate))*n;});
+    let platTotalUSD=0;
+    t.rows.forEach((r,i)=>{const n=cc['r'+i]||0; if(n) platTotalUSD+=Math.ceil(r.usd/(1-pl.rate))*n;});
     const key=pl.name==='Tripster'?'trip':'sp8';
     const el=document.getElementById(`cplat-${key}-${idx}`);
-    if(el) el.textContent=platTotal?platTotal+'$':'—';
+    if(el) el.textContent=platTotalUSD?formatPrice(calcFromUSD(platTotalUSD,R),cursF):'—';
   });
   // store for copy
   totalEl.dataset.rows=JSON.stringify(rows.map(r=>({label:r.label,n:r.n,...r.p})));
