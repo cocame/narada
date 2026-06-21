@@ -1216,7 +1216,7 @@ function bClearForm(){
   // сбросить счётчики билетов
   Object.keys(fTickCounts).forEach(k=>delete fTickCounts[k]);
   Object.keys(pfTickCounts).forEach(k=>delete pfTickCounts[k]);
-  fCalcRoute=''; pfCalcRoute='';
+  fCalcRoute=''; pfCalcRoute=''; fCurrentPlatRate=0; pfCurrentPlatRate=0;
   ['fOtherName','pfOtherName','fOtherPriceInput','pfOtherPriceInput','fTransfer','pfTransfer'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   // скрыть калькулятор
   const fb=document.getElementById('fCalcBlock'); if(fb) fb.style.display='none';
@@ -1255,15 +1255,18 @@ function bUpdatePreview(){
 
 // ── КАЛЬКУЛЯТОР В ФОРМЕ (ручной ввод) ──
 const fTickCounts={};
-let fCalcRoute=''; // запоминаем для какого маршрута нарисованы поля
+let fCalcRoute='';
+let fCurrentPlatRate=0;
 
 function fSetPlatformPrices(rate){
+  fCurrentPlatRate=rate||0;
   const route=document.getElementById('fRoute').value;
   const tour=TOURS.find(t=>t.key===route); if(!tour) return;
   tour.rows.forEach((row,i)=>{const el=document.getElementById(`fPriceRow${i}`); if(el) el.value=rate?Math.ceil(row.usd/(1-rate)):row.usd;});
   fRecalc();
 }
 function pfSetPlatformPrices(rate){
+  pfCurrentPlatRate=rate||0;
   const route=document.getElementById('pfRoute').value;
   const tour=TOURS.find(t=>t.key===route); if(!tour) return;
   tour.rows.forEach((row,i)=>{const el=document.getElementById(`pfPriceRow${i}`); if(el) el.value=rate?Math.ceil(row.usd/(1-rate)):row.usd;});
@@ -1403,7 +1406,7 @@ function fUpdateCalc(){
       document.getElementById('fTicketRows').innerHTML=tkHTML;
     } else { tickSec.style.display='none'; }
   }
-  fRecalc();
+  if(fCurrentPlatRate){fSetPlatformPrices(fCurrentPlatRate);}else{fRecalc();}
 }
 
 function fRecalc(){
@@ -1430,7 +1433,8 @@ function fRecalc(){
     const tot=document.getElementById(`fTotRow${i}`); if(tot) tot.textContent=fmtVal(sub);
   });
   fCalcTotal(tour, adults, children, currency, tourUSD);
-  const comm=Math.ceil(tourUSD/10*2)/2;
+  const baseForComm=hasFlatChecked?tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(`fFlatCheck${i}`)?.checked?r.usd:0),0):adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0);
+  const comm=Math.ceil(baseForComm/10*2)/2;
   const cEl=document.getElementById('previewComm'); if(cEl) cEl.textContent='$'+comm;
   const spEl=document.getElementById('previewSputnik');
   if(spEl&&tour){let sp8=0; tour.rows.forEach((row,i)=>{let cnt=row.flat?(i>=1?(document.getElementById(`fFlatCheck${i}`)?.checked?1:0):1):(hasFlatChecked?0:(i===0?adults:i===1?children:parseInt(document.getElementById(`fCountRow${i}`)?.value)||0)); sp8+=Math.ceil(row.usd/0.76)*cnt;}); spEl.textContent=sp8?sp8+'$':'—';}
@@ -1467,10 +1471,6 @@ function fCalcTotal(tour, adults, children, currency, tourUSD){
   document.getElementById('fCalcResult').style.display='block';
   document.getElementById('fCalcResult').dataset.val=val;
   document.getElementById('fCalcResult').dataset.usd=total.usd;
-  // комиссия только от tourUSD (без трансфера)
-  const commRaw = tourUSD / 10;
-  const comm = Math.ceil(commRaw*2)/2;
-  const cEl=document.getElementById('previewComm'); if(cEl) cEl.textContent='$'+comm;
 }
 function fInsertAmount(){
   const val=document.getElementById('fCalcResult').dataset.val||'';
@@ -1483,6 +1483,7 @@ function fInsertAmount(){
 // ── КАЛЬКУЛЯТОР В ФОРМЕ (парсер) ──
 const pfTickCounts={};
 let pfCalcRoute='';
+let pfCurrentPlatRate=0;
 
 function pfUpdateCalc(){
   const route=document.getElementById('pfRoute').value;
@@ -1561,7 +1562,7 @@ function pfUpdateCalc(){
       document.getElementById('pfTicketRows').innerHTML=tkHTML;
     } else { tickSec.style.display='none'; }
   }
-  pfRecalc();
+  if(pfCurrentPlatRate){pfSetPlatformPrices(pfCurrentPlatRate);}else{pfRecalc();}
 }
 
 function pfFlatToggle(i){
@@ -1596,7 +1597,8 @@ function pfRecalc(){
     const tot=document.getElementById(`pfTotRow${i}`); if(tot) tot.textContent=fmtVal(sub);
   });
   pfCalcTotal(tour, adults, children, currency, tourUSD);
-  const comm=Math.ceil(tourUSD/10*2)/2;
+  const baseForComm=hasFlatChecked?tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(`pfFlatCheck${i}`)?.checked?r.usd:0),0):adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0);
+  const comm=Math.ceil(baseForComm/10*2)/2;
   const cEl=document.getElementById('previewComm2'); if(cEl) cEl.textContent='$'+comm;
   const spEl2=document.getElementById('previewSputnik2');
   if(spEl2&&tour){let sp8=0; tour.rows.forEach((row,i)=>{let cnt=row.flat?(i>=1?(document.getElementById(`pfFlatCheck${i}`)?.checked?1:0):1):(hasFlatChecked?0:(i===0?adults:i===1?children:parseInt(document.getElementById(`pfCountRow${i}`)?.value)||0)); sp8+=Math.ceil(row.usd/0.76)*cnt;}); spEl2.textContent=sp8?sp8+'$':'—';}
@@ -1618,10 +1620,6 @@ function pfCalcTotal(tour, adults, children, currency, tourUSD){
   document.getElementById('pfCalcBreak').textContent='';
   document.getElementById('pfCalcResult').style.display='block';
   document.getElementById('pfCalcResult').dataset.val=val;
-  // комиссия только от tourUSD (без трансфера)
-  const commRaw=tourUSD/10;
-  const comm=Math.ceil(commRaw*2)/2;
-  const cEl=document.getElementById('previewComm2'); if(cEl) cEl.textContent='$'+comm;
 }
 function pfInsertAmount(){
   const val=document.getElementById('pfCalcResult').dataset.val||'';
@@ -1663,7 +1661,7 @@ function bGetFormData(){
       });
       if(flatActive){tourUSD=flatSum; isIndividual=true;}
     }
-    comm=tourUSD>0?Math.ceil(tourUSD/10*2)/2:0;
+    if(tour){let baseComm=isIndividual?(tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(p+'FlatCheck'+i)?.checked?r.usd:0),0)):(flatRow0?tour.rows[0].usd:adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0));comm=baseComm>0?Math.ceil(baseComm/10*2)/2:0;}
   }
   return {
     id:editingId,
