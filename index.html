@@ -986,7 +986,7 @@ function bCardHTML(b){
       })()}
       <div class="b-notes-row">
         <label>Примечание</label>
-        <textarea onclick="event.stopPropagation()" onchange="event.stopPropagation();bSaveNote('${b.id}',this.value)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:40px;color:var(--text)">${(b.notes||'').replace(/​/g,'')}</textarea>
+        <textarea onclick="event.stopPropagation()" onchange="event.stopPropagation();bSaveNote('${b.id}',this.value)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:40px;color:var(--text)">${(b.notes||'').replace(/​/g,'').replace(/‌[TS]/g,'')}</textarea>
       </div>
       <button class="b-copy-card-btn" onclick="event.stopPropagation();bCopyCard('${b.id}')">Скопировать карточку</button>
       <div class="b-status-row">
@@ -1110,10 +1110,13 @@ function editComm(id){
 }
 
 function bDetectPlatform(b){
+  const n=b.notes||'';
+  if(n.includes('‌S')) return 'Sputnik8';
+  if(n.includes('‌T')) return 'Tripster';
   if(b.platform) return b.platform;
   if(!b.customPriceAdult) return '';
   const tour=TOURS.find(t=>t.key===b.route); if(!tour||!tour.rows[0]) return '';
-  for(const pl of PLATFORMS){ if(Math.ceil(tour.rows[0].usd/(1-pl.rate))===b.customPriceAdult) return pl.name; }
+  for(const pl of PLATFORMS){ if(Math.ceil(tour.rows[0].usd/(1-pl.rate))==b.customPriceAdult) return pl.name; }
   return '';
 }
 
@@ -1159,7 +1162,8 @@ async function bToggleBase(id){
 async function bSaveNote(id,val){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   const isInd=(b.notes||'').endsWith('​')||b.isIndividual;
-  b.notes=val.replace(/​/g,'')+(isInd?'​':'');
+  const platMark=(b.notes||'').match(/‌[TS]/)?.[0]||'';
+  b.notes=val.replace(/​/g,'').replace(/‌[TS]/g,'')+platMark+(isInd?'​':'');
   await gasSave('updateBooking',b);
 }
 async function bCyclePay(id){
@@ -1689,7 +1693,7 @@ function bGetFormData(){
     platform:mTab==='manual'?fPlatformName:pfPlatformName,
     payStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.payStatus||'unpaid') : 'unpaid',
     tripStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.tripStatus||'waiting') : (document.getElementById(p+'TripStatus')?.value||'waiting'),
-    notes:(document.getElementById(p+'Notes').value||'').replace(/​/g,'')+(isIndividual?'​':'')
+    {const _pn=mTab==='manual'?fPlatformName:pfPlatformName;const _pm=_pn==='Sputnik8'?'‌S':_pn==='Tripster'?'‌T':'';notes=(document.getElementById(p+'Notes').value||'').replace(/​/g,'').replace(/‌[TS]/g,'')+_pm+(isIndividual?'​':'');}
   };
 }
 function bRepeat(id){
