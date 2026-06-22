@@ -1693,7 +1693,7 @@ function bGetFormData(){
     platform:mTab==='manual'?fPlatformName:pfPlatformName,
     payStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.payStatus||'unpaid') : 'unpaid',
     tripStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.tripStatus||'waiting') : (document.getElementById(p+'TripStatus')?.value||'waiting'),
-    {const _pn=mTab==='manual'?fPlatformName:pfPlatformName;const _pm=_pn==='Sputnik8'?'‌S':_pn==='Tripster'?'‌T':'';notes=(document.getElementById(p+'Notes').value||'').replace(/​/g,'').replace(/‌[TS]/g,'')+_pm+(isIndividual?'​':'');}
+    notes:(()=>{const _pn=mTab==='manual'?fPlatformName:pfPlatformName;const _pm=_pn==='Sputnik8'?'‌S':_pn==='Tripster'?'‌T':'';return(document.getElementById(p+'Notes').value||'').replace(/​/g,'').replace(/‌[TS]/g,'')+_pm+(isIndividual?'​':'');})()
   };
 }
 function bRepeat(id){
