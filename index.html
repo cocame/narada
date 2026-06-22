@@ -933,7 +933,7 @@ function bCardHTML(b){
 
   return `<div class="booking-card${sc}${scInd}" id="bcard-${b.id}">
     <div class="b-card-main" onclick="bToggle('${b.id}')">
-      <div class="b-card-route">${b.route}${b.platform?`<span style="font-size:9px;color:var(--accent);margin-left:4px;font-family:'DM Mono',monospace;opacity:.8">${b.platform}</span>`:''}</div>
+      <div class="b-card-route">${b.route}${(()=>{const _p=bDetectPlatform(b);return _p?`<span style="font-size:9px;color:var(--accent);margin-left:4px;font-family:'DM Mono',monospace;opacity:.8">${_p}</span>`:'';})()} </div>
       <div class="b-card-pax">${paxParts.join('+')||'—'}</div>
       <div class="b-card-contact">${b.contact||'—'}</div>
       <span onclick="event.stopPropagation();bCyclePay('${b.id}')" style="cursor:pointer;font-size:15px;line-height:1">${payIcon}</span>
@@ -951,7 +951,7 @@ function bCardHTML(b){
         <div class="b-exp-item"><label>Оплата</label><span>${b.payMethod||'—'}</span></div>
         <div class="b-exp-item"><label>Сумма</label><span>${b.totalAmount||'—'}</span></div>
         <div class="b-exp-item"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
-        ${b.platform?`<div class="b-exp-item"><label>Платформа</label><span style="color:var(--accent);font-weight:600">${b.platform}</span></div>`:''}
+        ${(()=>{const _p=bDetectPlatform(b);return _p?`<div class="b-exp-item"><label>Платформа</label><span style="color:var(--accent);font-weight:600">${_p}</span></div>`:'';})()}
       </div>
       ${(()=>{
         const tour=TOURS.find(t=>t.key===b.route);
@@ -1109,12 +1109,21 @@ function editComm(id){
   gasSave('updateBooking',b).then(()=>bUpdateStats());
 }
 
+function bDetectPlatform(b){
+  if(b.platform) return b.platform;
+  if(!b.customPriceAdult) return '';
+  const tour=TOURS.find(t=>t.key===b.route); if(!tour||!tour.rows[0]) return '';
+  for(const pl of PLATFORMS){ if(Math.ceil(tour.rows[0].usd/(1-pl.rate))===b.customPriceAdult) return pl.name; }
+  return '';
+}
+
 function bCopyCard(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   const pax=[b.adults?b.adults+' взр':'',b.children?b.children+' дет':'',b.infants?b.infants+' мал':''].filter(Boolean).join(', ');
   const payLine=[b.payMethod,b.currency].filter(Boolean).join(', ');
   const amountLine=b.totalAmount?(b.payStatus==='paid'?'Оплачено: '+b.totalAmount:'К оплате: '+b.totalAmount):'';
-  const routeLine=(b.platform?b.route+' · '+b.platform:b.route)||'—';
+  const plat=bDetectPlatform(b);
+  const routeLine=(plat?b.route+' · '+plat:b.route)||'—';
   const lines=[
     b.date?formatDateLabel(b.date):'—',
     routeLine,
