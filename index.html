@@ -1247,6 +1247,14 @@ function bEdit(id){
   document.getElementById('fOnsiteCur').value=b.onsite?(b.onsiteCur||b.currency||'VND'):(b.currency||'VND');
   document.getElementById('fNotes').value=(b.notes||'').replace(/​/g,'');
   bUpdatePreview();
+  // Восстановить галочку Индивидуально
+  if(b.isIndividual||(b.notes||'').endsWith('​')){
+    const _itour=TOURS.find(t=>t.key===b.route);
+    if(_itour){
+      const _fi=_itour.rows.reduce((acc,row,i)=>(i>=1&&row.flat)?[...acc,i]:acc,[]);
+      if(_fi.length>0){const cb=document.getElementById('fFlatCheck'+_fi[_fi.length-1]);if(cb){cb.checked=true;fFlatToggle(_fi[_fi.length-1]);}}
+    }
+  }
   // Восстановить счётчики билетов
   const _etour=TOURS.find(t=>t.key===b.route);
   if(_etour&&_etour.tickets){
@@ -1266,7 +1274,11 @@ function prepayAutoFill(p) {
   const prepay = parseFloat(document.getElementById(p+'Prepay').value);
   if (!prepay || prepay <= 0) return;
   const prepayCur = document.getElementById(p+'PrepayCur').value;
-  const totalStr = document.getElementById(p+'Amount').value;
+  let totalStr = document.getElementById(p+'Amount').value;
+  if (!totalStr) {
+    const calcEl = document.getElementById(p==='f'?'fCalcResult':'pfCalcResult');
+    totalStr = calcEl?.dataset?.val || '';
+  }
   if (!totalStr) return;
   const clean = totalStr.replace(/\s/g,'');
   let cur = null;
