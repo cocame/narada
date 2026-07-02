@@ -954,7 +954,7 @@ function bCardHTML(b){
   const tom=tomorrowStr();
   const sc=b.tripStatus==='done'?' s-done':b.tripStatus==='cancelled'?' s-cancelled':b.tripStatus==='waiting_date'?' s-waiting':(b.date&&b.date===tom)?' s-tomorrow':'';
   const scInd=(b.isIndividual||(b.notes||'').endsWith('​'))?' s-individual':'';
-  const payIcon=b.payStatus==='paid'?'💲':b.payStatus==='refund'?'🤑':'💳';
+  const payIcon=b.payStatus==='refund'?'🤑':(b.payStatus==='paid'||b.prepay)?'💲':'💳';
   const comm=b.tripStatus==='done'?'$'+(parseFloat(b.commission)||0):'';
   const starCol=b.inBase?'#7c5cbf':'#ccc';
 
