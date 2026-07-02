@@ -372,6 +372,20 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
           <div class="form-group"><label>Оплата</label>
             <select id="fPayMethod"><option>Наличные</option><option>Перевод</option><option>USDT</option></select>
           </div>
+          <div class="form-group">
+            <label>Предоплата</label>
+            <div style="display:flex;gap:6px">
+              <input type="text" id="fPrepay" placeholder="сумма" style="flex:1">
+              <select id="fPrepayCur"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>На месте</label>
+            <div style="display:flex;gap:6px">
+              <input type="text" id="fOnsite" placeholder="сумма" style="flex:1">
+              <select id="fOnsiteCur"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+            </div>
+          </div>
           <div class="form-group full"><label>Примечание</label><textarea id="fNotes"></textarea></div>
         </div>
         <!-- КАЛЬКУЛЯТОР В ФОРМЕ -->
@@ -435,6 +449,20 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
             </div>
             <div class="form-group"><label>Оплата</label>
               <select id="pfPayMethod"><option>Наличные</option><option>Перевод</option><option>USDT</option></select>
+            </div>
+            <div class="form-group">
+              <label>Предоплата</label>
+              <div style="display:flex;gap:6px">
+                <input type="text" id="pfPrepay" placeholder="сумма" style="flex:1">
+                <select id="pfPrepayCur"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>На месте</label>
+              <div style="display:flex;gap:6px">
+                <input type="text" id="pfOnsite" placeholder="сумма" style="flex:1">
+                <select id="pfOnsiteCur"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+              </div>
             </div>
             <div class="form-group full"><label>Примечание</label><textarea id="pfNotes"></textarea></div>
           </div>
@@ -949,6 +977,8 @@ function bCardHTML(b){
         <div class="b-exp-item"><label>Валюта</label><span>${b.currency||'—'}</span></div>
         <div class="b-exp-item"><label>Оплата</label><span>${b.payMethod||'—'}</span></div>
         <div class="b-exp-item"><label>Сумма</label><span>${b.totalAmount||'—'}</span></div>
+        ${b.prepay?`<div class="b-exp-item"><label>Предоплата</label><span>${b.prepay} ${b.prepayCur||''}</span></div>`:''}
+        ${b.onsite?`<div class="b-exp-item"><label>На месте</label><span>${b.onsite} ${b.onsiteCur||''}</span></div>`:''}
         <div class="b-exp-item"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
         ${(()=>{const _p=bDetectPlatform(b);return _p?`<div class="b-exp-item"><label>Платформа</label><span style="color:var(--accent);font-weight:600">${_p}</span></div>`:'';})()}
       </div>
@@ -1134,6 +1164,8 @@ function bCopyCard(id){
     b.hotel||'—',
     payLine||'',
     amountLine||'',
+    b.prepay?'Предоплата: '+b.prepay+' '+(b.prepayCur||''):'',
+    b.onsite?'На месте: '+b.onsite+' '+(b.onsiteCur||''):'',
     (b.notes||'').replace(/​/g,'')
   ].filter(Boolean);
   copyText(lines.join('\n'));
@@ -1209,13 +1241,18 @@ function bEdit(id){
   document.getElementById('fCurrency').value=b.currency||'VND';
   document.getElementById('fPayMethod').value=b.payMethod||'Наличные';
   document.getElementById('fAmount').value=b.totalAmount||'';
+  document.getElementById('fPrepay').value=b.prepay||'';
+  document.getElementById('fPrepayCur').value=b.prepayCur||'VND';
+  document.getElementById('fOnsite').value=b.onsite||'';
+  document.getElementById('fOnsiteCur').value=b.onsiteCur||'VND';
   document.getElementById('fNotes').value=(b.notes||'').replace(/​/g,'');
   bUpdatePreview();
   document.getElementById('modalOverlay').classList.add('open');
 }
 function bCloseModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
 function bClearForm(){
-  ['fDate','fContact','fHotel','fAmount','fNotes','pfDate','pfContact','pfHotel','pfAmount','pfNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fDate','fContact','fHotel','fAmount','fNotes','fPrepay','fOnsite','pfDate','pfContact','pfHotel','pfAmount','pfNotes','pfPrepay','pfOnsite'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fPrepayCur','fOnsiteCur','pfPrepayCur','pfOnsiteCur'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='VND';});
   ['fRoute','pfRoute'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('fAdults').value=1; document.getElementById('fChildren').value=0; document.getElementById('fInfants').value=0;
   const pa=document.getElementById('pfAdults');
@@ -1685,6 +1722,10 @@ function bGetFormData(){
     currency:document.getElementById(p+'Currency').value,
     payMethod:document.getElementById(p+'PayMethod').value,
     totalAmount:document.getElementById(p+'Amount').value,
+    prepay:document.getElementById(p+'Prepay').value,
+    prepayCur:document.getElementById(p+'PrepayCur').value,
+    onsite:document.getElementById(p+'Onsite').value,
+    onsiteCur:document.getElementById(p+'OnsiteCur').value,
     commission:comm,
     isIndividual,
     customPriceAdult:route==='ДРУГОЕ'?0:adultUSD,
