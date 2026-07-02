@@ -375,8 +375,8 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
           <div class="form-group">
             <label>Предоплата</label>
             <div style="display:flex;gap:6px">
-              <input type="text" id="fPrepay" placeholder="сумма" style="flex:1">
-              <select id="fPrepayCur"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+              <input type="text" id="fPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('f')">
+              <select id="fPrepayCur" onchange="prepayAutoFill('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
             </div>
           </div>
           <div class="form-group">
@@ -453,8 +453,8 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
             <div class="form-group">
               <label>Предоплата</label>
               <div style="display:flex;gap:6px">
-                <input type="text" id="pfPrepay" placeholder="сумма" style="flex:1">
-                <select id="pfPrepayCur"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+                <input type="text" id="pfPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('pf')">
+                <select id="pfPrepayCur" onchange="prepayAutoFill('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
               </div>
             </div>
             <div class="form-group">
@@ -1261,6 +1261,28 @@ function bEdit(id){
   document.getElementById('modalOverlay').classList.add('open');
 }
 function bCloseModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+
+function prepayAutoFill(p) {
+  const prepay = parseFloat(document.getElementById(p+'Prepay').value);
+  if (!prepay || prepay <= 0) return;
+  const prepayCur = document.getElementById(p+'PrepayCur').value;
+  const totalStr = document.getElementById(p+'Amount').value;
+  if (!totalStr) return;
+  const clean = totalStr.replace(/\s/g,'');
+  let cur = null;
+  if (clean.includes('₫')||/vnd/i.test(clean)) cur='VND';
+  else if (/usdt/i.test(clean)) cur='USDT';
+  else if (clean.includes('$')) cur='USD';
+  else if (clean.includes('₽')||/rub/i.test(clean)) cur='RUB';
+  if (!cur || cur !== prepayCur) return;
+  const total = parseFloat(clean.replace(/[^\d]/g,''));
+  if (!total || isNaN(total)) return;
+  const onsite = total - prepay;
+  if (onsite < 0) return;
+  document.getElementById(p+'OnsiteCur').value = prepayCur;
+  document.getElementById(p+'Onsite').value = onsite;
+}
+
 function bClearForm(){
   ['fDate','fContact','fHotel','fAmount','fNotes','fPrepay','fOnsite','pfDate','pfContact','pfHotel','pfAmount','pfNotes','pfPrepay','pfOnsite'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['fPrepayCur','fOnsiteCur','pfPrepayCur','pfOnsiteCur'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='VND';});
