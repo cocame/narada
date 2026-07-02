@@ -1242,9 +1242,9 @@ function bEdit(id){
   document.getElementById('fPayMethod').value=b.payMethod||'Наличные';
   document.getElementById('fAmount').value=b.totalAmount||'';
   document.getElementById('fPrepay').value=b.prepay||'';
-  document.getElementById('fPrepayCur').value=b.prepayCur||'VND';
+  document.getElementById('fPrepayCur').value=b.prepayCur||(b.currency||'VND');
   document.getElementById('fOnsite').value=b.onsite||'';
-  document.getElementById('fOnsiteCur').value=b.onsiteCur||'VND';
+  document.getElementById('fOnsiteCur').value=b.onsiteCur||(b.currency||'VND');
   document.getElementById('fNotes').value=(b.notes||'').replace(/​/g,'');
   bUpdatePreview();
   // Восстановить счётчики билетов
