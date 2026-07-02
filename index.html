@@ -1247,6 +1247,17 @@ function bEdit(id){
   document.getElementById('fOnsiteCur').value=b.onsiteCur||'VND';
   document.getElementById('fNotes').value=(b.notes||'').replace(/​/g,'');
   bUpdatePreview();
+  // Восстановить счётчики билетов
+  const _etour=TOURS.find(t=>t.key===b.route);
+  if(_etour&&_etour.tickets){
+    const _ec=Array.isArray(b.ticketCounts)?b.ticketCounts:[];
+    _etour.tickets.forEach((tk,i)=>{
+      const cnt=_ec[i]!=null?_ec[i]:(/детск|дети/i.test(tk.label)?(b.children||0):(b.adults||0));
+      fTickCounts['f_'+i]=cnt;
+      const el=document.getElementById('ftc-'+i); if(el) el.textContent=cnt;
+    });
+    fRecalc();
+  }
   document.getElementById('modalOverlay').classList.add('open');
 }
 function bCloseModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
@@ -1726,6 +1737,7 @@ function bGetFormData(){
     prepayCur:document.getElementById(p+'PrepayCur').value,
     onsite:document.getElementById(p+'Onsite').value,
     onsiteCur:document.getElementById(p+'OnsiteCur').value,
+    ticketCounts:(()=>{const _c=p==='f'?fTickCounts:pfTickCounts;const _x=p==='f'?'f_':'pf_';return tour&&tour.tickets?tour.tickets.map((_,i)=>_c[_x+i]||0):[];})(),
     commission:comm,
     isIndividual,
     customPriceAdult:route==='ДРУГОЕ'?0:adultUSD,
