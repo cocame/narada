@@ -296,7 +296,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
               <button id="walletSubBtn" onclick="walletAdd(1)" title="Получила — остаток уменьшается" style="padding:6px 10px;background:none;border:1px solid var(--border);border-radius:6px;font-size:14px;cursor:pointer;color:var(--red)">−</button>
               <button id="walletAddBtn" onclick="walletAdd(-1)" title="Вернуть — остаток увеличивается" style="padding:6px 10px;background:none;border:1px solid var(--border);border-radius:6px;font-size:14px;cursor:pointer;color:var(--green)">+</button>
             </div>
-            <div id="walletPaidTotal" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px;cursor:pointer" onclick="walletEditPaid()"></div>
+            <div id="walletPaidTotal" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px"></div>
           </div>
           <div>
             <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Остаток у меня</div>
@@ -1981,24 +1981,6 @@ function calcTotalEarned(){
   return Math.round(t*100)/100;
 }
 let _walletSaving=false;
-function walletEditPaid(){
-  const pT=document.getElementById('walletPaidTotal');
-  if(!pT||pT.querySelector('input')) return;
-  const cur=parseFloat(localStorage.getItem('walletPaid'))||0;
-  pT.innerHTML=`<input id="walletPaidEdit" type="number" value="${cur}" step="1" style="width:90px;font-family:'DM Mono',monospace;font-size:11px;border:1px solid var(--accent);border-radius:4px;padding:2px 5px;background:var(--surface)"> <span style="font-size:10px;color:var(--muted)">↵ сохранить</span>`;
-  const inp=document.getElementById('walletPaidEdit');
-  inp.focus(); inp.select();
-  inp.onblur=()=>walletSavePaid(inp.value);
-  inp.onkeydown=(e)=>{if(e.key==='Enter'){e.preventDefault();inp.blur();}if(e.key==='Escape'){refreshWalletBalance();}};
-}
-async function walletSavePaid(raw){
-  const val=parseFloat(raw);
-  if(isNaN(val)||val<0){refreshWalletBalance();return;}
-  const paid=Math.round(val*100)/100;
-  localStorage.setItem('walletPaid',paid);
-  refreshWalletBalance();
-  try{await gasSave('saveWallet',{extra:0,paid});}catch(e){}
-}
 async function walletAdd(sign){
   const inp=document.getElementById('walletPaidInput');
   const val=parseFloat(inp.value)||0; if(!val||_walletSaving) return;
