@@ -292,10 +292,10 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
           <div>
             <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Получила на руки $</div>
             <div style="display:flex;gap:4px">
-              <input type="number" id="walletPaidInput" placeholder="0" onkeydown="if(event.key==='Enter')walletAdd('paid',1)" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:13px;background:var(--surface)">
-              <button onclick="walletAdd('paid',1)" style="padding:6px 10px;background:none;border:1px solid var(--border);border-radius:6px;font-size:14px;cursor:pointer;color:var(--red)">−</button>
+              <input type="number" id="walletPaidInput" placeholder="0" onkeydown="if(event.key==='Enter'){event.preventDefault();walletAdd();}" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:13px;background:var(--surface)">
+              <button id="walletAddBtn" onclick="walletAdd()" style="padding:6px 10px;background:none;border:1px solid var(--border);border-radius:6px;font-size:14px;cursor:pointer;color:var(--red)">−</button>
             </div>
-            <div id="walletPaidTotal" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px;cursor:pointer" onclick="walletEditPaid()" title="Нажми чтобы исправить"></div>
+            <div id="walletPaidTotal" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px;cursor:pointer" onclick="walletEditPaid()"></div>
           </div>
           <div>
             <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Остаток у меня</div>
@@ -594,7 +594,7 @@ function switchTab(name) {
     bFilter='upcoming_waiting';
     const sel=document.getElementById('bFilterStatus'); if(sel) sel.value='upcoming_waiting';
     bRender();
-    loadWallet();
+    refreshWalletBalance();
   }
 }
 function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
@@ -1939,7 +1939,7 @@ function toggleWallet(){
   const h=document.getElementById('earnHistoryPanel');
   const isOpen=p.style.display==='block';
   p.style.display=isOpen?'none':'block';
-  if(!isOpen){h.style.display='none';loadWallet();}
+  if(!isOpen){h.style.display='none';refreshWalletBalance();}
 }
 function toggleEarnHistory(){
   const h=document.getElementById('earnHistoryPanel');
@@ -1980,29 +1980,38 @@ function calcTotalEarned(){
   return Math.round(t*100)/100;
 }
 let _walletSaving=false;
-async function walletEditPaid(){
+function walletEditPaid(){
+  const pT=document.getElementById('walletPaidTotal');
+  if(!pT||pT.querySelector('input')) return;
   const cur=parseFloat(localStorage.getItem('walletPaid'))||0;
-  const input=prompt('Выплачено сейчас: $'+cur+'\nВведи правильную сумму:',cur);
-  if(input===null) return;
-  const val=parseFloat(input);
-  if(isNaN(val)||val<0) return;
-  localStorage.setItem('walletPaid',Math.round(val*100)/100);
-  await gasSave('saveWallet',{extra:0,paid:Math.round(val*100)/100});
-  refreshWalletBalance();
+  pT.innerHTML=`<input id="walletPaidEdit" type="number" value="${cur}" step="1" style="width:90px;font-family:'DM Mono',monospace;font-size:11px;border:1px solid var(--accent);border-radius:4px;padding:2px 5px;background:var(--surface)"> <span style="font-size:10px;color:var(--muted)">↵ сохранить</span>`;
+  const inp=document.getElementById('walletPaidEdit');
+  inp.focus(); inp.select();
+  inp.onblur=()=>walletSavePaid(inp.value);
+  inp.onkeydown=(e)=>{if(e.key==='Enter'){e.preventDefault();inp.blur();}if(e.key==='Escape'){refreshWalletBalance();}};
 }
-async function walletAdd(key, sign){
-  const val=parseFloat(document.getElementById('walletPaidInput').value)||0; if(!val||_walletSaving) return;
+async function walletSavePaid(raw){
+  const val=parseFloat(raw);
+  if(isNaN(val)||val<0){refreshWalletBalance();return;}
+  const paid=Math.round(val*100)/100;
+  localStorage.setItem('walletPaid',paid);
+  refreshWalletBalance();
+  try{await gasSave('saveWallet',{extra:0,paid});}catch(e){}
+}
+async function walletAdd(key,sign){
+  const inp=document.getElementById('walletPaidInput');
+  const val=parseFloat(inp.value)||0; if(!val||_walletSaving) return;
   _walletSaving=true;
-  const btn=document.querySelector('#walletPanel button[onclick*="walletAdd"]');
-  if(btn) btn.disabled=true;
+  const btn=document.getElementById('walletAddBtn');
+  if(btn){btn.disabled=true;btn.textContent='…';}
   const cur=parseFloat(localStorage.getItem('walletPaid'))||0;
   const newPaid=Math.round((cur+val)*100)/100;
   localStorage.setItem('walletPaid',newPaid);
-  document.getElementById('walletPaidInput').value='';
+  inp.value='';
   refreshWalletBalance();
-  try{ await gasSave('saveWallet',{extra:0,paid:newPaid}); }catch(e){}
+  try{await gasSave('saveWallet',{extra:0,paid:newPaid});}catch(e){}
   _walletSaving=false;
-  if(btn) btn.disabled=false;
+  if(btn){btn.disabled=false;btn.textContent='−';}
 }
 function refreshWalletBalance(){
   const gasEarned=parseFloat(localStorage.getItem('walletTotalEarned'))||0;
@@ -2011,20 +2020,19 @@ function refreshWalletBalance(){
   const balance=Math.round((totalEarned-paid)*100)/100;
   const el=document.getElementById('walletBalance');
   if(el){el.textContent='$'+balance;el.style.color=balance<0?'var(--red)':'var(--green)';}
-  const pT=document.getElementById('walletPaidTotal'); if(pT) pT.textContent='Выплачено: $'+paid;
+  const pT=document.getElementById('walletPaidTotal');
+  if(pT&&!pT.querySelector('input')) pT.innerHTML='Выплачено: $'+paid+' <span style="color:var(--muted);font-size:10px">✏︎</span>';
   const eT=document.getElementById('walletEarnTotal'); if(eT) eT.textContent='Начислено всего: $'+totalEarned;
 }
-function updateWallet(){ refreshWalletBalance(); }
+function updateWallet(){refreshWalletBalance();}
 async function loadWallet(){
   try{
     const r=await fetch(GAS_URL+'?action=getWallet',{mode:'cors'});
     const data=await r.json();
-    if(!_walletSaving){
-      if(data&&typeof data.paid!=='undefined') localStorage.setItem('walletPaid',data.paid||0);
-      if(data&&typeof data.totalEarned!=='undefined') localStorage.setItem('walletTotalEarned',data.totalEarned||0);
-    }
-    if(data&&typeof data.monthEarned!=='undefined'){ localStorage.setItem('walletMonthEarned',data.monthEarned||0); bUpdateStats(); }
-  } catch(e){}
+    if(data&&typeof data.paid!=='undefined') localStorage.setItem('walletPaid',data.paid||0);
+    if(data&&typeof data.totalEarned!=='undefined') localStorage.setItem('walletTotalEarned',data.totalEarned||0);
+    if(data&&typeof data.monthEarned!=='undefined'){localStorage.setItem('walletMonthEarned',data.monthEarned||0);bUpdateStats();}
+  }catch(e){}
   refreshWalletBalance();
 }
 
