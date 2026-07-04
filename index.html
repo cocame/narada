@@ -1979,21 +1979,28 @@ function calcTotalEarned(){
   });
   return Math.round(t*100)/100;
 }
+let _walletSaving=false;
 async function walletAdd(key, sign){
-  const val=parseFloat(document.getElementById('walletPaidInput').value)||0; if(!val) return;
+  const val=parseFloat(document.getElementById('walletPaidInput').value)||0; if(!val||_walletSaving) return;
+  _walletSaving=true;
+  const btn=document.querySelector('#walletPanel button[onclick*="walletAdd"]');
+  if(btn) btn.disabled=true;
   const cur=parseFloat(localStorage.getItem('walletPaid'))||0;
-  localStorage.setItem('walletPaid', Math.round((cur+val)*100)/100);
+  const newPaid=Math.round((cur+val)*100)/100;
+  localStorage.setItem('walletPaid',newPaid);
   document.getElementById('walletPaidInput').value='';
-  const paid=parseFloat(localStorage.getItem('walletPaid'))||0;
-  await gasSave('saveWallet',{extra:0,paid});
   refreshWalletBalance();
+  try{ await gasSave('saveWallet',{extra:0,paid:newPaid}); }catch(e){}
+  _walletSaving=false;
+  if(btn) btn.disabled=false;
 }
 function refreshWalletBalance(){
   const gasEarned=parseFloat(localStorage.getItem('walletTotalEarned'))||0;
   const totalEarned=Math.round((gasEarned+calcTotalEarned())*100)/100;
   const paid=parseFloat(localStorage.getItem('walletPaid'))||0;
   const balance=Math.round((totalEarned-paid)*100)/100;
-  const el=document.getElementById('walletBalance'); if(el) el.textContent='$'+balance;
+  const el=document.getElementById('walletBalance');
+  if(el){el.textContent='$'+balance;el.style.color=balance<0?'var(--red)':'var(--green)';}
   const pT=document.getElementById('walletPaidTotal'); if(pT) pT.textContent='Выплачено: $'+paid;
   const eT=document.getElementById('walletEarnTotal'); if(eT) eT.textContent='Начислено всего: $'+totalEarned;
 }
@@ -2002,9 +2009,10 @@ async function loadWallet(){
   try{
     const r=await fetch(GAS_URL+'?action=getWallet',{mode:'cors'});
     const data=await r.json();
-    console.log('GAS response:', data);
-    if(data&&typeof data.paid!=='undefined') localStorage.setItem('walletPaid',data.paid||0);
-    if(data&&typeof data.totalEarned!=='undefined') localStorage.setItem('walletTotalEarned',data.totalEarned||0);
+    if(!_walletSaving){
+      if(data&&typeof data.paid!=='undefined') localStorage.setItem('walletPaid',data.paid||0);
+      if(data&&typeof data.totalEarned!=='undefined') localStorage.setItem('walletTotalEarned',data.totalEarned||0);
+    }
     if(data&&typeof data.monthEarned!=='undefined'){ localStorage.setItem('walletMonthEarned',data.monthEarned||0); bUpdateStats(); }
   } catch(e){}
   refreshWalletBalance();
