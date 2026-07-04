@@ -295,7 +295,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
               <input type="number" id="walletPaidInput" placeholder="0" onkeydown="if(event.key==='Enter')walletAdd('paid',1)" style="width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-family:'DM Mono',monospace;font-size:13px;background:var(--surface)">
               <button onclick="walletAdd('paid',1)" style="padding:6px 10px;background:none;border:1px solid var(--border);border-radius:6px;font-size:14px;cursor:pointer;color:var(--red)">−</button>
             </div>
-            <div id="walletPaidTotal" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px"></div>
+            <div id="walletPaidTotal" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:3px;cursor:pointer" onclick="walletEditPaid()" title="Нажми чтобы исправить"></div>
           </div>
           <div>
             <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Остаток у меня</div>
@@ -1980,6 +1980,16 @@ function calcTotalEarned(){
   return Math.round(t*100)/100;
 }
 let _walletSaving=false;
+async function walletEditPaid(){
+  const cur=parseFloat(localStorage.getItem('walletPaid'))||0;
+  const input=prompt('Выплачено сейчас: $'+cur+'\nВведи правильную сумму:',cur);
+  if(input===null) return;
+  const val=parseFloat(input);
+  if(isNaN(val)||val<0) return;
+  localStorage.setItem('walletPaid',Math.round(val*100)/100);
+  await gasSave('saveWallet',{extra:0,paid:Math.round(val*100)/100});
+  refreshWalletBalance();
+}
 async function walletAdd(key, sign){
   const val=parseFloat(document.getElementById('walletPaidInput').value)||0; if(!val||_walletSaving) return;
   _walletSaving=true;
