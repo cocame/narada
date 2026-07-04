@@ -595,7 +595,7 @@ function switchTab(name) {
     bFilter='upcoming_waiting';
     const sel=document.getElementById('bFilterStatus'); if(sel) sel.value='upcoming_waiting';
     bRender();
-    refreshWalletBalance();
+    loadWallet();
   }
 }
 function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
@@ -1940,7 +1940,7 @@ function toggleWallet(){
   const h=document.getElementById('earnHistoryPanel');
   const isOpen=p.style.display==='block';
   p.style.display=isOpen?'none':'block';
-  if(!isOpen){h.style.display='none';refreshWalletBalance();}
+  if(!isOpen){h.style.display='none';loadWallet();}
 }
 function toggleEarnHistory(){
   const h=document.getElementById('earnHistoryPanel');
@@ -2012,7 +2012,9 @@ async function loadWallet(){
   try{
     const r=await fetch(GAS_URL+'?action=getWallet',{mode:'cors'});
     const data=await r.json();
-    if(data&&typeof data.paid!=='undefined') localStorage.setItem('walletPaid',data.paid||0);
+    if(!_walletSaving){
+      if(data&&typeof data.paid!=='undefined') localStorage.setItem('walletPaid',data.paid||0);
+    }
     if(data&&typeof data.totalEarned!=='undefined') localStorage.setItem('walletTotalEarned',data.totalEarned||0);
     if(data&&typeof data.monthEarned!=='undefined'){localStorage.setItem('walletMonthEarned',data.monthEarned||0);bUpdateStats();}
   }catch(e){}
