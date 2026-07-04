@@ -2022,7 +2022,7 @@ function refreshWalletBalance(){
   const el=document.getElementById('walletBalance');
   if(el){el.textContent='$'+balance;el.style.color=balance<0?'var(--red)':'var(--green)';}
   const pT=document.getElementById('walletPaidTotal');
-  if(pT&&!pT.querySelector('input')) pT.innerHTML='Выплачено: $'+paid+' <span style="color:var(--muted);font-size:10px">✏︎</span>';
+  if(pT&&!pT.querySelector('input')) pT.textContent='Выплачено: $'+paid;
   const eT=document.getElementById('walletEarnTotal'); if(eT) eT.textContent='Начислено всего: $'+totalEarned;
 }
 function updateWallet(){refreshWalletBalance();}
