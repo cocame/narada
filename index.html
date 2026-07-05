@@ -324,7 +324,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
         <option value="">Маршрут</option>
         <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
         <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>БХ ВЕЧЕР</option><option>HOT SPRINGS</option>
-        <option>СЕРФИНГ</option><option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option><option>ХАЙВАН</option><option>ДОНГ ЗЯНГ</option>
+        <option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option><option>ХАЙВАН</option><option>ДОНГ ЗЯНГ</option>
       </select>
       <input type="date" class="b-filter-select" id="bFilterDate" onchange="bRender()">
       <button class="b-add-btn" onclick="bOpenModal()">+</button>
@@ -353,7 +353,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
               <option value="">— выбрать —</option>
               <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
               <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>БХ ВЕЧЕР</option><option>HOT SPRINGS</option>
-              <option>СЕРФИНГ</option><option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option><option>ХАЙВАН</option><option>ДОНГ ЗЯНГ</option>
+              <option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option><option>ХАЙВАН</option><option>ДОНГ ЗЯНГ</option>
               <option value="ДРУГОЕ">Другое...</option>
             </select>
             <div id="fOtherBlock" style="display:none"><label>Название</label><input type="text" id="fOtherName"></div>
@@ -431,7 +431,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
                 <option value="">— выбрать —</option>
                 <option>ХЮЭ</option><option>ХОЙАН</option><option>ОСТРОВА ЧАМ</option>
                 <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>БХ ВЕЧЕР</option><option>HOT SPRINGS</option>
-                <option>СЕРФИНГ</option><option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option><option>ХАЙВАН</option><option>ДОНГ ЗЯНГ</option>
+                <option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option><option>ХАЙВАН</option><option>ДОНГ ЗЯНГ</option>
                 <option value="ДРУГОЕ">Другое...</option>
               </select>
               <div id="pfOtherBlock" style="display:none"><label>Название</label><input type="text" id="pfOtherName"></div>
@@ -514,7 +514,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 const GAS_URL = 'https://script.google.com/macros/s/AKfycbx8CYJyuBXJkCdffQljxzooyt7t__gwjCRde7qfOHkWvVPrxi-oN3KQk8QpxwCE8Eh6/exec';
 const MARKUP     = { RUB:0.15, VND:0.06, USDT:0.00 };
 const ROUND_STEP = { RUB:100, VND:100000, USDT:1 };
-const COMM_RATES = { 'ХЮЭ':8.5,'ХОЙАН':6.5,'ОСТРОВА ЧАМ':7,'ДАНАНГ':6.5,'БА НА ХИЛЛС':5,'БХ ВЕЧЕР':19.5,'HOT SPRINGS':7.5,'МОРСКАЯ ПРОГУЛКА':7,'СЕРФИНГ':4,'РЫБАЛКА':9,'VINWONDERS':6,'ХАЙВАН':6.5,'ДОНГ ЗЯНГ':6.5 };
+const COMM_RATES = { 'ХЮЭ':8.5,'ХОЙАН':6.5,'ОСТРОВА ЧАМ':7,'ДАНАНГ':6.5,'БА НА ХИЛЛС':5,'БХ ВЕЧЕР':19.5,'HOT SPRINGS':7.5,'МОРСКАЯ ПРОГУЛКА':7,'РЫБАЛКА':9,'VINWONDERS':6,'ХАЙВАН':6.5,'ДОНГ ЗЯНГ':6.5 };
 const PLATFORMS = [{name:'Tripster', rate:0.22}, {name:'Sputnik8', rate:0.24}];
 
 const TOURS = [
@@ -550,8 +550,6 @@ const TOURS = [
       {id:'vw_adult', label:'Взрослые и дети >140 см', vnd_fixed:950000},
       {id:'vw_child', label:'Дети 100–140 см',          vnd_fixed:600000}
     ]},
-  { icon:'🏄', name:'Серфинг', key:'СЕРФИНГ',
-    rows:[{label:'Групповой (до 3 человек)',usd:40},{label:'Индивидуально 1/1',usd:80,flat:true},{label:'Сплит для двоих',usd:110,flat:true}] },
   { icon:'🎣', name:'Рыбалка', key:'РЫБАЛКА',
     rows:[{label:'Взрослый',usd:90},{label:'Лодка',usd:360},{label:'Индивидуально',usd:360,flat:true}] },
   { icon:'⛵', name:'Морская прогулка', key:'МОРСКАЯ ПРОГУЛКА',
