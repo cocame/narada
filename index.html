@@ -368,7 +368,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
           <div class="form-group full"><label>Контакт</label><input type="text" id="fContact" placeholder="Иван, +79001234567"></div>
           <div class="form-group full"><label>Отель</label><input type="text" id="fHotel" placeholder="Tourane Hotel, к. 204"></div>
           <div class="form-group"><label>Валюта</label>
-            <select id="fCurrency" onchange="fUpdateCalc()"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+            <select id="fCurrency" onchange="fCurrencyChanged('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
           </div>
           <div class="form-group"><label>Оплата</label>
             <select id="fPayMethod"><option>Наличные</option><option>Перевод</option><option>USDT</option></select>
@@ -446,7 +446,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
             <div class="form-group full"><label>Контакт</label><input type="text" id="pfContact"></div>
             <div class="form-group full"><label>Отель</label><input type="text" id="pfHotel"></div>
             <div class="form-group"><label>Валюта</label>
-              <select id="pfCurrency" onchange="pfUpdateCalc()"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+              <select id="pfCurrency" onchange="fCurrencyChanged('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
             </div>
             <div class="form-group"><label>Оплата</label>
               <select id="pfPayMethod"><option>Наличные</option><option>Перевод</option><option>USDT</option></select>
@@ -966,7 +966,7 @@ function bCardHTML(b){
       <button class="b-action-btn" onclick="event.stopPropagation();bRepeat('${b.id}')" title="Повторить бронь">♻️</button>
       <button class="b-action-btn" onclick="event.stopPropagation();bEdit('${b.id}')">✏️</button>
       <button class="b-action-btn" onclick="event.stopPropagation();bDelete('${b.id}')" style="color:var(--red)">✕</button>
-      <div class="b-card-amount">${(()=>{if(!b.customPriceAdult)return '';const _t=TOURS.find(x=>x.key===b.route);const _f=_t&&_t.rows[0]&&_t.rows[0].flat;return _f?b.customPriceAdult+'$':(b.customPriceAdult*(b.adults||0)+(b.customPriceChild||0)*(b.children||0))+'$';})()}</div>
+      <div class="b-card-amount">${(()=>{const _t=TOURS.find(x=>x.key===b.route);if(!_t) return '';const _dp2=bDetectPlatform(b);const _dpl2=_dp2?PLATFORMS.find(x=>x.name===_dp2):null;const _ba2=_t.rows[0].usd,_bc2=_t.rows[1]?_t.rows[1].usd:0;const _a2=(b.customPriceAdult&&b.customPriceAdult!==_ba2)?b.customPriceAdult:(_dpl2?Math.ceil(_ba2/(1-_dpl2.rate)):_ba2);const _c2=(b.customPriceChild&&b.customPriceChild!==_bc2)?b.customPriceChild:(_dpl2&&_t.rows[1]?Math.ceil(_bc2/(1-_dpl2.rate)):_bc2);const _f=_t.rows[0].flat;return _f?_a2+'$':(_a2*(b.adults||0)+_c2*(b.children||0))+'$';})()}</div>
       <div class="b-card-comm">${comm}</div>
     </div>
     <div class="b-card-exp" id="bexp-${b.id}">
@@ -985,8 +985,10 @@ function bCardHTML(b){
         const tour=TOURS.find(t=>t.key===b.route);
         if(!tour||!currentRates) return '';
         const R=currentRates;
-        const aPrice=b.customPriceAdult||tour.rows[0].usd;
-        const cPrice=b.customPriceChild||(tour.rows[1]?tour.rows[1].usd:0);
+        const _dp=bDetectPlatform(b);const _dpl=_dp?PLATFORMS.find(x=>x.name===_dp):null;
+        const _ba=tour.rows[0].usd,_bc=tour.rows[1]?tour.rows[1].usd:0;
+        const aPrice=(b.customPriceAdult&&b.customPriceAdult!==_ba)?b.customPriceAdult:(_dpl?Math.ceil(_ba/(1-_dpl.rate)):_ba);
+        const cPrice=(b.customPriceChild&&b.customPriceChild!==_bc)?b.customPriceChild:(_dpl&&tour.rows[1]?Math.ceil(_bc/(1-_dpl.rate)):_bc);
         const flatRow0=tour.rows[0].flat;
         let lines='';
         if(b.adults){
@@ -1227,6 +1229,7 @@ function bEdit(id){
   // сбросить счётчики билетов и кэш маршрута
   Object.keys(fTickCounts).forEach(k=>delete fTickCounts[k]);
   fCalcRoute=''; pfCalcRoute='';
+  const _ep=bDetectPlatform(b); fPlatformName=_ep; const _epl=PLATFORMS.find(x=>x.name===_ep); fCurrentPlatRate=_epl?_epl.rate:0;
   const fb=document.getElementById('fCalcBlock'); if(fb){fb.style.display='none';delete fb.dataset.route;}
   document.getElementById('modalTitle').textContent='Редактировать';
   mSwitchTab('manual');
@@ -1292,6 +1295,14 @@ function prepayAutoFill(p) {
   if (onsite < 0) return;
   document.getElementById(p+'OnsiteCur').value = prepayCur;
   document.getElementById(p+'Onsite').value = onsite;
+}
+
+function fCurrencyChanged(p){
+  const cur=document.getElementById(p+'Currency').value;
+  document.getElementById(p+'PrepayCur').value=cur;
+  document.getElementById(p+'OnsiteCur').value=cur;
+  if(p==='f') fUpdateCalc(); else pfUpdateCalc();
+  prepayAutoFill(p);
 }
 
 function bClearForm(){
