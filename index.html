@@ -1276,11 +1276,8 @@ function prepayAutoFill(p) {
   const prepay = parseFloat(document.getElementById(p+'Prepay').value);
   if (!prepay || prepay <= 0) return;
   const prepayCur = document.getElementById(p+'PrepayCur').value;
-  let totalStr = document.getElementById(p+'Amount').value;
-  if (!totalStr) {
-    const calcEl = document.getElementById(p==='f'?'fCalcResult':'pfCalcResult');
-    totalStr = calcEl?.dataset?.val || '';
-  }
+  const calcEl = document.getElementById(p==='f'?'fCalcResult':'pfCalcResult');
+  let totalStr = (calcEl?.dataset?.val) || document.getElementById(p+'Amount').value;
   if (!totalStr) return;
   const clean = totalStr.replace(/\s/g,'');
   let cur = null;
@@ -1302,7 +1299,6 @@ function fCurrencyChanged(p){
   document.getElementById(p+'PrepayCur').value=cur;
   document.getElementById(p+'OnsiteCur').value=cur;
   if(p==='f') fUpdateCalc(); else pfUpdateCalc();
-  prepayAutoFill(p);
 }
 
 function bClearForm(){
