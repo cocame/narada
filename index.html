@@ -952,7 +952,8 @@ function bCardHTML(b){
   if(b.infants>0) paxParts.push(b.infants+' мал');
   const tom=tomorrowStr();
   const sc=b.tripStatus==='done'?' s-done':b.tripStatus==='cancelled'?' s-cancelled':b.tripStatus==='waiting_date'?' s-waiting':(b.date&&b.date===tom)?' s-tomorrow':'';
-  const scInd=(b.isIndividual||(b.notes||'').endsWith('​'))?' s-individual':'';
+  const _bTourInd=TOURS.find(t=>t.key===b.route);const _flatOnly=_bTourInd&&_bTourInd.rows[0]&&_bTourInd.rows[0].flat;
+  const scInd=(b.isIndividual||(b.notes||'').endsWith('​')||_flatOnly)?' s-individual':'';
   const payIcon=b.payStatus==='refund'?'🤑':(b.payStatus==='paid'||b.prepay)?'💲':'💳';
   const comm=b.tripStatus==='done'?'$'+(parseFloat(b.commission)||0):'';
   const starCol=b.inBase?'#7c5cbf':'#ccc';
@@ -1764,6 +1765,7 @@ function bGetFormData(){
         }
       });
       if(flatActive){tourUSD=flatSum; isIndividual=true;}
+      else if(flatRow0) isIndividual=true;
     }
     if(tour){let baseComm=isIndividual?(tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(p+'FlatCheck'+i)?.checked?r.usd:0),0)):(flatRow0?tour.rows[0].usd:adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0));comm=baseComm>0?Math.ceil(baseComm/10*2)/2:0;}
   }
