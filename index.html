@@ -1339,8 +1339,13 @@ function bUpdatePreview(){
   const tour=TOURS.find(t=>t.key===route);
   let commRaw=0;
   if(tour){
-    commRaw += tour.rows[0].usd * adults / 10;
-    if(tour.rows[1]) commRaw += tour.rows[1].usd * children / 10;
+    const flatRow0=tour.rows[0]&&tour.rows[0].flat;
+    if(flatRow0){
+      commRaw=tour.rows[0].usd/10;
+    } else {
+      commRaw+=tour.rows[0].usd*adults/10;
+      if(tour.rows[1]&&!tour.rows[1].flat) commRaw+=tour.rows[1].usd*children/10;
+    }
   }
   const comm = Math.ceil(commRaw*2)/2; // округление до 0.5
   const sfx=mTab==='manual'?'':'2';
