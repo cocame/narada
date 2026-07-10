@@ -764,7 +764,7 @@ function platformPricesHTML(t, rates, skeleton) {
   PLATFORMS.forEach(pl => {
     html += `<div class="ticket-section-label">${pl.name} −${Math.round(pl.rate*100)}%</div><div class="price-rows" style="padding-top:0">`;
     mainRows.forEach(r => {
-      const platUSD = Math.ceil(r.usd / (1 - pl.rate));
+      const platUSD = (pl.rate===0.24&&r.sp8)?r.sp8:(pl.rate===0.22&&r.tr)?r.tr:Math.ceil(r.usd/(1-pl.rate));
       const p = rates ? calcFromUSD(platUSD, rates) : null;
       html += skeleton ? skelRowHTML(true) : priceRowHTML(lbl(r.label), p, true);
     });
@@ -848,7 +848,7 @@ function pCalcUpdate(idx){
   document.getElementById(`pcu-${idx}`).textContent=formatPrice(total,cursF);
   PLATFORMS.forEach(pl=>{
     let platTotalUSD=0;
-    t.rows.forEach((r,i)=>{const n=cc['r'+i]||0; if(n) platTotalUSD+=Math.ceil(r.usd/(1-pl.rate))*n;});
+    t.rows.forEach((r,i)=>{const n=cc['r'+i]||0; if(n) platTotalUSD+=((pl.rate===0.24&&r.sp8)?r.sp8:(pl.rate===0.22&&r.tr)?r.tr:Math.ceil(r.usd/(1-pl.rate)))*n;});
     const key=pl.name==='Tripster'?'trip':'sp8';
     const el=document.getElementById(`cplat-${key}-${idx}`);
     if(el) el.textContent=platTotalUSD?formatPrice(calcFromUSD(platTotalUSD,R),cursF):'—';
