@@ -1140,7 +1140,7 @@ function editComm(id){
   const cur=(el.textContent||'$0').replace('$','').trim();
   const val=prompt('Комиссия ($):', cur);
   if(val===null||val.trim()==='') return;
-  const newComm=parseInt(val)||0;
+  const newComm=parseFloat(val)||0;
   el.textContent='$'+newComm;
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   b.commission=newComm;
