@@ -967,7 +967,7 @@ function bCardHTML(b){
       <button class="b-action-btn" onclick="event.stopPropagation();bRepeat('${b.id}')" title="Повторить бронь">♻️</button>
       <button class="b-action-btn" onclick="event.stopPropagation();bEdit('${b.id}')">✏️</button>
       <button class="b-action-btn" onclick="event.stopPropagation();bDelete('${b.id}')" style="color:var(--red)">✕</button>
-      <div class="b-card-amount">${(()=>{const _t=TOURS.find(x=>x.key===b.route);if(!_t) return '';const _dp2=bDetectPlatform(b);const _dpl2=_dp2?PLATFORMS.find(x=>x.name===_dp2):null;const _ba2=_t.rows[0].usd,_bc2=_t.rows[1]?_t.rows[1].usd:0;const _pp2=(row,pl)=>pl?((pl.rate===0.24&&row.sp8)?row.sp8:(pl.rate===0.22&&row.tr)?row.tr:Math.ceil(row.usd/(1-pl.rate))):row.usd;const _a2=(b.customPriceAdult&&b.customPriceAdult!==_ba2)?b.customPriceAdult:_pp2(_t.rows[0],_dpl2);const _c2=(b.customPriceChild&&b.customPriceChild!==_bc2)?b.customPriceChild:(_t.rows[1]?_pp2(_t.rows[1],_dpl2):_bc2);const _f=_t.rows[0].flat;return _f?_a2+'$':(_a2*(b.adults||0)+_c2*(b.children||0))+'$';})()}</div>
+      <div class="b-card-amount">${(()=>{const _t=TOURS.find(x=>x.key===b.route);if(!_t) return '';const _dp2=bDetectPlatform(b);const _dpl2=_dp2?PLATFORMS.find(x=>x.name===_dp2):null;const _ba2=_t.rows[0].usd,_bc2=_t.rows[1]?_t.rows[1].usd:0;const _pp2=(row,pl)=>pl?((pl.rate===0.24&&row.sp8)?row.sp8:(pl.rate===0.22&&row.tr)?row.tr:Math.ceil(row.usd/(1-pl.rate))):row.usd;const _a2=(b.customPriceAdult&&b.customPriceAdult!==_ba2)?b.customPriceAdult:_pp2(_t.rows[0],_dpl2);const _c2=(b.customPriceChild&&b.customPriceChild!==_bc2)?b.customPriceChild:(_t.rows[1]?_pp2(_t.rows[1],_dpl2):_bc2);const _f=_t.rows[0].flat;const _isInd2=(b.isIndividual||(b.notes||'').endsWith('​'));if(_f) return _a2+'$';if(_isInd2){const _fr2=_t.rows.find((r,i)=>i>=1&&r.flat);if(_fr2) return _pp2(_fr2,_dpl2)+'$';}return (_a2*(b.adults||0)+_c2*(b.children||0))+'$';})()}</div>
       <div class="b-card-comm">${comm}</div>
     </div>
     <div class="b-card-exp" id="bexp-${b.id}">
@@ -992,7 +992,12 @@ function bCardHTML(b){
         const aPrice=(b.customPriceAdult&&b.customPriceAdult!==_ba)?b.customPriceAdult:_platP(tour.rows[0],_dpl);
         const cPrice=(b.customPriceChild&&b.customPriceChild!==_bc)?b.customPriceChild:(tour.rows[1]?_platP(tour.rows[1],_dpl):_bc);
         const flatRow0=tour.rows[0].flat;
+        const _isInd=(b.isIndividual||(b.notes||'').endsWith('​'));
         let lines='';
+        if(_isInd&&!flatRow0){
+          const _fr=tour.rows.find((r,i)=>i>=1&&r.flat);
+          if(_fr){const _fPrice=_platP(_fr,_dpl);lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Индивидуально</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${_fPrice} $ = ${fmtUSD(_fPrice)}</span></div>`;}
+        } else {
         if(b.adults){
           if(flatRow0){
             lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Индивидуально</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${aPrice} $ = ${fmtUSD(aPrice)}</span></div>`;
@@ -1001,6 +1006,7 @@ function bCardHTML(b){
           }
         }
         if(b.children&&tour.rows[1]&&!flatRow0) lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Ребёнок × ${b.children}</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${b.children} × ${cPrice} $ = ${fmtUSD(cPrice*b.children)}</span></div>`;
+        }
         if(tour.tickets&&tour.tickets.length){
           let tkLines='';
           tour.tickets.forEach(tk=>{
