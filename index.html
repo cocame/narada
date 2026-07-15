@@ -580,6 +580,7 @@ let bFilter = 'upcoming_waiting';
 let editingId = null;
 let mTab = 'paste';
 const calcCounts = {};
+const pCalcPlatforms = {};
 
 // ══════════════════════════════════════
 // TABS
@@ -725,11 +726,9 @@ function buildPriceCalc(t, idx) {
       </div>
     </div>`).join('');
   const pExtraUSD=t.rows.find(r=>r.flat)?(t.rows.find(r=>!r.flat)?.usd||t.extraPerPerson||0):0;
-  const pExtraPlatUSD=(t.extraPerPersonSp8||t.extraPerPersonTr);
-  const pExtraLabel=pExtraPlatUSD&&pExtraPlatUSD!==pExtraUSD?`${pExtraUSD}$ / Tr+Sp8: ${pExtraPlatUSD}$`:`${pExtraUSD}$`;
   const extraRow=pExtraUSD?`
     <div class="calc-row-p" id="pc-${idx}-extraRow" style="display:none">
-      <div class="calc-label-p" style="color:var(--accent)">+ Доп. взр. ${pExtraLabel}/чел.</div>
+      <div class="calc-label-p" style="color:var(--accent)" id="pc-${idx}-extraLabel">+ Доп. взр. ${pExtraUSD}$/чел.</div>
       <div class="calc-counter">
         <button class="calc-btn" onclick="pCalcChange(${idx},'extra',-1)">−</button>
         <div class="calc-num" id="pc-${idx}-extra">0</div>
@@ -746,16 +745,18 @@ function buildPriceCalc(t, idx) {
           <button class="calc-btn" onclick="pCalcChange(${idx},'t${i}',1)">+</button>
         </div>
       </div>`).join('') : '';
+  const hasPlatPrices=t.rows.some(r=>r.tr||r.sp8);
+  const platBtns=hasPlatPrices?`<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap"><span style="font-size:10px;color:var(--muted);line-height:22px;font-family:'DM Mono',monospace">Цены:</span><button id="pcp-base-${idx}" onclick="pCalcSetPlat(${idx},0)" style="padding:2px 8px;font-size:10px;border:1px solid var(--border);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--muted);font-family:'DM Mono',monospace;font-weight:600">База</button><button id="pcp-trip-${idx}" onclick="pCalcSetPlat(${idx},0.22)" style="padding:2px 8px;font-size:10px;border:1px solid var(--green);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--green);font-family:'DM Mono',monospace">Tripster</button><button id="pcp-sp8-${idx}" onclick="pCalcSetPlat(${idx},0.24)" style="padding:2px 8px;font-size:10px;border:1px solid var(--accent);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--accent);font-family:'DM Mono',monospace;font-weight:600">Sputnik8</button></div>`:'';
   return `<div class="calc-block" id="pcb-${idx}">
-    ${rows}${extraRow}${trows}
+    ${platBtns}${rows}${extraRow}${trows}
     <div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border)" class="calc-row-p">
       <div class="calc-label-p" style="font-size:11px;color:var(--muted)">Трансфер $</div>
       <input type="number" id="pc-${idx}-transfer" min="0" placeholder="0" oninput="pCalcUpdate(${idx})" style="width:64px;padding:3px 8px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)">
     </div>
     <div class="calc-total" id="pct-${idx}" style="display:none">
-      <div class="calc-total-label">Итого</div>
+      <div class="calc-total-label" id="pct-label-${idx}">Итого</div>
       <div class="calc-total-usd" id="pcu-${idx}"></div>
-      <div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border2)">
+      <div id="cplat-rows-${idx}" style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border2)">
         <div style="margin-top:3px"><div style="color:var(--muted);font-size:10px;font-family:'DM Mono',monospace">Tripster</div><div class="calc-total-usd" style="font-size:12px;line-height:1.5;word-break:break-word" id="cplat-trip-${idx}">—</div></div>
         <div style="margin-top:5px"><div style="color:var(--muted);font-size:10px;font-family:'DM Mono',monospace">Sputnik8</div><div class="calc-total-usd" style="font-size:12px;line-height:1.5;word-break:break-word;color:var(--accent)" id="cplat-sp8-${idx}">—</div></div>
       </div>
@@ -839,10 +840,12 @@ function pCalcGetCurs(idx){ return Array.from(document.querySelectorAll(`.pc-cur
 function pCalcUpdate(idx){
   const t=TOURS[idx]; if(!t||!currentRates) return;
   const R=currentRates; const cc=calcCounts[idx]||{};
+  const selRate=pCalcPlatforms[idx]||0;
+  const pPlatPrice=(r)=>selRate?((selRate===0.24&&r.sp8)?r.sp8:(selRate===0.22&&r.tr)?r.tr:Math.ceil(r.usd/(1-selRate))):r.usd;
   let total=zeroP(); let hasAny=false; const rows=[]; const tickets=[];
   t.rows.forEach((r,i)=>{
     const n=cc['r'+i]||0; if(!n) return; hasAny=true;
-    const p=mulP(calcFromUSD(r.usd,R),n); total=addP(total,p);
+    const p=mulP(calcFromUSD(pPlatPrice(r),R),n); total=addP(total,p);
     rows.push({label:r.label,n,p});
   });
   // Extra adults row (appears when individual/flat row is used)
@@ -851,9 +854,13 @@ function pCalcUpdate(idx){
   if(pFlatRow){
     const pFlatIdx=t.rows.indexOf(pFlatRow);
     pFlatN=cc['r'+pFlatIdx]||0;
-    const pExtraUSD=t.rows.find(r=>!r.flat)?.usd||t.extraPerPerson||0;
+    const pExtraBase=t.rows.find(r=>!r.flat)?.usd||t.extraPerPerson||0;
+    const pAdultRowForExtra=t.rows.find(r=>!r.flat);
+    const pExtraUSD=selRate?(pAdultRowForExtra?pPlatPrice(pAdultRowForExtra):((selRate===0.24&&t.extraPerPersonSp8)?t.extraPerPersonSp8:(selRate===0.22&&t.extraPerPersonTr)?t.extraPerPersonTr:Math.ceil(pExtraBase/(1-selRate)))):pExtraBase;
     const pExtraRowEl=document.getElementById(`pc-${idx}-extraRow`);
-    if(pExtraRowEl&&pExtraUSD){
+    const pExtraLblEl=document.getElementById(`pc-${idx}-extraLabel`);
+    if(pExtraLblEl) pExtraLblEl.textContent=`+ Доп. взр. ${pExtraUSD}$/чел.`;
+    if(pExtraRowEl&&pExtraBase){
       pExtraRowEl.style.display=pFlatN>0?'':'none';
       if(pFlatN>0){
         const pExtraN=cc['extra']||0;
@@ -877,20 +884,26 @@ function pCalcUpdate(idx){
   totalEl.style.display='block';
   const curs=pCalcGetCurs(idx);
   const cursF=curs.length?curs:['usd'];
+  const lblEl=document.getElementById(`pct-label-${idx}`);
+  if(lblEl) lblEl.textContent=selRate===0.22?'Tripster — итого':selRate===0.24?'Sputnik8 — итого':'Итого';
   document.getElementById(`pcu-${idx}`).textContent=formatPrice(total,cursF);
-  PLATFORMS.forEach(pl=>{
-    let platTotalUSD=0;
-    t.rows.forEach((r,i)=>{const n=cc['r'+i]||0; if(n) platTotalUSD+=((pl.rate===0.24&&r.sp8)?r.sp8:(pl.rate===0.22&&r.tr)?r.tr:Math.ceil(r.usd/(1-pl.rate)))*n;});
-    if(pFlatN>0){
-      const pAdultRow2=t.rows.find(r=>!r.flat);
-      const pExtraBase2=pAdultRow2?pAdultRow2.usd:(t.extraPerPerson||0);
-      const platExtraP=pAdultRow2?((pl.rate===0.24&&pAdultRow2.sp8)?pAdultRow2.sp8:(pl.rate===0.22&&pAdultRow2.tr)?pAdultRow2.tr:Math.ceil(pAdultRow2.usd/(1-pl.rate))):((pl.rate===0.24&&t.extraPerPersonSp8)?t.extraPerPersonSp8:(pl.rate===0.22&&t.extraPerPersonTr)?t.extraPerPersonTr:Math.ceil(pExtraBase2/(1-pl.rate)));
-      platTotalUSD+=platExtraP*(cc['extra']||0);
-    }
-    const key=pl.name==='Tripster'?'trip':'sp8';
-    const el=document.getElementById(`cplat-${key}-${idx}`);
-    if(el) el.textContent=platTotalUSD?formatPrice(calcFromUSD(platTotalUSD,R),cursF):'—';
-  });
+  const platRowsEl=document.getElementById(`cplat-rows-${idx}`);
+  if(platRowsEl) platRowsEl.style.display=selRate?'none':'block';
+  if(!selRate){
+    PLATFORMS.forEach(pl=>{
+      let platTotalUSD=0;
+      t.rows.forEach((r,i)=>{const n=cc['r'+i]||0; if(n) platTotalUSD+=((pl.rate===0.24&&r.sp8)?r.sp8:(pl.rate===0.22&&r.tr)?r.tr:Math.ceil(r.usd/(1-pl.rate)))*n;});
+      if(pFlatN>0){
+        const pAdultRow2=t.rows.find(r=>!r.flat);
+        const pExtraBase2=pAdultRow2?pAdultRow2.usd:(t.extraPerPerson||0);
+        const platExtraP=pAdultRow2?((pl.rate===0.24&&pAdultRow2.sp8)?pAdultRow2.sp8:(pl.rate===0.22&&pAdultRow2.tr)?pAdultRow2.tr:Math.ceil(pAdultRow2.usd/(1-pl.rate))):((pl.rate===0.24&&t.extraPerPersonSp8)?t.extraPerPersonSp8:(pl.rate===0.22&&t.extraPerPersonTr)?t.extraPerPersonTr:Math.ceil(pExtraBase2/(1-pl.rate)));
+        platTotalUSD+=platExtraP*(cc['extra']||0);
+      }
+      const key=pl.name==='Tripster'?'trip':'sp8';
+      const el=document.getElementById(`cplat-${key}-${idx}`);
+      if(el) el.textContent=platTotalUSD?formatPrice(calcFromUSD(platTotalUSD,R),cursF):'—';
+    });
+  }
   // store for copy
   totalEl.dataset.rows=JSON.stringify(rows.map(r=>({label:r.label,n:r.n,...r.p})));
   totalEl.dataset.tickets=JSON.stringify(tickets.map(r=>({label:r.label,n:r.n,...r.p})));
@@ -1446,6 +1459,16 @@ function pfSetPlatformPrices(rate){
   const pfExtraPlat=rate?(pfAdultRow?((rate===0.24&&pfAdultRow.sp8)?pfAdultRow.sp8:(rate===0.22&&pfAdultRow.tr)?pfAdultRow.tr:Math.ceil(pfAdultRow.usd/(1-rate))):((rate===0.24&&tour.extraPerPersonSp8)?tour.extraPerPersonSp8:(rate===0.22&&tour.extraPerPersonTr)?tour.extraPerPersonTr:Math.ceil(pfExtraBase/(1-rate)))):pfExtraBase;
   tour.rows.forEach((row,i)=>{if(row.flat){const ep=document.getElementById(`pfExtraPrice${i}`);if(ep)ep.value=pfExtraPlat;}});
   pfRecalc();
+}
+function pCalcSetPlat(idx,rate){
+  pCalcPlatforms[idx]=rate;
+  ['base','trip','sp8'].forEach(k=>{
+    const btn=document.getElementById(`pcp-${k}-${idx}`); if(!btn) return;
+    const isActive=(k==='base'&&!rate)||(k==='trip'&&rate===0.22)||(k==='sp8'&&rate===0.24);
+    btn.style.fontWeight=isActive?'700':'400';
+    btn.style.opacity=isActive?'1':'0.5';
+  });
+  pCalcUpdate(idx);
 }
 const PLAT_BTNS=`<div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap"><span style="font-size:10px;color:var(--muted);line-height:22px;font-family:'DM Mono',monospace">Цены:</span><button onclick="fSetPlatformPrices(0)" style="padding:2px 8px;font-size:10px;border:1px solid var(--border);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--muted);font-family:'DM Mono',monospace">База</button><button onclick="fSetPlatformPrices(0.22)" style="padding:2px 8px;font-size:10px;border:1px solid var(--green);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--green);font-family:'DM Mono',monospace">Tripster</button><button onclick="fSetPlatformPrices(0.24)" style="padding:2px 8px;font-size:10px;border:1px solid var(--accent);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--accent);font-family:'DM Mono',monospace;font-weight:600">Sputnik8</button></div>`;
 const PF_PLAT_BTNS=`<div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap"><span style="font-size:10px;color:var(--muted);line-height:22px;font-family:'DM Mono',monospace">Цены:</span><button onclick="pfSetPlatformPrices(0)" style="padding:2px 8px;font-size:10px;border:1px solid var(--border);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--muted);font-family:'DM Mono',monospace">База</button><button onclick="pfSetPlatformPrices(0.22)" style="padding:2px 8px;font-size:10px;border:1px solid var(--green);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--green);font-family:'DM Mono',monospace">Tripster</button><button onclick="pfSetPlatformPrices(0.24)" style="padding:2px 8px;font-size:10px;border:1px solid var(--accent);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--accent);font-family:'DM Mono',monospace;font-weight:600">Sputnik8</button></div>`;
