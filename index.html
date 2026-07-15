@@ -878,6 +878,12 @@ function pCalcUpdate(idx){
   PLATFORMS.forEach(pl=>{
     let platTotalUSD=0;
     t.rows.forEach((r,i)=>{const n=cc['r'+i]||0; if(n) platTotalUSD+=((pl.rate===0.24&&r.sp8)?r.sp8:(pl.rate===0.22&&r.tr)?r.tr:Math.ceil(r.usd/(1-pl.rate)))*n;});
+    if(pFlatN>0){
+      const pAdultRow2=t.rows.find(r=>!r.flat);
+      const pExtraBase2=pAdultRow2?pAdultRow2.usd:(t.extraPerPerson||0);
+      const platExtraP=pAdultRow2?((pl.rate===0.24&&pAdultRow2.sp8)?pAdultRow2.sp8:(pl.rate===0.22&&pAdultRow2.tr)?pAdultRow2.tr:Math.ceil(pAdultRow2.usd/(1-pl.rate))):Math.ceil(pExtraBase2/(1-pl.rate));
+      platTotalUSD+=platExtraP*(cc['extra']||0);
+    }
     const key=pl.name==='Tripster'?'trip':'sp8';
     const el=document.getElementById(`cplat-${key}-${idx}`);
     if(el) el.textContent=platTotalUSD?formatPrice(calcFromUSD(platTotalUSD,R),cursF):'—';
@@ -1411,6 +1417,10 @@ function fSetPlatformPrices(rate){
   const route=document.getElementById('fRoute').value;
   const tour=TOURS.find(t=>t.key===route); if(!tour) return;
   tour.rows.forEach((row,i)=>{const el=document.getElementById(`fPriceRow${i}`); if(el) el.value=rate?((rate===0.24&&row.sp8)?row.sp8:(rate===0.22&&row.tr)?row.tr:Math.ceil(row.usd/(1-rate))):row.usd;});
+  const fAdultRow=tour.rows.find(r=>!r.flat);
+  const fExtraBase=fAdultRow?fAdultRow.usd:(tour.extraPerPerson||0);
+  const fExtraPlat=rate?(fAdultRow?((rate===0.24&&fAdultRow.sp8)?fAdultRow.sp8:(rate===0.22&&fAdultRow.tr)?fAdultRow.tr:Math.ceil(fAdultRow.usd/(1-rate))):Math.ceil(fExtraBase/(1-rate))):fExtraBase;
+  tour.rows.forEach((row,i)=>{if(row.flat){const ep=document.getElementById(`fExtraPrice${i}`);if(ep)ep.value=fExtraPlat;}});
   fRecalc();
 }
 function pfSetPlatformPrices(rate){
@@ -1419,6 +1429,10 @@ function pfSetPlatformPrices(rate){
   const route=document.getElementById('pfRoute').value;
   const tour=TOURS.find(t=>t.key===route); if(!tour) return;
   tour.rows.forEach((row,i)=>{const el=document.getElementById(`pfPriceRow${i}`); if(el) el.value=rate?((rate===0.24&&row.sp8)?row.sp8:(rate===0.22&&row.tr)?row.tr:Math.ceil(row.usd/(1-rate))):row.usd;});
+  const pfAdultRow=tour.rows.find(r=>!r.flat);
+  const pfExtraBase=pfAdultRow?pfAdultRow.usd:(tour.extraPerPerson||0);
+  const pfExtraPlat=rate?(pfAdultRow?((rate===0.24&&pfAdultRow.sp8)?pfAdultRow.sp8:(rate===0.22&&pfAdultRow.tr)?pfAdultRow.tr:Math.ceil(pfAdultRow.usd/(1-rate))):Math.ceil(pfExtraBase/(1-rate))):pfExtraBase;
+  tour.rows.forEach((row,i)=>{if(row.flat){const ep=document.getElementById(`pfExtraPrice${i}`);if(ep)ep.value=pfExtraPlat;}});
   pfRecalc();
 }
 const PLAT_BTNS=`<div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap"><span style="font-size:10px;color:var(--muted);line-height:22px;font-family:'DM Mono',monospace">Цены:</span><button onclick="fSetPlatformPrices(0)" style="padding:2px 8px;font-size:10px;border:1px solid var(--border);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--muted);font-family:'DM Mono',monospace">База</button><button onclick="fSetPlatformPrices(0.22)" style="padding:2px 8px;font-size:10px;border:1px solid var(--green);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--green);font-family:'DM Mono',monospace">Tripster</button><button onclick="fSetPlatformPrices(0.24)" style="padding:2px 8px;font-size:10px;border:1px solid var(--accent);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--accent);font-family:'DM Mono',monospace;font-weight:600">Sputnik8</button></div>`;
@@ -1451,7 +1465,7 @@ function fDrawCalcRows(tour, adults, children){
           <button onclick="fExtraChange(${i},-1)" style="${fExtraBtnStyle}">−</button>
           <span id="fExtraCount${i}" style="font-family:'DM Mono',monospace;font-size:13px;min-width:20px;text-align:center">0</span>
           <button onclick="fExtraChange(${i},1)" style="${fExtraBtnStyle}">+</button>
-          <span style="font-size:10px;color:var(--muted)">×${fExtraUSD}$=</span>
+          <input type="number" id="fExtraPrice${i}" value="${fExtraUSD}" oninput="fRecalc()" style="width:50px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center"><span style="font-size:10px;color:var(--muted)">$=</span>
           <span id="fExtraTot${i}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
         </div>
       </div>`;}
@@ -1470,7 +1484,7 @@ function fDrawCalcRows(tour, adults, children){
           <button onclick="fExtraChange(${i},-1)" style="${fExtraBtnStyle}">−</button>
           <span id="fExtraCount${i}" style="font-family:'DM Mono',monospace;font-size:13px;min-width:20px;text-align:center">0</span>
           <button onclick="fExtraChange(${i},1)" style="${fExtraBtnStyle}">+</button>
-          <span style="font-size:10px;color:var(--muted)">×${fExtraUSD}$=</span>
+          <input type="number" id="fExtraPrice${i}" value="${fExtraUSD}" oninput="fRecalc()" style="width:50px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center"><span style="font-size:10px;color:var(--muted)">$=</span>
           <span id="fExtraTot${i}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
         </div>
       </div>`;}
@@ -1627,14 +1641,15 @@ function fRecalc(){
     const tot=document.getElementById(`fTotRow${i}`); if(tot) tot.textContent=fmtVal(sub);
   });
   // Доп. взрослые (5-й+ чел.) в индивидуальном режиме
-  const fExtraPricePerPerson=tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0;
   let fExtraUSD=0;
   tour.rows.forEach((row,i)=>{
     if(!row.flat) return;
     const isActive=i===0?true:(document.getElementById(`fFlatCheck${i}`)?.checked||false);
-    if(isActive&&fExtraPricePerPerson){
+    if(isActive){
+      const priceEl=document.getElementById(`fExtraPrice${i}`);
+      const extraPrice=priceEl&&priceEl.value!==''?(parseFloat(priceEl.value)||0):(tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0);
       const extraN=fExtraAdults[i]||0;
-      const sub=fExtraPricePerPerson*extraN;
+      const sub=extraPrice*extraN;
       fExtraUSD+=sub;
       const tot=document.getElementById(`fExtraTot${i}`);if(tot)tot.textContent=sub>0?fmtVal(sub):'';
     }
@@ -1741,7 +1756,7 @@ function pfUpdateCalc(){
             <button onclick="pfExtraChange(${i},-1)" style="${pfExtraBtnStyle}">−</button>
             <span id="pfExtraCount${i}" style="font-family:'DM Mono',monospace;font-size:13px;min-width:20px;text-align:center">0</span>
             <button onclick="pfExtraChange(${i},1)" style="${pfExtraBtnStyle}">+</button>
-            <span style="font-size:10px;color:var(--muted)">×${pfExtraUSD}$=</span>
+            <input type="number" id="pfExtraPrice${i}" value="${pfExtraUSD}" oninput="pfRecalc()" style="width:50px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center"><span style="font-size:10px;color:var(--muted)">$=</span>
             <span id="pfExtraTot${i}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
           </div>
         </div>`;}
@@ -1760,7 +1775,7 @@ function pfUpdateCalc(){
             <button onclick="pfExtraChange(${i},-1)" style="${pfExtraBtnStyle}">−</button>
             <span id="pfExtraCount${i}" style="font-family:'DM Mono',monospace;font-size:13px;min-width:20px;text-align:center">0</span>
             <button onclick="pfExtraChange(${i},1)" style="${pfExtraBtnStyle}">+</button>
-            <span style="font-size:10px;color:var(--muted)">×${pfExtraUSD}$=</span>
+            <input type="number" id="pfExtraPrice${i}" value="${pfExtraUSD}" oninput="pfRecalc()" style="width:50px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center"><span style="font-size:10px;color:var(--muted)">$=</span>
             <span id="pfExtraTot${i}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
           </div>
         </div>`;}
@@ -1849,14 +1864,15 @@ function pfRecalc(){
     const tot=document.getElementById(`pfTotRow${i}`); if(tot) tot.textContent=fmtVal(sub);
   });
   // Доп. взрослые (5-й+ чел.) в индивидуальном режиме
-  const pfExtraPricePerPerson=tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0;
   let pfExtraUSDTotal=0;
   tour.rows.forEach((row,i)=>{
     if(!row.flat) return;
     const isActive=i===0?true:(document.getElementById(`pfFlatCheck${i}`)?.checked||false);
-    if(isActive&&pfExtraPricePerPerson){
+    if(isActive){
+      const priceEl=document.getElementById(`pfExtraPrice${i}`);
+      const extraPrice=priceEl&&priceEl.value!==''?(parseFloat(priceEl.value)||0):(tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0);
       const extraN=pfExtraAdults[i]||0;
-      const sub=pfExtraPricePerPerson*extraN;
+      const sub=extraPrice*extraN;
       pfExtraUSDTotal+=sub;
       const tot=document.getElementById(`pfExtraTot${i}`);if(tot)tot.textContent=sub>0?fmtVal(sub):'';
     }
