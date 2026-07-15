@@ -533,6 +533,7 @@ const TOURS = [
       {id:'bana_child_day', label:'Входной детский 100-140 см', vnd_fixed:1000000}
     ]},
   { icon:'🌆', name:'БХ Вечер', key:'БХ ВЕЧЕР',
+    extraPerPerson:48,
     rows:[{label:'Индивидуально',usd:192,tr:270,flat:true}],
     tickets:[
       {id:'bh_eve_adult', label:'Вечер — взрослый', vnd_fixed:1100000},
@@ -716,13 +717,23 @@ function skelRowHTML(isTicket){
 function buildPriceCalc(t, idx) {
   const rows = t.rows.map((r,i)=>`
     <div class="calc-row-p">
-      <div class="calc-label-p">${r.label}</div>
+      <div class="calc-label-p" id="pc-${idx}-label${i}">${r.label}</div>
       <div class="calc-counter">
         <button class="calc-btn" onclick="pCalcChange(${idx},'r${i}',-1)">−</button>
         <div class="calc-num" id="pc-${idx}-r${i}">0</div>
         <button class="calc-btn" onclick="pCalcChange(${idx},'r${i}',1)">+</button>
       </div>
     </div>`).join('');
+  const pExtraUSD=t.rows.find(r=>r.flat)?(t.rows.find(r=>!r.flat)?.usd||t.extraPerPerson||0):0;
+  const extraRow=pExtraUSD?`
+    <div class="calc-row-p" id="pc-${idx}-extraRow" style="display:none">
+      <div class="calc-label-p" style="color:var(--accent)">+ Доп. взр. ${pExtraUSD}$/чел.</div>
+      <div class="calc-counter">
+        <button class="calc-btn" onclick="pCalcChange(${idx},'extra',-1)">−</button>
+        <div class="calc-num" id="pc-${idx}-extra">0</div>
+        <button class="calc-btn" onclick="pCalcChange(${idx},'extra',1)">+</button>
+      </div>
+    </div>` : '';
   const trows = t.tickets ? `<div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;font-family:'DM Mono',monospace;padding-bottom:2px">Входные билеты</div>`+
     t.tickets.map((tk,i)=>`
       <div class="calc-row-p">
@@ -734,7 +745,7 @@ function buildPriceCalc(t, idx) {
         </div>
       </div>`).join('') : '';
   return `<div class="calc-block" id="pcb-${idx}">
-    ${rows}${trows}
+    ${rows}${extraRow}${trows}
     <div style="margin-top:6px;padding-top:6px;border-top:1px dashed var(--border)" class="calc-row-p">
       <div class="calc-label-p" style="font-size:11px;color:var(--muted)">Трансфер $</div>
       <input type="number" id="pc-${idx}-transfer" min="0" placeholder="0" oninput="pCalcUpdate(${idx})" style="width:64px;padding:3px 8px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)">
@@ -832,6 +843,24 @@ function pCalcUpdate(idx){
     const p=mulP(calcFromUSD(r.usd,R),n); total=addP(total,p);
     rows.push({label:r.label,n,p});
   });
+  // Extra adults row (appears when individual/flat row is used)
+  const pFlatRow=t.rows.find(r=>r.flat);
+  if(pFlatRow){
+    const pFlatIdx=t.rows.indexOf(pFlatRow);
+    const pFlatN=cc['r'+pFlatIdx]||0;
+    const pExtraUSD=t.rows.find(r=>!r.flat)?.usd||t.extraPerPerson||0;
+    const pExtraRowEl=document.getElementById(`pc-${idx}-extraRow`);
+    if(pExtraRowEl&&pExtraUSD){
+      pExtraRowEl.style.display=pFlatN>0?'':'none';
+      if(pFlatN>0){
+        const pExtraN=cc['extra']||0;
+        if(pExtraN){hasAny=true;const p=mulP(calcFromUSD(pExtraUSD,R),pExtraN);total=addP(total,p);rows.push({label:'+ Доп. взр.',n:pExtraN,p});}
+        if(t.rows[0]&&!t.rows[0].flat){const lbl=document.getElementById(`pc-${idx}-label0`);if(lbl)lbl.textContent=t.rows[0].label+' (доп.)';}
+      } else {
+        if(t.rows[0]&&!t.rows[0].flat){const lbl=document.getElementById(`pc-${idx}-label0`);if(lbl)lbl.textContent=t.rows[0].label;}
+      }
+    }
+  }
   if(t.tickets) t.tickets.forEach((tk,i)=>{
     const n=cc['t'+i]||0; if(!n) return; hasAny=true;
     const p=mulP(calcFromVND(tk.vnd_fixed,R),n); total=addP(total,p);
@@ -1234,8 +1263,9 @@ function bOpenModal(){
 function bEdit(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   editingId=id;
-  // сбросить счётчики билетов и кэш маршрута
+  // сбросить счётчики билетов, доп. взрослых и кэш маршрута
   Object.keys(fTickCounts).forEach(k=>delete fTickCounts[k]);
+  Object.keys(fExtraAdults).forEach(k=>delete fExtraAdults[k]);
   fCalcRoute=''; pfCalcRoute='';
   const _ep=bDetectPlatform(b); fPlatformName=_ep; const _epl=PLATFORMS.find(x=>x.name===_ep); fCurrentPlatRate=_epl?_epl.rate:0;
   const fb=document.getElementById('fCalcBlock'); if(fb){fb.style.display='none';delete fb.dataset.route;}
@@ -1320,9 +1350,11 @@ function bClearForm(){
   document.getElementById('pasteText').value='';
   document.getElementById('parseResult').classList.remove('show');
   document.getElementById('parsedForm').style.display='none';
-  // сбросить счётчики билетов
+  // сбросить счётчики билетов и доп. взрослых
   Object.keys(fTickCounts).forEach(k=>delete fTickCounts[k]);
   Object.keys(pfTickCounts).forEach(k=>delete pfTickCounts[k]);
+  Object.keys(fExtraAdults).forEach(k=>delete fExtraAdults[k]);
+  Object.keys(pfExtraAdults).forEach(k=>delete pfExtraAdults[k]);
   fCalcRoute=''; pfCalcRoute=''; fCurrentPlatRate=0; pfCurrentPlatRate=0; fPlatformName=''; pfPlatformName='';
   ['fOtherName','pfOtherName','fOtherPriceInput','pfOtherPriceInput','fTransfer','pfTransfer'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   // скрыть калькулятор
@@ -1367,6 +1399,8 @@ function bUpdatePreview(){
 
 // ── КАЛЬКУЛЯТОР В ФОРМЕ (ручной ввод) ──
 const fTickCounts={};
+const fExtraAdults={};
+const pfExtraAdults={};
 let fCalcRoute='';
 let fCurrentPlatRate=0;
 let fPlatformName='';
@@ -1392,6 +1426,8 @@ const PF_PLAT_BTNS=`<div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap
 
 function fDrawCalcRows(tour, adults, children){
   let rowsHTML=PLAT_BTNS;
+  const fExtraUSD=tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0;
+  const fExtraBtnStyle='width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:16px;cursor:pointer';
   tour.rows.forEach((row,i)=>{
     const count=i===0?adults:i===1?children:0;
     const priceId=`fPriceRow${i}`;
@@ -1409,6 +1445,16 @@ function fDrawCalcRows(tour, adults, children){
           <span id="${totId}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
         </div>
       </div>`;
+      if(fExtraUSD){rowsHTML+=`<div id="fExtraRow${i}" style="display:none;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+        <div style="font-size:12px;color:var(--accent);flex-shrink:0">+ Доп. взр. (5-й+)</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button onclick="fExtraChange(${i},-1)" style="${fExtraBtnStyle}">−</button>
+          <span id="fExtraCount${i}" style="font-family:'DM Mono',monospace;font-size:13px;min-width:20px;text-align:center">0</span>
+          <button onclick="fExtraChange(${i},1)" style="${fExtraBtnStyle}">+</button>
+          <span style="font-size:10px;color:var(--muted)">×${fExtraUSD}$=</span>
+          <span id="fExtraTot${i}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
+        </div>
+      </div>`;}
     } else if(row.flat&&i===0){
       rowsHTML+=`<div id="fCalcRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
         <div style="font-size:12px;color:var(--muted);flex-shrink:0">${row.label}</div>
@@ -1418,6 +1464,16 @@ function fDrawCalcRows(tour, adults, children){
           <span id="${totId}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
         </div>
       </div>`;
+      if(fExtraUSD){rowsHTML+=`<div id="fExtraRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+        <div style="font-size:12px;color:var(--accent);flex-shrink:0">+ Доп. взр. (5-й+)</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button onclick="fExtraChange(${i},-1)" style="${fExtraBtnStyle}">−</button>
+          <span id="fExtraCount${i}" style="font-family:'DM Mono',monospace;font-size:13px;min-width:20px;text-align:center">0</span>
+          <button onclick="fExtraChange(${i},1)" style="${fExtraBtnStyle}">+</button>
+          <span style="font-size:10px;color:var(--muted)">×${fExtraUSD}$=</span>
+          <span id="fExtraTot${i}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
+        </div>
+      </div>`;}
     } else {
       rowsHTML+=`<div id="fCalcRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
         <div style="font-size:12px;color:var(--muted);flex-shrink:0">${row.label} × ${count}</div>
@@ -1437,6 +1493,11 @@ function fFlatToggle(i){
     const el=document.getElementById(`fCalcRow${j}`);
     if(el){el.style.opacity=checked?'0.35':'1';el.style.pointerEvents=checked?'none':'';}
   });
+  const extraRow=document.getElementById(`fExtraRow${i}`);
+  if(extraRow){
+    extraRow.style.display=checked?'flex':'none';
+    if(!checked){fExtraAdults[i]=0;const ec=document.getElementById(`fExtraCount${i}`);if(ec)ec.textContent='0';const et=document.getElementById(`fExtraTot${i}`);if(et)et.textContent='';}
+  }
   if(checked){
     const tour=TOURS.find(t=>t.key===document.getElementById('fRoute').value);
     const adults=parseInt(document.getElementById('fAdults').value)||0;
@@ -1449,6 +1510,11 @@ function fFlatToggle(i){
       });
     }
   }
+  fRecalc();
+}
+function fExtraChange(i,d){
+  fExtraAdults[i]=Math.max(0,(fExtraAdults[i]||0)+d);
+  const el=document.getElementById('fExtraCount'+i);if(el)el.textContent=fExtraAdults[i];
   fRecalc();
 }
 
@@ -1514,6 +1580,7 @@ function fUpdateCalc(){
   // перерисовываем поля только если изменился маршрут
   const fCacheKey=route+adults+","+children; if(fCalcRoute!==fCacheKey){
     fCalcRoute=fCacheKey;
+    Object.keys(fExtraAdults).forEach(k=>delete fExtraAdults[k]);
     fDrawCalcRows(tour,adults,children);
     // билеты
     const tickSec=document.getElementById('fTicketSection');
@@ -1559,8 +1626,22 @@ function fRecalc(){
     tourUSD+=sub;
     const tot=document.getElementById(`fTotRow${i}`); if(tot) tot.textContent=fmtVal(sub);
   });
+  // Доп. взрослые (5-й+ чел.) в индивидуальном режиме
+  const fExtraPricePerPerson=tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0;
+  let fExtraUSD=0;
+  tour.rows.forEach((row,i)=>{
+    if(!row.flat) return;
+    const isActive=i===0?true:(document.getElementById(`fFlatCheck${i}`)?.checked||false);
+    if(isActive&&fExtraPricePerPerson){
+      const extraN=fExtraAdults[i]||0;
+      const sub=fExtraPricePerPerson*extraN;
+      fExtraUSD+=sub;
+      const tot=document.getElementById(`fExtraTot${i}`);if(tot)tot.textContent=sub>0?fmtVal(sub):'';
+    }
+  });
+  tourUSD+=fExtraUSD;
   fCalcTotal(tour, adults, children, currency, tourUSD);
-  const baseForComm=hasFlatChecked?tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(`fFlatCheck${i}`)?.checked?r.usd:0),0):adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0);
+  const baseForComm=hasFlatChecked?tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(`fFlatCheck${i}`)?.checked?r.usd:0),0)+fExtraUSD:(tour.rows[0]?.flat?tour.rows[0].usd:adults*(tour.rows[0]?.usd||0)+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0))+fExtraUSD;
   const comm=Math.ceil(baseForComm/10*2)/2;
   const cEl=document.getElementById('previewComm'); if(cEl) cEl.textContent='$'+comm;
 }
@@ -1633,7 +1714,10 @@ function pfUpdateCalc(){
   block.style.display='block';
   const pfCK=route+"|"+adults+","+children; if(pfCalcRoute!==pfCK){
     pfCalcRoute=pfCK;
+    Object.keys(pfExtraAdults).forEach(k=>delete pfExtraAdults[k]);
     let rowsHTML=PF_PLAT_BTNS;
+    const pfExtraUSD=tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0;
+    const pfExtraBtnStyle='width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:16px;cursor:pointer';
     tour.rows.forEach((row,i)=>{
       const count=i===0?adults:i===1?children:0;
       const priceId=`pfPriceRow${i}`;
@@ -1651,6 +1735,16 @@ function pfUpdateCalc(){
             <span id="${totId}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
           </div>
         </div>`;
+        if(pfExtraUSD){rowsHTML+=`<div id="pfExtraRow${i}" style="display:none;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+          <div style="font-size:12px;color:var(--accent);flex-shrink:0">+ Доп. взр. (5-й+)</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button onclick="pfExtraChange(${i},-1)" style="${pfExtraBtnStyle}">−</button>
+            <span id="pfExtraCount${i}" style="font-family:'DM Mono',monospace;font-size:13px;min-width:20px;text-align:center">0</span>
+            <button onclick="pfExtraChange(${i},1)" style="${pfExtraBtnStyle}">+</button>
+            <span style="font-size:10px;color:var(--muted)">×${pfExtraUSD}$=</span>
+            <span id="pfExtraTot${i}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
+          </div>
+        </div>`;}
       } else if(row.flat&&i===0){
         rowsHTML+=`<div id="pfCalcRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
           <div style="font-size:12px;color:var(--muted);flex-shrink:0">${row.label}</div>
@@ -1660,6 +1754,16 @@ function pfUpdateCalc(){
             <span id="${totId}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
           </div>
         </div>`;
+        if(pfExtraUSD){rowsHTML+=`<div id="pfExtraRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+          <div style="font-size:12px;color:var(--accent);flex-shrink:0">+ Доп. взр. (5-й+)</div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button onclick="pfExtraChange(${i},-1)" style="${pfExtraBtnStyle}">−</button>
+            <span id="pfExtraCount${i}" style="font-family:'DM Mono',monospace;font-size:13px;min-width:20px;text-align:center">0</span>
+            <button onclick="pfExtraChange(${i},1)" style="${pfExtraBtnStyle}">+</button>
+            <span style="font-size:10px;color:var(--muted)">×${pfExtraUSD}$=</span>
+            <span id="pfExtraTot${i}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
+          </div>
+        </div>`;}
       } else {
         rowsHTML+=`<div id="pfCalcRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
           <div style="font-size:12px;color:var(--muted);flex-shrink:0">${row.label} × ${count}</div>
@@ -1697,6 +1801,11 @@ function pfFlatToggle(i){
     const el=document.getElementById(`pfCalcRow${j}`);
     if(el){el.style.opacity=checked?'0.35':'1';el.style.pointerEvents=checked?'none':'';}
   });
+  const pfExtraRow=document.getElementById(`pfExtraRow${i}`);
+  if(pfExtraRow){
+    pfExtraRow.style.display=checked?'flex':'none';
+    if(!checked){pfExtraAdults[i]=0;const ec=document.getElementById(`pfExtraCount${i}`);if(ec)ec.textContent='0';const et=document.getElementById(`pfExtraTot${i}`);if(et)et.textContent='';}
+  }
   if(checked){
     const tour=TOURS.find(t=>t.key===document.getElementById('pfRoute').value);
     const adults=parseInt(document.getElementById('pfAdults').value)||0;
@@ -1709,6 +1818,11 @@ function pfFlatToggle(i){
       });
     }
   }
+  pfRecalc();
+}
+function pfExtraChange(i,d){
+  pfExtraAdults[i]=Math.max(0,(pfExtraAdults[i]||0)+d);
+  const el=document.getElementById('pfExtraCount'+i);if(el)el.textContent=pfExtraAdults[i];
   pfRecalc();
 }
 function pfRecalc(){
@@ -1734,8 +1848,22 @@ function pfRecalc(){
     tourUSD+=sub;
     const tot=document.getElementById(`pfTotRow${i}`); if(tot) tot.textContent=fmtVal(sub);
   });
+  // Доп. взрослые (5-й+ чел.) в индивидуальном режиме
+  const pfExtraPricePerPerson=tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0;
+  let pfExtraUSDTotal=0;
+  tour.rows.forEach((row,i)=>{
+    if(!row.flat) return;
+    const isActive=i===0?true:(document.getElementById(`pfFlatCheck${i}`)?.checked||false);
+    if(isActive&&pfExtraPricePerPerson){
+      const extraN=pfExtraAdults[i]||0;
+      const sub=pfExtraPricePerPerson*extraN;
+      pfExtraUSDTotal+=sub;
+      const tot=document.getElementById(`pfExtraTot${i}`);if(tot)tot.textContent=sub>0?fmtVal(sub):'';
+    }
+  });
+  tourUSD+=pfExtraUSDTotal;
   pfCalcTotal(tour, adults, children, currency, tourUSD);
-  const baseForComm=hasFlatChecked?tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(`pfFlatCheck${i}`)?.checked?r.usd:0),0):adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0);
+  const baseForComm=hasFlatChecked?tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(`pfFlatCheck${i}`)?.checked?r.usd:0),0)+pfExtraUSDTotal:(tour.rows[0]?.flat?tour.rows[0].usd:adults*(tour.rows[0]?.usd||0)+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0))+pfExtraUSDTotal;
   const comm=Math.ceil(baseForComm/10*2)/2;
   const cEl=document.getElementById('previewComm2'); if(cEl) cEl.textContent='$'+comm;
 }
