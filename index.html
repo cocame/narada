@@ -533,8 +533,8 @@ const TOURS = [
       {id:'bana_child_day', label:'Входной детский 100-140 см', vnd_fixed:1000000}
     ]},
   { icon:'🌆', name:'БХ Вечер', key:'БХ ВЕЧЕР',
-    extraPerPerson:48,
-    rows:[{label:'Индивидуально',usd:192,tr:270,flat:true}],
+    extraPerPerson:48, extraPerPersonSp8:68,
+    rows:[{label:'Индивидуально',usd:192,tr:270,sp8:270,flat:true}],
     tickets:[
       {id:'bh_eve_adult', label:'Вечер — взрослый', vnd_fixed:1100000},
       {id:'bh_eve_child', label:'Вечер — детский',  vnd_fixed:900000}
@@ -1419,7 +1419,7 @@ function fSetPlatformPrices(rate){
   tour.rows.forEach((row,i)=>{const el=document.getElementById(`fPriceRow${i}`); if(el) el.value=rate?((rate===0.24&&row.sp8)?row.sp8:(rate===0.22&&row.tr)?row.tr:Math.ceil(row.usd/(1-rate))):row.usd;});
   const fAdultRow=tour.rows.find(r=>!r.flat);
   const fExtraBase=fAdultRow?fAdultRow.usd:(tour.extraPerPerson||0);
-  const fExtraPlat=rate?(fAdultRow?((rate===0.24&&fAdultRow.sp8)?fAdultRow.sp8:(rate===0.22&&fAdultRow.tr)?fAdultRow.tr:Math.ceil(fAdultRow.usd/(1-rate))):Math.ceil(fExtraBase/(1-rate))):fExtraBase;
+  const fExtraPlat=rate?(fAdultRow?((rate===0.24&&fAdultRow.sp8)?fAdultRow.sp8:(rate===0.22&&fAdultRow.tr)?fAdultRow.tr:Math.ceil(fAdultRow.usd/(1-rate))):((rate===0.24&&tour.extraPerPersonSp8)?tour.extraPerPersonSp8:(rate===0.22&&tour.extraPerPersonTr)?tour.extraPerPersonTr:Math.ceil(fExtraBase/(1-rate)))):fExtraBase;
   tour.rows.forEach((row,i)=>{if(row.flat){const ep=document.getElementById(`fExtraPrice${i}`);if(ep)ep.value=fExtraPlat;}});
   fRecalc();
 }
@@ -1431,7 +1431,7 @@ function pfSetPlatformPrices(rate){
   tour.rows.forEach((row,i)=>{const el=document.getElementById(`pfPriceRow${i}`); if(el) el.value=rate?((rate===0.24&&row.sp8)?row.sp8:(rate===0.22&&row.tr)?row.tr:Math.ceil(row.usd/(1-rate))):row.usd;});
   const pfAdultRow=tour.rows.find(r=>!r.flat);
   const pfExtraBase=pfAdultRow?pfAdultRow.usd:(tour.extraPerPerson||0);
-  const pfExtraPlat=rate?(pfAdultRow?((rate===0.24&&pfAdultRow.sp8)?pfAdultRow.sp8:(rate===0.22&&pfAdultRow.tr)?pfAdultRow.tr:Math.ceil(pfAdultRow.usd/(1-rate))):Math.ceil(pfExtraBase/(1-rate))):pfExtraBase;
+  const pfExtraPlat=rate?(pfAdultRow?((rate===0.24&&pfAdultRow.sp8)?pfAdultRow.sp8:(rate===0.22&&pfAdultRow.tr)?pfAdultRow.tr:Math.ceil(pfAdultRow.usd/(1-rate))):((rate===0.24&&tour.extraPerPersonSp8)?tour.extraPerPersonSp8:(rate===0.22&&tour.extraPerPersonTr)?tour.extraPerPersonTr:Math.ceil(pfExtraBase/(1-rate)))):pfExtraBase;
   tour.rows.forEach((row,i)=>{if(row.flat){const ep=document.getElementById(`pfExtraPrice${i}`);if(ep)ep.value=pfExtraPlat;}});
   pfRecalc();
 }
