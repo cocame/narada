@@ -368,7 +368,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
           <div class="form-group full"><label>Контакт</label><input type="text" id="fContact" placeholder="Иван, +79001234567"></div>
           <div class="form-group full"><label>Отель</label><input type="text" id="fHotel" placeholder="Tourane Hotel, к. 204"></div>
           <div class="form-group"><label>Валюта</label>
-            <select id="fCurrency" onchange="fCurrencyChanged('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+            <select id="fCurrency" onchange="fCurrencyChanged('f')"><option>USD</option><option>VND</option><option>RUB</option><option>USDT</option></select>
           </div>
           <div class="form-group"><label>Оплата</label>
             <select id="fPayMethod"><option>Наличные</option><option>Перевод</option><option>USDT</option></select>
@@ -446,7 +446,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
             <div class="form-group full"><label>Контакт</label><input type="text" id="pfContact"></div>
             <div class="form-group full"><label>Отель</label><input type="text" id="pfHotel"></div>
             <div class="form-group"><label>Валюта</label>
-              <select id="pfCurrency" onchange="fCurrencyChanged('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+              <select id="pfCurrency" onchange="fCurrencyChanged('pf')"><option>USD</option><option>VND</option><option>RUB</option><option>USDT</option></select>
             </div>
             <div class="form-group"><label>Оплата</label>
               <select id="pfPayMethod"><option>Наличные</option><option>Перевод</option><option>USDT</option></select>
@@ -533,7 +533,7 @@ const TOURS = [
       {id:'bana_child_day', label:'Входной детский 100-140 см', vnd_fixed:1000000}
     ]},
   { icon:'🌆', name:'БХ Вечер', key:'БХ ВЕЧЕР',
-    extraPerPerson:48, extraPerPersonSp8:68,
+    extraPerPerson:48, extraPerPersonSp8:68, extraPerPersonTr:68,
     rows:[{label:'Индивидуально',usd:192,tr:270,sp8:270,flat:true}],
     tickets:[
       {id:'bh_eve_adult', label:'Вечер — взрослый', vnd_fixed:1100000},
@@ -773,7 +773,7 @@ function platformPricesHTML(t, rates, skeleton) {
   const mainRows = t.rows.slice(0, 4);
   let html = '';
   PLATFORMS.forEach(pl => {
-    html += `<div class="ticket-section-label">${pl.name} −${Math.round(pl.rate*100)}%</div><div class="price-rows" style="padding-top:0">`;
+    html += `<div class="ticket-section-label">${pl.name}</div><div class="price-rows" style="padding-top:0">`;
     mainRows.forEach(r => {
       const platUSD = (pl.rate===0.24&&r.sp8)?r.sp8:(pl.rate===0.22&&r.tr)?r.tr:Math.ceil(r.usd/(1-pl.rate));
       const p = rates ? calcFromUSD(platUSD, rates) : null;
@@ -845,9 +845,10 @@ function pCalcUpdate(idx){
   });
   // Extra adults row (appears when individual/flat row is used)
   const pFlatRow=t.rows.find(r=>r.flat);
+  let pFlatN=0;
   if(pFlatRow){
     const pFlatIdx=t.rows.indexOf(pFlatRow);
-    const pFlatN=cc['r'+pFlatIdx]||0;
+    pFlatN=cc['r'+pFlatIdx]||0;
     const pExtraUSD=t.rows.find(r=>!r.flat)?.usd||t.extraPerPerson||0;
     const pExtraRowEl=document.getElementById(`pc-${idx}-extraRow`);
     if(pExtraRowEl&&pExtraUSD){
@@ -881,7 +882,7 @@ function pCalcUpdate(idx){
     if(pFlatN>0){
       const pAdultRow2=t.rows.find(r=>!r.flat);
       const pExtraBase2=pAdultRow2?pAdultRow2.usd:(t.extraPerPerson||0);
-      const platExtraP=pAdultRow2?((pl.rate===0.24&&pAdultRow2.sp8)?pAdultRow2.sp8:(pl.rate===0.22&&pAdultRow2.tr)?pAdultRow2.tr:Math.ceil(pAdultRow2.usd/(1-pl.rate))):Math.ceil(pExtraBase2/(1-pl.rate));
+      const platExtraP=pAdultRow2?((pl.rate===0.24&&pAdultRow2.sp8)?pAdultRow2.sp8:(pl.rate===0.22&&pAdultRow2.tr)?pAdultRow2.tr:Math.ceil(pAdultRow2.usd/(1-pl.rate))):((pl.rate===0.24&&t.extraPerPersonSp8)?t.extraPerPersonSp8:(pl.rate===0.22&&t.extraPerPersonTr)?t.extraPerPersonTr:Math.ceil(pExtraBase2/(1-pl.rate)));
       platTotalUSD+=platExtraP*(cc['extra']||0);
     }
     const key=pl.name==='Tripster'?'trip':'sp8';
@@ -1352,7 +1353,7 @@ function bClearForm(){
   document.getElementById('fAdults').value=1; document.getElementById('fChildren').value=0; document.getElementById('fInfants').value=0;
   const pa=document.getElementById('pfAdults');
   if(pa){pa.value=1;document.getElementById('pfChildren').value=0;document.getElementById('pfInfants').value=0;}
-  document.getElementById('fCurrency').value='VND'; document.getElementById('fPayMethod').value='Наличные';
+  document.getElementById('fCurrency').value='USD'; document.getElementById('fPayMethod').value='Наличные';
   document.getElementById('pasteText').value='';
   document.getElementById('parseResult').classList.remove('show');
   document.getElementById('parsedForm').style.display='none';
