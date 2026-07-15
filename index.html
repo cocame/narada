@@ -725,9 +725,11 @@ function buildPriceCalc(t, idx) {
       </div>
     </div>`).join('');
   const pExtraUSD=t.rows.find(r=>r.flat)?(t.rows.find(r=>!r.flat)?.usd||t.extraPerPerson||0):0;
+  const pExtraPlatUSD=(t.extraPerPersonSp8||t.extraPerPersonTr);
+  const pExtraLabel=pExtraPlatUSD&&pExtraPlatUSD!==pExtraUSD?`${pExtraUSD}$ / Tr+Sp8: ${pExtraPlatUSD}$`:`${pExtraUSD}$`;
   const extraRow=pExtraUSD?`
     <div class="calc-row-p" id="pc-${idx}-extraRow" style="display:none">
-      <div class="calc-label-p" style="color:var(--accent)">+ Доп. взр. ${pExtraUSD}$/чел.</div>
+      <div class="calc-label-p" style="color:var(--accent)">+ Доп. взр. ${pExtraLabel}/чел.</div>
       <div class="calc-counter">
         <button class="calc-btn" onclick="pCalcChange(${idx},'extra',-1)">−</button>
         <div class="calc-num" id="pc-${idx}-extra">0</div>
@@ -1045,13 +1047,22 @@ function bCardHTML(b){
         }
         if(tour.tickets&&tour.tickets.length){
           let tkLines='';
-          tour.tickets.forEach(tk=>{
+          tour.tickets.forEach((tk,tkIdx)=>{
+            if(flatRow0){
+              const cnt=(b.ticketCounts&&b.ticketCounts[tkIdx])||0;
+              if(!cnt) return;
+              const unitFmt=fmtVNDticket(tk.vnd_fixed);
+              const label=cnt>1?`${tk.label} × ${cnt}`:tk.label;
+              const total=cnt>1?fmtVNDticket(tk.vnd_fixed*cnt):unitFmt;
+              tkLines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted);font-style:italic">${label}</span><span style="font-family:'DM Mono',monospace;color:var(--accent2)">${total}</span></div>`;
+              return;
+            }
             const isChild=/детск|дети/i.test(tk.label);
-            const pax=flatRow0?null:(isChild?b.children:b.adults);
-            if(!flatRow0&&!pax) return;
+            const pax=isChild?b.children:b.adults;
+            if(!pax) return;
             const unitFmt=fmtVNDticket(tk.vnd_fixed);
-            const label=flatRow0?tk.label:`${tk.label} × ${pax}`;
-            const total=flatRow0?unitFmt:fmtVNDticket(tk.vnd_fixed*pax);
+            const label=`${tk.label} × ${pax}`;
+            const total=fmtVNDticket(tk.vnd_fixed*pax);
             tkLines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted);font-style:italic">${label}</span><span style="font-family:'DM Mono',monospace;color:var(--accent2)">${total}</span></div>`;
           });
           if(tkLines) lines+=`<div style="margin-top:4px;padding-top:4px;border-top:1px dashed var(--border2)"><div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;font-family:'DM Mono',monospace;padding:2px 0">Входные билеты</div>${tkLines}</div>`;
@@ -1348,7 +1359,7 @@ function fCurrencyChanged(p){
 
 function bClearForm(){
   ['fDate','fContact','fHotel','fAmount','fNotes','fPrepay','fOnsite','pfDate','pfContact','pfHotel','pfAmount','pfNotes','pfPrepay','pfOnsite'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  ['fPrepayCur','fOnsiteCur','pfPrepayCur','pfOnsiteCur'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='VND';});
+  ['fPrepayCur','fOnsiteCur','pfPrepayCur','pfOnsiteCur'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='USD';});
   ['fRoute','pfRoute'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('fAdults').value=1; document.getElementById('fChildren').value=0; document.getElementById('fInfants').value=0;
   const pa=document.getElementById('pfAdults');
@@ -1943,7 +1954,7 @@ function bGetFormData(){
       if(flatActive){tourUSD=flatSum; isIndividual=true;}
       else if(flatRow0) isIndividual=true;
     }
-    if(tour){let baseComm=isIndividual?(tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(p+'FlatCheck'+i)?.checked?r.usd:0),0)):(flatRow0?tour.rows[0].usd:adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0));comm=baseComm>0?Math.ceil(baseComm/10*2)/2:0;}
+    if(tour){let baseComm=isIndividual?(flatRow0?tour.rows[0].usd:tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(p+'FlatCheck'+i)?.checked?r.usd:0),0)):(flatRow0?tour.rows[0].usd:adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0));comm=baseComm>0?Math.ceil(baseComm/10*2)/2:0;}
   }
   return {
     id:editingId,
