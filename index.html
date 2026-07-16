@@ -899,6 +899,8 @@ function pCalcUpdate(idx){
         const platExtraP=pAdultRow2?((pl.rate===0.24&&pAdultRow2.sp8)?pAdultRow2.sp8:(pl.rate===0.22&&pAdultRow2.tr)?pAdultRow2.tr:Math.ceil(pAdultRow2.usd/(1-pl.rate))):((pl.rate===0.24&&t.extraPerPersonSp8)?t.extraPerPersonSp8:(pl.rate===0.22&&t.extraPerPersonTr)?t.extraPerPersonTr:Math.ceil(pExtraBase2/(1-pl.rate)));
         platTotalUSD+=platExtraP*(cc['extra']||0);
       }
+      if(t.tickets) t.tickets.forEach((_tk,tkI)=>{const n=cc['t'+tkI]||0;if(n) platTotalUSD+=calcFromVND(_tk.vnd_fixed,R).usd*n;});
+      if(transferUSD) platTotalUSD+=transferUSD;
       const key=pl.name==='Tripster'?'trip':'sp8';
       const el=document.getElementById(`cplat-${key}-${idx}`);
       if(el) el.textContent=platTotalUSD?formatPrice(calcFromUSD(platTotalUSD,R),cursF):'—';
