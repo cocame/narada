@@ -1525,6 +1525,18 @@ function fDrawCalcRows(tour, adults, children){
           <span id="fExtraTot${i}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
         </div>
       </div>`;}
+    } else if(i>=2){
+      rowsHTML+=`<div id="fCalcRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+        <div style="font-size:12px;color:var(--muted);flex-shrink:0">${row.label}</div>
+        <div style="display:flex;align-items:center;gap:4px">
+          <button onclick="fOptChange(${i},-1)" style="${fExtraBtnStyle}">−</button>
+          <input type="number" id="fCountRow${i}" value="0" min="0" oninput="fRecalc()" style="width:36px;padding:3px 4px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+          <button onclick="fOptChange(${i},1)" style="${fExtraBtnStyle}">+</button>
+          <input type="number" id="${priceId}" value="${row.usd}" oninput="fRecalc()" style="width:55px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+          <span style="font-size:10px;color:var(--muted)">$=</span>
+          <span id="${totId}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
+        </div>
+      </div>`;
     } else {
       rowsHTML+=`<div id="fCalcRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
         <div style="font-size:12px;color:var(--muted);flex-shrink:0">${row.label} × ${count}</div>
@@ -1697,6 +1709,14 @@ function fRecalc(){
   const comm=Math.ceil(baseForComm/10*2)/2;
   const cEl=document.getElementById('previewComm'); if(cEl) cEl.textContent='$'+comm;
 }
+function fOptChange(i,d){
+  const el=document.getElementById(`fCountRow${i}`); if(!el) return;
+  el.value=Math.max(0,(parseInt(el.value)||0)+d); fRecalc();
+}
+function pfOptChange(i,d){
+  const el=document.getElementById(`pfCountRow${i}`); if(!el) return;
+  el.value=Math.max(0,(parseInt(el.value)||0)+d); pfRecalc();
+}
 function fTickChange(i,d){
   fTickCounts['f_'+i]=Math.max(0,(fTickCounts['f_'+i]||0)+d);
   const el=document.getElementById('ftc-'+i); if(el) el.textContent=fTickCounts['f_'+i];
@@ -1816,6 +1836,18 @@ function pfUpdateCalc(){
             <span id="pfExtraTot${i}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
           </div>
         </div>`;}
+      } else if(i>=2){
+        rowsHTML+=`<div id="pfCalcRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+          <div style="font-size:12px;color:var(--muted);flex-shrink:0">${row.label}</div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <button onclick="pfOptChange(${i},-1)" style="${pfExtraBtnStyle}">−</button>
+            <input type="number" id="pfCountRow${i}" value="0" min="0" oninput="pfRecalc()" style="width:36px;padding:3px 4px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+            <button onclick="pfOptChange(${i},1)" style="${pfExtraBtnStyle}">+</button>
+            <input type="number" id="${priceId}" value="${row.usd}" oninput="pfRecalc()" style="width:55px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center">
+            <span style="font-size:10px;color:var(--muted)">$=</span>
+            <span id="${totId}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
+          </div>
+        </div>`;
       } else {
         rowsHTML+=`<div id="pfCalcRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
           <div style="font-size:12px;color:var(--muted);flex-shrink:0">${row.label} × ${count}</div>
