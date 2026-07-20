@@ -745,7 +745,7 @@ function buildPriceCalc(t, idx) {
           <button class="calc-btn" onclick="pCalcChange(${idx},'t${i}',1)">+</button>
         </div>
       </div>`).join('') : '';
-  const hasPlatPrices=t.rows.some(r=>r.tr||r.sp8);
+  const hasPlatPrices=true;
   const platBtns=hasPlatPrices?`<div style="display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap"><span style="font-size:10px;color:var(--muted);line-height:22px;font-family:'DM Mono',monospace">Цены:</span><button id="pcp-base-${idx}" onclick="pCalcSetPlat(${idx},0)" style="padding:2px 8px;font-size:10px;border:1px solid var(--border);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--muted);font-family:'DM Mono',monospace;font-weight:600">База</button><button id="pcp-trip-${idx}" onclick="pCalcSetPlat(${idx},0.22)" style="padding:2px 8px;font-size:10px;border:1px solid var(--green);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--green);font-family:'DM Mono',monospace">Tripster</button><button id="pcp-sp8-${idx}" onclick="pCalcSetPlat(${idx},0.24)" style="padding:2px 8px;font-size:10px;border:1px solid var(--accent);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--accent);font-family:'DM Mono',monospace;font-weight:600">Sputnik8</button></div>`:'';
   return `<div class="calc-block" id="pcb-${idx}">
     ${platBtns}${rows}${extraRow}${trows}
