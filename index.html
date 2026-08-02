@@ -1476,6 +1476,7 @@ const PLAT_BTNS=`<div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wr
 const PF_PLAT_BTNS=`<div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap"><span style="font-size:10px;color:var(--muted);line-height:22px;font-family:'DM Mono',monospace">Цены:</span><button onclick="pfSetPlatformPrices(0)" style="padding:2px 8px;font-size:10px;border:1px solid var(--border);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--muted);font-family:'DM Mono',monospace">База</button><button onclick="pfSetPlatformPrices(0.22)" style="padding:2px 8px;font-size:10px;border:1px solid var(--green);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--green);font-family:'DM Mono',monospace">Tripster</button><button onclick="pfSetPlatformPrices(0.24)" style="padding:2px 8px;font-size:10px;border:1px solid var(--accent);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--accent);font-family:'DM Mono',monospace;font-weight:600">Sputnik8</button></div>`;
 
 function fDrawCalcRows(tour, adults, children){
+  const _sv={};tour.rows.forEach((_,i)=>{const _e=document.getElementById('fPriceRow'+i);if(_e&&_e.value!=='' &&parseFloat(_e.value)!==tour.rows[i].usd)_sv[i]=_e.value;});
   let rowsHTML=PLAT_BTNS;
   const fExtraUSD=tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0;
   const fExtraBtnStyle='width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:16px;cursor:pointer';
@@ -1549,6 +1550,8 @@ function fDrawCalcRows(tour, adults, children){
     }
   });
   document.getElementById('fCalcRows').innerHTML=rowsHTML;
+  Object.keys(_sv).forEach(i=>{const _e=document.getElementById('fPriceRow'+i);if(_e)_e.value=_sv[i];});
+  fRecalc();
 }
 function fFlatToggle(i){
   const checked=document.getElementById(`fFlatCheck${i}`)?.checked;
