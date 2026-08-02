@@ -1339,6 +1339,18 @@ function bEdit(id){
     });
     fRecalc();
   }
+  // восстановить кастомные цены из сохранённых данных брони
+  const _ctour=TOURS.find(t=>t.key===b.route);
+  if(_ctour){
+    if(b.customPriceAdult&&b.customPriceAdult!==_ctour.rows[0].usd){
+      const _ce0=document.getElementById('fPriceRow0');
+      if(_ce0){_ce0.value=b.customPriceAdult;fRecalc();}
+    }
+    if(b.customPriceChild&&_ctour.rows[1]&&b.customPriceChild!==_ctour.rows[1].usd){
+      const _ce1=document.getElementById('fPriceRow1');
+      if(_ce1){_ce1.value=b.customPriceChild;fRecalc();}
+    }
+  }
   document.getElementById('modalOverlay').classList.add('open');
 }
 function bCloseModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
