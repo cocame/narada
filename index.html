@@ -968,18 +968,62 @@ async function gasGet(action, onAttempt){
   throw lastErr;
 }
 
+// Локальная копия списка броней: список показывается мгновенно из неё,
+// а свежие данные с сервера подменяют его, когда доедут.
+const B_CACHE_KEY='narada_bookings_cache_v1';
+function bCacheRead(){
+  try {
+    const raw=localStorage.getItem(B_CACHE_KEY); if(!raw) return null;
+    const c=JSON.parse(raw);
+    return Array.isArray(c.data)&&c.data.length ? c : null;
+  } catch(e){ return null; }
+}
+function bCacheWrite(data){
+  try { localStorage.setItem(B_CACHE_KEY,JSON.stringify({ts:Date.now(),data})); } catch(e){}
+}
+function bSyncNote(html){
+  let n=document.getElementById('bSync');
+  if(!html){ if(n) n.remove(); return; }
+  if(!n){
+    n=document.createElement('div'); n.id='bSync';
+    n.style.cssText='text-align:center;padding:4px 8px;font-size:10.5px;color:var(--muted);font-family:\'DM Mono\',monospace';
+    const list=document.getElementById('bList'); list.parentNode.insertBefore(n,list);
+  }
+  n.innerHTML=html;
+}
+
 async function bLoad(){
   const el=document.getElementById('bList');
+  // Показываем прошлый список сразу — но только на первом заходе.
+  // После сохранения/удаления allBookings уже актуален, подменять его старой копией нельзя.
+  let shownFromCache=false;
+  if(!allBookings.length){
+    const c=bCacheRead();
+    if(c){
+      allBookings=c.data; bRender(); bUpdateStats(); shownFromCache=true;
+      const t=new Date(c.ts).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+      bSyncNote(`список от ${t} · обновляю…`);
+    }
+  }
   try {
     const data=await gasGet('getBookings',(n,total)=>{
-      if(el && n>1) el.innerHTML=`<div class="b-loading">Загрузка… попытка ${n} из ${total}</div>`;
+      if(shownFromCache){ if(n>1) bSyncNote(`обновляю… попытка ${n} из ${total}`); }
+      else if(el && n>1) el.innerHTML=`<div class="b-loading">Загрузка… попытка ${n} из ${total}</div>`;
     });
     console.log('GAS response:', data);
     allBookings=Array.isArray(data)?data:[];
+    bCacheWrite(allBookings);
     bRender(); bUpdateStats();
+    bSyncNote('');
   } catch(e){
     console.error('GAS load failed:', e);
-    el.innerHTML='<div class="b-loading" style="color:var(--red)">Ошибка загрузки. Проверьте соединение.<br><button onclick="bLoad()" style="margin-top:12px;padding:6px 18px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--accent);cursor:pointer;font-family:\'DM Mono\',monospace">Повторить</button></div>';
+    const retryBtn='<button onclick="bLoad()" style="margin-left:8px;padding:3px 12px;font-size:11px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--accent);cursor:pointer;font-family:\'DM Mono\',monospace">Обновить</button>';
+    if(shownFromCache){
+      // связи нет, но работать можно — список остаётся, просто честно помечен
+      bSyncNote(`<span style="color:var(--red)">нет связи, список может быть неактуален</span>${retryBtn}`);
+    } else {
+      el.innerHTML='<div class="b-loading" style="color:var(--red)">Ошибка загрузки. Проверьте соединение.<br><button onclick="bLoad()" style="margin-top:12px;padding:6px 18px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--accent);cursor:pointer;font-family:\'DM Mono\',monospace">Повторить</button></div>';
+    }
   }
 }
 async function gasSave(action,data){
