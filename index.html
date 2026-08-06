@@ -944,15 +944,42 @@ function calcCustom(){
 // ══════════════════════════════════════
 // BOOKING LOAD
 // ══════════════════════════════════════
+// GAS отвечает нестабильно: изредка отдаёт 404, обычный ответ идёт 9-15 секунд.
+// Поэтому не сдаёмся с первой попытки, а пробуем ещё три раза с нарастающей паузой.
+const GAS_RETRY_DELAYS = [800, 2000, 4000];
+const GAS_TIMEOUT_MS   = 25000;
+async function gasGet(action, onAttempt){
+  let lastErr;
+  for (let i=0; i<=GAS_RETRY_DELAYS.length; i++){
+    if(onAttempt) onAttempt(i+1, GAS_RETRY_DELAYS.length+1);
+    const ctl=new AbortController();
+    const timer=setTimeout(()=>ctl.abort(), GAS_TIMEOUT_MS);
+    try {
+      const r=await fetch(GAS_URL+'?action='+action+'&_='+Date.now(),{mode:'cors',signal:ctl.signal});
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return await r.json();
+    } catch(e){
+      lastErr=e;
+      if(i<GAS_RETRY_DELAYS.length) await new Promise(res=>setTimeout(res,GAS_RETRY_DELAYS[i]));
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  throw lastErr;
+}
+
 async function bLoad(){
+  const el=document.getElementById('bList');
   try {
-    const r=await fetch(GAS_URL+'?action=getBookings',{mode:'cors'});
-    const data=await r.json();
+    const data=await gasGet('getBookings',(n,total)=>{
+      if(el && n>1) el.innerHTML=`<div class="b-loading">Загрузка… попытка ${n} из ${total}</div>`;
+    });
     console.log('GAS response:', data);
     allBookings=Array.isArray(data)?data:[];
     bRender(); bUpdateStats();
   } catch(e){
-    document.getElementById('bList').innerHTML='<div class="b-loading" style="color:var(--red)">Ошибка загрузки. Проверьте соединение.</div>';
+    console.error('GAS load failed:', e);
+    el.innerHTML='<div class="b-loading" style="color:var(--red)">Ошибка загрузки. Проверьте соединение.<br><button onclick="bLoad()" style="margin-top:12px;padding:6px 18px;font-size:12px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--accent);cursor:pointer;font-family:\'DM Mono\',monospace">Повторить</button></div>';
   }
 }
 async function gasSave(action,data){
@@ -2285,8 +2312,7 @@ function refreshWalletBalance(){
 function updateWallet(){refreshWalletBalance();}
 async function loadWallet(){
   try{
-    const r=await fetch(GAS_URL+'?action=getWallet',{mode:'cors'});
-    const data=await r.json();
+    const data=await gasGet('getWallet');
     if(!_walletSaving){
       if(data&&typeof data.paid!=='undefined') localStorage.setItem('walletPaid',data.paid||0);
     }
