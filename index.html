@@ -637,6 +637,9 @@ function formatPrice(p, curs) {
   return parts.join(' / ');
 }
 
+// Билеты — только донги: цена фиксирована в ₫, пересчёт в другие валюты не показываем
+function formatTicket(p) { return fmtVNDticket(p.vnd); }
+
 function toast(msg) {
   const el=document.getElementById('toast');
   el.textContent=msg||'✓ Скопировано';
@@ -923,7 +926,7 @@ function pCalcCopy(idx){
   const total={usd:+totalEl.dataset.tusd,rub:+totalEl.dataset.trub,vnd:+totalEl.dataset.tvnd,usdt:+totalEl.dataset.tusdt};
   let text=t.icon+' '+t.name+'\n\n';
   rows.forEach(r=>text+=r.label+' × '+r.n+' — '+formatPrice(r,cursF)+'\n');
-  if(tickets.length){text+='\nВходные билеты:\n'; tickets.forEach(r=>text+=r.label+' × '+r.n+' — '+formatPrice(r,cursF)+'\n');}
+  if(tickets.length){text+='\nВходные билеты:\n'; tickets.forEach(r=>text+=r.label+' × '+r.n+' — '+formatTicket(r)+'\n');}
   if(transferUSD) text+='\nТрансфер — '+formatPrice(calcFromUSD(transferUSD,currentRates),cursF)+'\n';
   text+='\nИтого: '+formatPrice(total,cursF);
   copyText(text.trim());
@@ -1174,7 +1177,7 @@ function bcUpdate(bid){
   document.getElementById(`${tid}-total`).textContent='Итого: '+formatPrice(total,cF);
   // breakdown только билеты
   document.getElementById(`${tid}-breakdown`).textContent=
-    tickets.map(r=>r.label+' × '+r.n+' — '+formatPrice(r.p,cF)).join('\n');
+    tickets.map(r=>r.label+' × '+r.n+' — '+formatTicket(r.p)).join('\n');
   resEl.dataset.rows=JSON.stringify([
     ...(adultN?[{label:'Взрослый',n:adultN,usd:adultUSD*adultN,rub:calcFromUSD(adultUSD*adultN,R).rub,vnd:calcFromUSD(adultUSD*adultN,R).vnd,usdt:calcFromUSD(adultUSD*adultN,R).usdt}]:[]),
     ...(childN&&tour.rows[1]?[{label:'Ребёнок',n:childN,usd:childUSD*childN,rub:calcFromUSD(childUSD*childN,R).rub,vnd:calcFromUSD(childUSD*childN,R).vnd,usdt:calcFromUSD(childUSD*childN,R).usdt}]:[])
@@ -1193,7 +1196,7 @@ function bcCopy(bid){
   const total={usd:+resEl.dataset.tusd,rub:+resEl.dataset.trub,vnd:+resEl.dataset.tvnd,usdt:+resEl.dataset.tusdt};
   let text=(tour?tour.icon+' ':'')+b.route+'\n\n';
   rows.forEach(r=>text+=r.label+' × '+r.n+' — '+formatPrice(r,cF)+'\n');
-  if(tickets.length){text+='\nВходные билеты:\n'; tickets.forEach(r=>text+=r.label+' × '+r.n+' — '+formatPrice(r,cF)+'\n');}
+  if(tickets.length){text+='\nВходные билеты:\n'; tickets.forEach(r=>text+=r.label+' × '+r.n+' — '+formatTicket(r)+'\n');}
   text+='\nИтого: '+formatPrice(total,cF);
   copyText(text.trim());
 }
