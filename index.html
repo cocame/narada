@@ -1265,7 +1265,8 @@ function bcCopy(bid){
   const rows=JSON.parse(resEl.dataset.rows||'[]');
   const tickets=JSON.parse(resEl.dataset.tickets||'[]');
   const total={usd:+resEl.dataset.tusd,rub:+resEl.dataset.trub,vnd:+resEl.dataset.tvnd,usdt:+resEl.dataset.tusdt};
-  let text=(tour?tour.icon+' ':'')+b.route+'\n\n';
+  const bcPlat=bDetectPlatform(b);
+  let text=(tour?tour.icon+' ':'')+b.route+(bcPlat?' · '+bcPlat:'')+'\n\n';
   rows.forEach(r=>text+=r.label+' × '+r.n+' — '+formatPrice(r,cF)+'\n');
   if(tickets.length){text+='\nВходные билеты:\n'; tickets.forEach(r=>text+=r.label+' × '+r.n+' — '+formatPrice(r,cF)+'\n');}
   text+='\nИтого: '+formatPrice(total,cF);
@@ -1284,11 +1285,20 @@ function editComm(id){
   gasSave('updateBooking',b).then(()=>bUpdateStats());
 }
 
+// упоминание платформы словом в заметке; «без спутника» не считается
+function bPlatMentioned(txt,re){
+  let m; re.lastIndex=0;
+  while((m=re.exec(txt))!==null){ if(!/без\s*$/.test(txt.slice(Math.max(0,m.index-6),m.index))) return true; }
+  return false;
+}
 function bDetectPlatform(b){
   const n=b.notes||'';
   if(n.includes('‌S')) return 'Sputnik8';
   if(n.includes('‌T')) return 'Tripster';
   if(b.platform) return b.platform;
+  const nt=n.replace(/‌[TS]/g,'').replace(/​/g,'').toLowerCase();
+  if(bPlatMentioned(nt,/спутник|sputnik|sp8/g)) return 'Sputnik8';
+  if(bPlatMentioned(nt,/трипстер|tripster/g)) return 'Tripster';
   if(!b.customPriceAdult) return '';
   const tour=TOURS.find(t=>t.key===b.route); if(!tour||!tour.rows[0]) return '';
   for(const pl of PLATFORMS){ const _pp=(pl.rate===0.24&&tour.rows[0].sp8)?tour.rows[0].sp8:(pl.rate===0.22&&tour.rows[0].tr)?tour.rows[0].tr:Math.ceil(tour.rows[0].usd/(1-pl.rate)); if(_pp==b.customPriceAdult) return pl.name; }
@@ -1312,7 +1322,7 @@ function bCopyCard(id){
     amountLine||'',
     b.prepay?'Предоплата: '+b.prepay+' '+(b.prepayCur||''):'',
     b.onsite?'На месте: '+b.onsite+' '+(b.onsiteCur||''):'',
-    (b.notes||'').replace(/​/g,'')
+    (b.notes||'').replace(/​/g,'').replace(/‌[TS]/g,'')
   ].filter(Boolean);
   copyText(lines.join('\n'));
 }
