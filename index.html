@@ -254,7 +254,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
     <div id="price-list"></div>
     <div class="custom-price-wrap">
       <div class="custom-price-card">
-        <div class="custom-price-title">Своя цена — введи сумму в $ (по курсу, без наценки)</div>
+        <div class="custom-price-title">Своя цена — введи сумму в $</div>
         <div class="custom-price-row">
           <input class="custom-price-input" type="number" id="customUSD" min="1" placeholder="0" oninput="calcCustom()">
           <div class="custom-price-label">$</div>
@@ -937,9 +937,7 @@ function calcCustom(){
   const usd=parseFloat(document.getElementById('customUSD').value)||0;
   const el=document.getElementById('customResult');
   if(!usd||!currentRates){el.innerHTML='';return;}
-  // чистый пересчёт по курсу, без наценки: сумма уже итоговая
-  const R=currentRates;
-  const p={usd, rub:usd*R.RUB, vnd:usd*R.VND, usdt:usd*R.USDT};
+  const p=calcFromUSD(usd,currentRates);
   el.innerHTML=`<span class="r-usd">${fmtUSD(p.usd)}</span><span class="r-rub">${fmtRUB(p.rub)}</span><span class="r-vnd">${fmtVND(p.vnd)}</span><span class="r-usdt">${fmtUSDT(p.usdt)}</span>`;
 }
 
