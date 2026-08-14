@@ -1473,9 +1473,9 @@ const trCache={};
 // Сокращения переводчик не понимает — раскрываем их заранее
 function expandRu(s){
   return (s||'')
-    .replace(/\bком\./gi,'комната')
-    .replace(/\bном\./gi,'номер')
-    .replace(/\bкв\./gi,'квартира');
+    .replace(/ком\./gi,'комната')
+    .replace(/ном\./gi,'номер')
+    .replace(/кв\./gi,'квартира');
 }
 async function trRuVi(text){
   const t=expandRu(text).trim();
