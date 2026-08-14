@@ -1415,6 +1415,11 @@ function guidePeople(n){
   if(a>=2&&a<=4&&(b<10||b>=20)) return n+' человека';
   return n+' человек';
 }
+// Названия маршрутов для карточки гиду — без сокращений.
+// Только здесь: в прайсе и списке броней всё остаётся как есть.
+const ROUTE_RU={
+  'БХ ВЕЧЕР':'БА НА ХИЛЛС ВЕЧЕР',
+};
 // Вьетнамская часть: дата, маршрут, число людей.
 // Отель не переводим — это название.
 const ROUTE_VI={
@@ -1445,7 +1450,7 @@ function bCopyGuide(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   const pax=(parseInt(b.adults)||0)+(parseInt(b.children)||0)+(parseInt(b.infants)||0);
   const hotel=b.hotel||'—';
-  const ru=[guideDate(b.date), b.route||'—', hotel, pax?guidePeople(pax):'—'];
+  const ru=[guideDate(b.date), ROUTE_RU[b.route]||b.route||'—', hotel, pax?guidePeople(pax):'—'];
   const vi=[guideDateVi(b.date), ROUTE_VI[b.route]||b.route||'—', hotel, pax?pax+' người':'—'];
   copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n'));
 }
