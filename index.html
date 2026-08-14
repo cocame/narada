@@ -1518,9 +1518,9 @@ function bCopyGuide(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   const pax=(parseInt(b.adults)||0)+(parseInt(b.children)||0)+(parseInt(b.infants)||0);
   const hotel=b.hotel||'—';
-  const ru=[guideDate(b.date), ROUTE_RU[b.route]||b.route||'—', hotel, pax?guidePeople(pax):'—'];
+  const ru=[guideDate(b.date), ROUTE_RU[b.route]||b.route||'—', hotel, pax?guidePeople(pax)+' + гид':'—'];
   // переведённый отель, если перевод уже доехал; иначе словарь как запасной
-  const vi=[guideDateVi(b.date), ROUTE_VI[b.route]||b.route||'—', b.hotelVi||hotelVi(hotel), pax?pax+' người':'—'];
+  const vi=[guideDateVi(b.date), ROUTE_VI[b.route]||b.route||'—', b.hotelVi||hotelVi(hotel), pax?pax+' người + hướng dẫn viên':'—'];
   copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n'));
 }
 
