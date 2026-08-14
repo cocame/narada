@@ -964,7 +964,7 @@ async function gasGet(action, onAttempt){
     const ctl=new AbortController();
     const timer=setTimeout(()=>ctl.abort(), GAS_TIMEOUT_MS);
     try {
-      const r=await fetch(GAS_URL+'?action='+action+'&_='+Date.now(),{mode:'cors',signal:ctl.signal});
+      const r=await fetch(GAS_URL+'?action='+action+'&key='+encodeURIComponent(editKey())+'&_='+Date.now(),{mode:'cors',signal:ctl.signal});
       if(!r.ok) throw new Error('HTTP '+r.status);
       return await r.json();
     } catch(e){
@@ -1050,7 +1050,23 @@ const KEY_STORE='naradaEditKey';
   }
 })();
 function editKey(){ try{ return localStorage.getItem(KEY_STORE)||''; }catch(e){ return ''; } }
-function canEdit(){ return !!editKey(); }
+
+// Уровень доступа определяет скрипт, а не страница: подделать нельзя.
+let ACCESS={read:false,write:false};
+async function loadAccess(){
+  try{
+    const r=await fetch(GAS_URL+'?action=access&key='+encodeURIComponent(editKey())+'&_='+Date.now(),{mode:'cors'});
+    const j=await r.json();
+    ACCESS={read:!!j.read,write:!!j.write};
+  }catch(e){
+    // Скрипт ещё не знает про access — работаем по-старому,
+    // доступ на запись всё равно проверяет сервер.
+    ACCESS={read:true,write:!!editKey()};
+  }
+  return ACCESS;
+}
+function canEdit(){ return !!ACCESS.write; }
+function canRead(){ return !!ACCESS.read; }
 
 async function gasSave(action,data){
   if(!canEdit()){ toast('Только просмотр'); return {success:false,readonly:true}; }
@@ -2479,8 +2495,14 @@ async function loadWallet(){
   updateStatusBar(rates);
   renderPriceCards(rates,false);
 })();
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadAccess();
   document.body.classList.toggle('ro', !canEdit());
+  if(!canRead()){
+    const el=document.getElementById('bList');
+    if(el) el.innerHTML='<div class="b-loading">Нет доступа к бронированиям.<br><span style="font-size:11px">Откройте страницу по ссылке с ключом.</span></div>';
+    return;
+  }
   bLoad(); loadWallet();
 });
 </script>
