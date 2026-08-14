@@ -1401,14 +1401,28 @@ function bBreakdown(b){
 }
 
 // Карточка для гида: без цен и контактов — дата, маршрут, отель, число людей.
+// Всё словами, без сокращений.
+function guideDate(s){
+  if(!s) return '—';
+  const d=new Date(s+'T00:00:00'); if(isNaN(d)) return s;
+  const M=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  const W=['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+  return d.getDate()+' '+M[d.getMonth()]+' ('+W[d.getDay()]+')';
+}
+function guidePeople(n){
+  const a=n%10, b=n%100;
+  if(a===1&&b!==11) return n+' человек';
+  if(a>=2&&a<=4&&(b<10||b>=20)) return n+' человека';
+  return n+' человек';
+}
 function bCopyGuide(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   const pax=(parseInt(b.adults)||0)+(parseInt(b.children)||0)+(parseInt(b.infants)||0);
   copyText([
-    b.date?formatDateLabel(b.date):'—',
+    guideDate(b.date),
     b.route||'—',
     b.hotel||'—',
-    pax?pax+' чел':'—'
+    pax?guidePeople(pax):'—'
   ].join('\n'));
 }
 
