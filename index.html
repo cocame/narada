@@ -1415,15 +1415,39 @@ function guidePeople(n){
   if(a>=2&&a<=4&&(b<10||b>=20)) return n+' человека';
   return n+' человек';
 }
+// Вьетнамская часть: дата, маршрут, число людей.
+// Отель не переводим — это название.
+const ROUTE_VI={
+  'ХЮЭ':'Huế',
+  'ХОЙАН':'Hội An',
+  'ОСТРОВА ЧАМ':'Cù Lao Chàm',
+  'ДАНАНГ':'Đà Nẵng',
+  'БА НА ХИЛЛС':'Bà Nà Hills',
+  'БХ ВЕЧЕР':'Bà Nà Hills (buổi tối)',
+  'HOT SPRINGS':'Suối khoáng nóng',
+  'VINWONDERS':'VinWonders',
+  'РЫБАЛКА':'Câu cá',
+  'МОРСКАЯ ПРОГУЛКА':'Đi thuyền trên biển',
+  'ХАЙВАН':'Đèo Hải Vân',
+  'АВТОРСКИЙ ТУР ХАЙВАН':'Đèo Hải Vân (tour riêng)',
+  'ДОНГ ЗЯНГ':'Đông Giang',
+  'ДОНГ ЗЯН':'Đông Giang',
+  'МИШОН':'Mỹ Sơn',
+  'СЕРФИНГ':'Lướt sóng',
+};
+function guideDateVi(s){
+  if(!s) return '—';
+  const d=new Date(s+'T00:00:00'); if(isNaN(d)) return s;
+  const W=['Chủ nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+  return d.getDate()+' tháng '+(d.getMonth()+1)+' ('+W[d.getDay()]+')';
+}
 function bCopyGuide(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   const pax=(parseInt(b.adults)||0)+(parseInt(b.children)||0)+(parseInt(b.infants)||0);
-  copyText([
-    guideDate(b.date),
-    b.route||'—',
-    b.hotel||'—',
-    pax?guidePeople(pax):'—'
-  ].join('\n'));
+  const hotel=b.hotel||'—';
+  const ru=[guideDate(b.date), b.route||'—', hotel, pax?guidePeople(pax):'—'];
+  const vi=[guideDateVi(b.date), ROUTE_VI[b.route]||b.route||'—', hotel, pax?pax+' người':'—'];
+  copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n'));
 }
 
 function bCopyCard(id){
