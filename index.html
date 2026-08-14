@@ -1488,10 +1488,29 @@ async function trRuVi(text){
   }catch(e){}
   return null;
 }
+// Переводим только русские куски. Название отеля, номера и ссылки
+// остаются как есть — по латинице гид найдёт место на картах.
+async function hotelForGuide(s){
+  const toks=(s||'').split(/\s+/).filter(Boolean);
+  const out=[]; let buf=[];
+  const flush=async()=>{
+    if(!buf.length) return;
+    const ph=buf.join(' ');
+    out.push((await trRuVi(ph))||hotelVi(ph));
+    buf=[];
+  };
+  for(const t of toks){
+    if(/[а-яё]/i.test(t)) buf.push(t);
+    else { await flush(); out.push(t); }
+  }
+  await flush();
+  return out.join(' ');
+}
 // Заранее переводим отель, когда карточку раскрывают
 async function bPrefetchGuide(id){
   const b=allBookings.find(x=>x.id==id); if(!b||b.hotelVi) return;
-  const v=await trRuVi(b.hotel);
+  if(!/[а-яё]/i.test(b.hotel||'')) return;
+  const v=await hotelForGuide(b.hotel);
   if(v){ b.hotelVi=v; }
 }
 
