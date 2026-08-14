@@ -1470,8 +1470,15 @@ function hotelVi(s){
 // Настоящий перевод русского текста через переводчик Google в Apps Script.
 // Результат кладём в бронь, чтобы копирование оставалось мгновенным.
 const trCache={};
+// Сокращения переводчик не понимает — раскрываем их заранее
+function expandRu(s){
+  return (s||'')
+    .replace(/\bком\./gi,'комната')
+    .replace(/\bном\./gi,'номер')
+    .replace(/\bкв\./gi,'квартира');
+}
 async function trRuVi(text){
-  const t=(text||'').trim();
+  const t=expandRu(text).trim();
   if(!t || !/[а-яё]/i.test(t)) return t;
   if(trCache[t]!==undefined) return trCache[t];
   try{
