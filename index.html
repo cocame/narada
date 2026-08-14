@@ -225,6 +225,14 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
   .price-cell{font-size:10.5px}
   .tour-name{font-size:14px}
 }
+/* режим только для чтения */
+body.ro .b-add-btn,
+body.ro .b-action-btn,
+body.ro .b-status-row{display:none!important}
+body.ro .b-notes-row textarea{pointer-events:none;opacity:.8}
+body.ro .b-comm-val{pointer-events:none;border-bottom:none}
+.ro-badge{display:none;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:2px 8px;font-family:'DM Mono',monospace;margin-left:auto}
+body.ro .ro-badge{display:inline-block}
 </style>
 </head>
 <body>
@@ -328,6 +336,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
       </select>
       <input type="date" class="b-filter-select" id="bFilterDate" onchange="bRender()">
       <button class="b-add-btn" onclick="bOpenModal()">+</button>
+      <span class="ro-badge">только просмотр</span>
     </div>
     <div class="b-list" id="bList"><div class="b-loading">Загрузка…</div></div>
   </div>
@@ -1026,12 +1035,31 @@ async function bLoad(){
     }
   }
 }
+// ── ДОСТУП ──
+// Ключ приходит один раз ссылкой ?key=…, дальше живёт в браузере.
+// Без ключа страница только для чтения: кнопки скрыты, а запись
+// всё равно отклонит скрипт — ключа в исходниках страницы нет.
+const KEY_STORE='naradaEditKey';
+(function(){
+  const p=new URLSearchParams(location.search);
+  const k=p.get('key');
+  if(k){
+    localStorage.setItem(KEY_STORE,k);
+    p.delete('key');
+    history.replaceState(null,'',location.pathname+(p.toString()?'?'+p.toString():''));
+  }
+})();
+function editKey(){ try{ return localStorage.getItem(KEY_STORE)||''; }catch(e){ return ''; } }
+function canEdit(){ return !!editKey(); }
+
 async function gasSave(action,data){
-  const r=await fetch(GAS_URL,{method:'POST',mode:'cors',body:JSON.stringify({action,...data}),headers:{'Content-Type':'text/plain'}});
+  if(!canEdit()){ toast('Только просмотр'); return {success:false,readonly:true}; }
+  const r=await fetch(GAS_URL,{method:'POST',mode:'cors',body:JSON.stringify({action,key:editKey(),...data}),headers:{'Content-Type':'text/plain'}});
   return r.json();
 }
 async function gasDelete(id){
-  const r=await fetch(GAS_URL,{method:'POST',mode:'cors',body:JSON.stringify({action:'deleteBooking',id}),headers:{'Content-Type':'text/plain'}});
+  if(!canEdit()){ toast('Только просмотр'); return {success:false,readonly:true}; }
+  const r=await fetch(GAS_URL,{method:'POST',mode:'cors',body:JSON.stringify({action:'deleteBooking',key:editKey(),id}),headers:{'Content-Type':'text/plain'}});
   return r.json();
 }
 
@@ -2451,7 +2479,10 @@ async function loadWallet(){
   updateStatusBar(rates);
   renderPriceCards(rates,false);
 })();
-document.addEventListener('DOMContentLoaded', () => { bLoad(); loadWallet(); });
+document.addEventListener('DOMContentLoaded', () => {
+  document.body.classList.toggle('ro', !canEdit());
+  bLoad(); loadWallet();
+});
 </script>
 </body>
 </html>
