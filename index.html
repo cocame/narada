@@ -659,9 +659,29 @@ function toast(msg) {
   el._t=setTimeout(()=>el.style.opacity='0',1800);
 }
 function copyText(txt) {
-  try { navigator.clipboard.writeText(txt); }
-  catch(e) { const ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
-  toast();
+  // Запасной способ — для телефонов и браузеров, где буфер закрыт
+  const fallback=()=>{
+    const ta=document.createElement('textarea');
+    ta.value=txt; ta.setAttribute('readonly','');
+    ta.style.cssText='position:fixed;top:0;left:0;width:1px;height:1px;opacity:0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try{ ta.setSelectionRange(0,txt.length); }catch(e){}
+    let ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    return ok;
+  };
+  // Раньше отказ буфера проглатывался молча: тост говорил «скопировано»,
+  // а в буфере было пусто.
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt)
+        .then(()=>toast())
+        .catch(()=>toast(fallback()?'✓ Скопировано':'Не удалось скопировать'));
+      return;
+    }
+  }catch(e){}
+  toast(fallback()?'✓ Скопировано':'Не удалось скопировать');
 }
 
 function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
