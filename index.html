@@ -180,6 +180,9 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .b-status-btn.act-cancel{background:rgba(192,57,43,.08);color:var(--red);border-color:var(--red)}
 .b-status-btn.act-waiting{background:rgba(46,139,87,.08);color:var(--green);border-color:var(--green)}
 .b-copy-card-btn{display:block;width:100%;margin-top:10px;padding:8px 0;background:none;border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;text-align:center}
+.b-copy-row{display:flex;gap:6px}
+.b-copy-row .b-copy-card-btn{flex:1}
+.b-copy-guide-btn{flex:0 0 34%!important;border-color:var(--accent2)!important;color:var(--accent2)!important}
 .b-copy-card-btn:hover{border-color:var(--accent);color:var(--accent)}
 
 /* MODAL */
@@ -1209,7 +1212,10 @@ function bCardHTML(b){
         <label>Примечание</label>
         <textarea onclick="event.stopPropagation()" onchange="event.stopPropagation();bSaveNote('${b.id}',this.value)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:40px;color:var(--text)">${(b.notes||'').replace(/​/g,'').replace(/‌[TS]/g,'')}</textarea>
       </div>
-      <button class="b-copy-card-btn" onclick="event.stopPropagation();bCopyCard('${b.id}')">Скопировать карточку</button>
+      <div class="b-copy-row">
+        <button class="b-copy-card-btn" onclick="event.stopPropagation();bCopyCard('${b.id}')">Скопировать карточку</button>
+        <button class="b-copy-card-btn b-copy-guide-btn" onclick="event.stopPropagation();bCopyGuide('${b.id}')">Гиду</button>
+      </div>
       <div class="b-status-row">
         <button class="b-status-btn ${b.tripStatus==='done'?'act-done':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','done')">Ездил</button>
         <button class="b-status-btn ${b.tripStatus==='cancelled'?'act-cancel':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','cancelled')">Отмена</button>
@@ -1392,6 +1398,18 @@ function bBreakdown(b){
   const _tr=parseFloat(b.transfer)||0;
   if(_tr) out.push({label:'Трансфер',val:fmtUSD(_tr)});
   return out;
+}
+
+// Карточка для гида: без цен и контактов — дата, маршрут, отель, число людей.
+function bCopyGuide(id){
+  const b=allBookings.find(x=>x.id==id); if(!b) return;
+  const pax=(parseInt(b.adults)||0)+(parseInt(b.children)||0)+(parseInt(b.infants)||0);
+  copyText([
+    b.date?formatDateLabel(b.date):'—',
+    b.route||'—',
+    b.hotel||'—',
+    pax?pax+' чел':'—'
+  ].join('\n'));
 }
 
 function bCopyCard(id){
