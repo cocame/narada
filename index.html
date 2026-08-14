@@ -1227,7 +1227,9 @@ function bCardHTML(b){
 }
 
 function bToggle(id){
-  document.getElementById('bexp-'+id).classList.toggle('open');
+  const el=document.getElementById('bexp-'+id);
+  el.classList.toggle('open');
+  if(el.classList.contains('open')) bPrefetchGuide(id);
 }
 
 // Init inline calc counts from booking data
@@ -1438,7 +1440,6 @@ const ROUTE_VI={
   'ДОНГ ЗЯНГ':'Đông Giang',
   'ДОНГ ЗЯН':'Đông Giang',
   'МИШОН':'Mỹ Sơn',
-  'СЕРФИНГ':'Lướt sóng',
 };
 function guideDateVi(s){
   if(!s) return '—';
@@ -1446,12 +1447,54 @@ function guideDateVi(s){
   const W=['Chủ nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
   return d.getDate()+' tháng '+(d.getMonth()+1)+' ('+W[d.getDay()]+')';
 }
+// Название отеля не трогаем — оно и во вьетнамских картах латиницей.
+// Переводим только русские слова вокруг него: номер, резиденция и прочее.
+const HOTEL_PHRASES=[
+  ['номер комнаты','phòng'],
+  ['ком\\.','phòng'],
+  ['локация по договоренности','địa điểm theo thỏa thuận'],
+  ['жилой дом','chung cư'],
+  ['на картах','trên bản đồ'],
+];
+const HOTEL_WORDS={
+  'номер':'phòng','комната':'phòng','комнаты':'phòng','ком':'phòng',
+  'резиденция':'nơi ở','апартаменты':'căn hộ','квартира':'căn hộ',
+  'отель':'khách sạn','дом':'nhà','вход':'lối vào','входа':'lối vào','порт':'cảng',
+};
+function hotelVi(s){
+  let t=s||'';
+  HOTEL_PHRASES.forEach(([from,to])=>{ t=t.replace(new RegExp(from,'gi'),to); });
+  return t.replace(/[а-яё]+/gi, w => HOTEL_WORDS[w.toLowerCase()] || w);
+}
+
+// Настоящий перевод русского текста через переводчик Google в Apps Script.
+// Результат кладём в бронь, чтобы копирование оставалось мгновенным.
+const trCache={};
+async function trRuVi(text){
+  const t=(text||'').trim();
+  if(!t || !/[а-яё]/i.test(t)) return t;
+  if(trCache[t]!==undefined) return trCache[t];
+  try{
+    const r=await fetch(GAS_URL+'?action=tr&key='+encodeURIComponent(editKey())+'&text='+encodeURIComponent(t)+'&_='+Date.now(),{mode:'cors'});
+    const j=await r.json();
+    if(j && j.text){ trCache[t]=j.text; return j.text; }
+  }catch(e){}
+  return null;
+}
+// Заранее переводим отель, когда карточку раскрывают
+async function bPrefetchGuide(id){
+  const b=allBookings.find(x=>x.id==id); if(!b||b.hotelVi) return;
+  const v=await trRuVi(b.hotel);
+  if(v){ b.hotelVi=v; }
+}
+
 function bCopyGuide(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   const pax=(parseInt(b.adults)||0)+(parseInt(b.children)||0)+(parseInt(b.infants)||0);
   const hotel=b.hotel||'—';
   const ru=[guideDate(b.date), ROUTE_RU[b.route]||b.route||'—', hotel, pax?guidePeople(pax):'—'];
-  const vi=[guideDateVi(b.date), ROUTE_VI[b.route]||b.route||'—', hotel, pax?pax+' người':'—'];
+  // переведённый отель, если перевод уже доехал; иначе словарь как запасной
+  const vi=[guideDateVi(b.date), ROUTE_VI[b.route]||b.route||'—', b.hotelVi||hotelVi(hotel), pax?pax+' người':'—'];
   copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n'));
 }
 
