@@ -1157,6 +1157,8 @@ function bCardHTML(b){
           });
           if(tkLines) lines+=`<div style="margin-top:4px;padding-top:4px;border-top:1px dashed var(--border2)"><div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;font-family:'DM Mono',monospace;padding:2px 0">Входные билеты</div>${tkLines}</div>`;
         }
+        const _tr=parseFloat(b.transfer)||0;
+        if(_tr) lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-top:1px dashed var(--border2);margin-top:4px"><span style="color:var(--muted)">Трансфер</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${fmtUSD(_tr)}</span></div>`;
         return lines?`<div style="margin-top:8px;padding:8px 10px;background:rgba(0,0,0,.03);border-radius:6px;border:1px dashed var(--border)">${lines}</div>`:'';
       })()}
       <div class="b-notes-row">
@@ -1404,6 +1406,8 @@ function bEdit(id){
   document.getElementById('fOnsite').value=b.onsite||'';
   document.getElementById('fOnsiteCur').value=b.onsite?(b.onsiteCur||b.currency||'VND'):(b.currency||'VND');
   document.getElementById('fNotes').value=(b.notes||'').replace(/​/g,'');
+  // трансфер: без этого он обнулялся при каждом открытии на редактирование
+  const _etr=document.getElementById('fTransfer'); if(_etr) _etr.value=b.transfer||'';
   bUpdatePreview();
   // Восстановить галочку Индивидуально
   if(b.isIndividual||(b.notes||'').endsWith('​')){
@@ -2129,6 +2133,7 @@ function bGetFormData(){
     onsite:document.getElementById(p+'Onsite').value,
     onsiteCur:document.getElementById(p+'OnsiteCur').value,
     ticketCounts:(()=>{const _c=p==='f'?fTickCounts:pfTickCounts;const _x=p==='f'?'f_':'pf_';return tour&&tour.tickets?tour.tickets.map((_,i)=>_c[_x+i]||0):[];})(),
+    transfer:parseFloat(document.getElementById(p+'Transfer')?.value)||0,
     commission:comm,
     isIndividual,
     customPriceAdult:route==='ДРУГОЕ'?0:adultUSD,
