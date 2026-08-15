@@ -1047,6 +1047,7 @@ async function bLoad(){
     bCacheWrite(allBookings);
     bRender(); bUpdateStats();
     bSyncNote('');
+    bWarmGuide();
   } catch(e){
     console.error('GAS load failed:', e);
     const retryBtn='<button onclick="bLoad()" style="margin-left:8px;padding:3px 12px;font-size:11px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--accent);cursor:pointer;font-family:\'DM Mono\',monospace">Обновить</button>';
@@ -1526,12 +1527,32 @@ async function hotelForGuide(s){
   await flush();
   return out.join(' ');
 }
-// Заранее переводим отель, когда карточку раскрывают
+// Переводы отелей живут отдельно от списка броней: bLoad заменяет
+// объекты целиком, а кэш переживает перезагрузку списка.
+const hotelViCache={};
 async function bPrefetchGuide(id){
   const b=allBookings.find(x=>x.id==id); if(!b||b.hotelVi) return;
-  if(!/[а-яё]/i.test(b.hotel||'')) return;
-  const v=await hotelForGuide(b.hotel);
-  if(v){ b.hotelVi=v; }
+  const h=b.hotel||'';
+  if(!/[а-яё]/i.test(h)) return;
+  if(hotelViCache[h]!==undefined){ b.hotelVi=hotelViCache[h]; return; }
+  const v=await hotelForGuide(h);
+  if(v){ hotelViCache[h]=v; b.hotelVi=v; }
+}
+
+// Готовим переводы для всего списка заранее, в фоне.
+// Иначе «Гиду», нажатое сразу после раскрытия карточки, попадает
+// на неготовый перевод и в блоке остаётся русский текст.
+let guideWarming=false;
+async function bWarmGuide(){
+  if(guideWarming) return;
+  guideWarming=true;
+  try{
+    for(const b of allBookings.slice()){
+      if(b.hotelVi || !/[а-яё]/i.test(b.hotel||'')) continue;
+      await bPrefetchGuide(b.id);
+      await new Promise(r=>setTimeout(r,120));  // не долбим скрипт очередью
+    }
+  } finally { guideWarming=false; }
 }
 
 function bCopyGuide(id){
