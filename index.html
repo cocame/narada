@@ -390,6 +390,7 @@ body.ro .ro-badge{display:inline-block}
             <div style="display:flex;gap:6px">
               <input type="text" id="fPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('f')">
               <select id="fPrepayCur" onchange="prepayAutoFill('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+              <input type="date" id="fPrepayDate" title="дата предоплаты" style="flex:0 0 138px">
             </div>
           </div>
           <div class="form-group">
@@ -468,6 +469,7 @@ body.ro .ro-badge{display:inline-block}
               <div style="display:flex;gap:6px">
                 <input type="text" id="pfPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('pf')">
                 <select id="pfPrepayCur" onchange="prepayAutoFill('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+                <input type="date" id="pfPrepayDate" title="дата предоплаты" style="flex:0 0 138px">
               </div>
             </div>
             <div class="form-group">
@@ -686,6 +688,12 @@ function copyText(txt) {
 
 function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function tomorrowStr(){ const d=new Date(); d.setDate(d.getDate()+1); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+// Короткая дата для предоплаты: 15.08
+function shortDate(s){
+  if(!s) return '';
+  const p=String(s).split('-');
+  return p.length===3 ? p[2]+'.'+p[1] : String(s);
+}
 function formatDateLabel(s){
   if(!s||s==='—') return '—';
   const d=new Date(s+'T00:00:00'); if(isNaN(d)) return s;
@@ -1173,7 +1181,7 @@ function bCardHTML(b){
         <div class="b-exp-item"><label>Валюта</label><span>${b.currency||'—'}</span></div>
         <div class="b-exp-item"><label>Оплата</label><span>${b.payMethod||'—'}</span></div>
         <div class="b-exp-item"><label>Сумма</label><span>${b.totalAmount||'—'}</span></div>
-        <div class="b-exp-item"><label>Предоплата</label><span>${b.prepay?(b.prepay+' '+(b.prepayCur||'')):'—'}</span></div>
+        <div class="b-exp-item"><label>Предоплата</label><span>${b.prepay?(b.prepay+' '+(b.prepayCur||'')+(b.prepayDate?' · '+shortDate(b.prepayDate):'')):'—'}</span></div>
         <div class="b-exp-item"><label>На месте</label><span>${b.onsite?(b.onsite+' '+(b.onsiteCur||'')):'—'}</span></div>
         <div class="b-exp-item"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
         ${(()=>{const _p=bDetectPlatform(b);return _p?`<div class="b-exp-item"><label>Платформа</label><span style="color:var(--accent);font-weight:600">${_p}</span></div>`:'';})()}
@@ -1595,7 +1603,7 @@ function bCopyCard(id){
 
   const tail=[
     amountLine||'',
-    b.prepay?'Предоплата: '+b.prepay+' '+(b.prepayCur||''):'',
+    b.prepay?'Предоплата: '+b.prepay+' '+(b.prepayCur||'')+(b.prepayDate?' · '+shortDate(b.prepayDate):''):'',
     b.onsite?'На месте: '+b.onsite+' '+(b.onsiteCur||''):'',
     // сначала метка платформы целиком (‌T/‌S), затем осиротевшие невидимки
     (b.notes||'').replace(/‌[TS]/g,'').replace(/[​‌‍]/g,'').trim()
@@ -1678,6 +1686,7 @@ function bEdit(id){
   document.getElementById('fAmount').value=b.totalAmount||'';
   document.getElementById('fPrepay').value=b.prepay||'';
   document.getElementById('fPrepayCur').value=b.prepay?(b.prepayCur||b.currency||'VND'):(b.currency||'VND');
+  document.getElementById('fPrepayDate').value=b.prepayDate||'';
   document.getElementById('fOnsite').value=b.onsite||'';
   document.getElementById('fOnsiteCur').value=b.onsite?(b.onsiteCur||b.currency||'VND'):(b.currency||'VND');
   document.getElementById('fNotes').value=(b.notes||'').replace(/​/g,'');
@@ -1749,7 +1758,7 @@ function fCurrencyChanged(p){
 }
 
 function bClearForm(){
-  ['fDate','fContact','fHotel','fAmount','fNotes','fPrepay','fOnsite','pfDate','pfContact','pfHotel','pfAmount','pfNotes','pfPrepay','pfOnsite'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fDate','fContact','fHotel','fAmount','fNotes','fPrepay','fPrepayDate','fOnsite','pfDate','pfContact','pfHotel','pfAmount','pfNotes','pfPrepay','pfPrepayDate','pfOnsite'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['fPrepayCur','fOnsiteCur','pfPrepayCur','pfOnsiteCur'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='USD';});
   ['fRoute','pfRoute'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('fAdults').value=1; document.getElementById('fChildren').value=0; document.getElementById('fInfants').value=0;
@@ -2405,6 +2414,7 @@ function bGetFormData(){
     totalAmount:document.getElementById(p+'Amount').value,
     prepay:document.getElementById(p+'Prepay').value,
     prepayCur:document.getElementById(p+'PrepayCur').value,
+    prepayDate:document.getElementById(p+'PrepayDate')?.value||'',
     onsite:document.getElementById(p+'Onsite').value,
     onsiteCur:document.getElementById(p+'OnsiteCur').value,
     ticketCounts:(()=>{const _c=p==='f'?fTickCounts:pfTickCounts;const _x=p==='f'?'f_':'pf_';return tour&&tour.tickets?tour.tickets.map((_,i)=>_c[_x+i]||0):[];})(),
