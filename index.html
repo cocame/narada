@@ -1075,11 +1075,9 @@ const KEY_STORE='naradaEditKey';
 (function(){
   const p=new URLSearchParams(location.search);
   const k=p.get('key');
-  if(k){
-    localStorage.setItem(KEY_STORE,k);
-    p.delete('key');
-    history.replaceState(null,'',location.pathname+(p.toString()?'?'+p.toString():''));
-  }
+  // Ключ остаётся в адресе: тогда обычная закладка работает как надо,
+  // и доступ восстанавливается сам, если браузер очистит хранилище.
+  if(k) localStorage.setItem(KEY_STORE,k);
 })();
 function editKey(){ try{ return localStorage.getItem(KEY_STORE)||''; }catch(e){ return ''; } }
 
