@@ -419,17 +419,18 @@ body.ro .ro-badge{display:inline-block}
             <div style="font-size:12px;color:var(--muted)">Трансфер $</div>
             <input type="number" id="fTransfer" min="0" placeholder="0" oninput="fRecalc()" style="width:70px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)">
           </div>
-          <div id="fCalcResult" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);display:none">
-            <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px">Итого</div>
-            <div id="fCalcTotal" style="font-family:'DM Mono',monospace;font-size:16px;color:var(--green);margin-bottom:8px"></div>
-            <div id="fCalcBreak" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);line-height:1.7;margin-bottom:10px;white-space:pre-line"></div>
-            <button id="fInsertBtn" onclick="fInsertAmount()" style="width:100%;padding:8px 0;background:var(--accent);color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer">↓ Вставить сумму</button>
+          <div id="fCalcResult" style="display:none">
+            <div id="fCalcTotal"></div>
+            <div id="fCalcBreak"></div>
+            <button id="fInsertBtn" onclick="fInsertAmount()" style="display:none"></button>
           </div>
         </div>
         <div style="margin-top:10px">
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Сумма оплаты</div>
           <input type="text" id="fAmount" placeholder="заполнится автоматически" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px">
-        </div>
+        
+            <div class="pay-hint" id="fAmountHint"></div>
+          </div>
         <div class="comm-preview" style="margin-top:10px">
           <div><div class="cv" id="previewComm">$0</div><div class="cl">Ваша комиссия</div></div>
           <div><div class="cv" id="previewPax">0 чел.</div><div class="cl">Состав группы</div></div>
@@ -500,16 +501,17 @@ body.ro .ro-badge{display:inline-block}
               <div style="font-size:12px;color:var(--muted)">Трансфер $</div>
               <input type="number" id="pfTransfer" min="0" placeholder="0" oninput="pfRecalc()" style="width:70px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)">
             </div>
-            <div id="pfCalcResult" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border);display:none">
-              <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px">Итого</div>
-              <div id="pfCalcTotal" style="font-family:'DM Mono',monospace;font-size:16px;color:var(--green);margin-bottom:8px"></div>
-              <div id="pfCalcBreak" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);line-height:1.7;margin-bottom:10px;white-space:pre-line"></div>
-              <button id="pfInsertBtn" onclick="pfInsertAmount()" style="width:100%;padding:8px 0;background:var(--accent);color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer">↓ Вставить сумму</button>
+            <div id="pfCalcResult" style="display:none">
+              <div id="pfCalcTotal"></div>
+              <div id="pfCalcBreak"></div>
+              <button id="pfInsertBtn" onclick="pfInsertAmount()" style="display:none"></button>
             </div>
           </div>
           <div style="margin-top:10px">
             <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Сумма оплаты</div>
             <input type="text" id="pfAmount" placeholder="заполнится автоматически" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px">
+          
+            <div class="pay-hint" id="pfAmountHint"></div>
           </div>
           <div class="comm-preview" style="margin-top:10px">
             <div><div class="cv" id="previewComm2">$0</div><div class="cl">Ваша комиссия</div></div>
@@ -1799,8 +1801,18 @@ function bToggleInsertBtn(){
   });
 }
 function autoAmount(p, val){
-  if (editingId) return;
   const el=document.getElementById(p+'Amount'); if(!el||!val) return;
+  const hint=document.getElementById(p+'AmountHint');
+  if (editingId){
+    // Старую бронь не трогаем — сумма зафиксирована по прежнему курсу.
+    // Но если расчёт разошёлся, честно об этом говорим и даём обновить.
+    const сейчас=(el.value||'').trim();
+    if (hint) hint.innerHTML = (сейчас && сейчас!==val)
+      ? 'по расчёту сейчас '+val+' · <a href="#" onclick="event.preventDefault();'+p+'InsertAmount()" style="color:var(--accent)">обновить</a>'
+      : '';
+    return;
+  }
+  if (hint) hint.textContent='';
   const сейчас=(el.value||'').trim();
   if (сейчас==='' || сейчас===_autoAmt[p]) { el.value=val; _autoAmt[p]=val; }
 }
@@ -2250,6 +2262,7 @@ function fCalcTotal(tour, adults, children, currency, tourUSD){
 function fInsertAmount(){
   const val=document.getElementById('fCalcResult').dataset.val||'';
   document.getElementById('fAmount').value=val;
+  const _h=document.getElementById('fAmountHint'); if(_h) _h.textContent='';
   const route=document.getElementById('fRoute').value;
   if(route==='ДРУГОЕ') fOtherRecalc(); else fRecalc();
   toast('✓ Сумма вставлена');
@@ -2472,6 +2485,7 @@ function pfCalcTotal(tour, adults, children, currency, tourUSD){
 function pfInsertAmount(){
   const val=document.getElementById('pfCalcResult').dataset.val||'';
   document.getElementById('pfAmount').value=val;
+  const _h=document.getElementById('pfAmountHint'); if(_h) _h.textContent='';
   const route=document.getElementById('pfRoute').value;
   if(route==='ДРУГОЕ') pfOtherRecalc(); else pfRecalc();
   toast('✓ Сумма вставлена');
