@@ -1777,8 +1777,8 @@ function prepayAutoFill(p) {
   const onsiteCurEl = document.getElementById(p+'OnsiteCur');
   // Уже выставленную доплату не трогаем: счёт клиенту выставлен по
   // тогдашнему курсу, пересчёт по сегодняшнему снова разъедет суммы.
-  const уже = (onsiteEl.value||'').trim();
-  if (уже !== '' && parseFloat(уже) > 0) return;
+  // Ноль тоже считается ответом «доплачивать нечего» — не перетираем его.
+  if ((onsiteEl.value||'').trim() !== '') return;
 
   const leftUsd = totalUsd - paidUsd;
   if (leftUsd < 1) { onsiteEl.value = 0; return; }   // округления, не долг
