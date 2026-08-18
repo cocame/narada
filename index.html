@@ -389,8 +389,8 @@ body.ro .ro-badge{display:inline-block}
           <div class="form-group">
             <label>Предоплата</label>
             <div style="display:flex;gap:6px">
-              <input type="text" id="fPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('f')">
-              <select id="fPrepayCur" onchange="prepayAutoFill('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+              <input type="text" id="fPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('f');payHints('f')">
+              <select id="fPrepayCur" onchange="prepayAutoFill('f');payHints('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
               <input type="date" id="fPrepayDate" title="дата предоплаты" style="flex:0 0 138px">
               <input type="hidden" id="fPrepayUsd">
             </div>
@@ -472,8 +472,8 @@ body.ro .ro-badge{display:inline-block}
             <div class="form-group">
               <label>Предоплата</label>
               <div style="display:flex;gap:6px">
-                <input type="text" id="pfPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('pf')">
-                <select id="pfPrepayCur" onchange="prepayAutoFill('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+                <input type="text" id="pfPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('pf');payHints('pf')">
+                <select id="pfPrepayCur" onchange="prepayAutoFill('pf');payHints('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
                 <input type="date" id="pfPrepayDate" title="дата предоплаты" style="flex:0 0 138px">
                 <input type="hidden" id="pfPrepayUsd">
               </div>
