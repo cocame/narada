@@ -180,6 +180,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .b-status-btn.act-cancel{background:rgba(192,57,43,.08);color:var(--red);border-color:var(--red)}
 .b-status-btn.act-waiting{background:rgba(46,139,87,.08);color:var(--green);border-color:var(--green)}
 .b-copy-card-btn{display:block;width:100%;margin-top:10px;padding:8px 0;background:none;border:1px solid var(--border);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;text-align:center}
+.pay-hint{font-size:11px;color:var(--accent2);font-family:'DM Mono',monospace;margin-top:4px;min-height:14px}
 .b-copy-row{display:flex;gap:6px}
 .b-copy-row .b-copy-card-btn{flex:1}
 .b-copy-guide-btn{flex:0 0 34%!important;border-color:var(--accent2)!important;color:var(--accent2)!important}
@@ -393,13 +394,15 @@ body.ro .ro-badge{display:inline-block}
               <input type="date" id="fPrepayDate" title="дата предоплаты" style="flex:0 0 138px">
               <input type="hidden" id="fPrepayUsd">
             </div>
+            <div class="pay-hint" id="fPrepayHint"></div>
           </div>
           <div class="form-group">
             <label>На месте</label>
             <div style="display:flex;gap:6px">
-              <input type="text" id="fOnsite" placeholder="сумма" style="flex:1">
-              <select id="fOnsiteCur"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+              <input type="text" id="fOnsite" placeholder="сумма" style="flex:1" oninput="payHints('f')">
+              <select id="fOnsiteCur" onchange="payHints('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
             </div>
+            <div class="pay-hint" id="fOnsiteHint"></div>
           </div>
           <div class="form-group full"><label>Примечание</label><textarea id="fNotes"></textarea></div>
         </div>
@@ -473,13 +476,15 @@ body.ro .ro-badge{display:inline-block}
                 <input type="date" id="pfPrepayDate" title="дата предоплаты" style="flex:0 0 138px">
                 <input type="hidden" id="pfPrepayUsd">
               </div>
+              <div class="pay-hint" id="pfPrepayHint"></div>
             </div>
             <div class="form-group">
               <label>На месте</label>
               <div style="display:flex;gap:6px">
-                <input type="text" id="pfOnsite" placeholder="сумма" style="flex:1">
-                <select id="pfOnsiteCur"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+                <input type="text" id="pfOnsite" placeholder="сумма" style="flex:1" oninput="payHints('pf')">
+                <select id="pfOnsiteCur" onchange="payHints('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
               </div>
+              <div class="pay-hint" id="pfOnsiteHint"></div>
             </div>
             <div class="form-group full"><label>Примечание</label><textarea id="pfNotes"></textarea></div>
           </div>
@@ -1182,8 +1187,8 @@ function bCardHTML(b){
         <div class="b-exp-item"><label>Валюта</label><span>${b.currency||'—'}</span></div>
         <div class="b-exp-item"><label>Оплата</label><span>${b.payMethod||'—'}</span></div>
         <div class="b-exp-item"><label>Сумма</label><span>${b.totalAmount||'—'}${b.payStatus==='paid'?`<span style="color:var(--green);font-size:10px;margin-left:6px">оплачено${b.paidAt?' '+shortDate(b.paidAt):''}</span>`:''}</span></div>
-        <div class="b-exp-item"><label>Предоплата</label><span>${b.prepay?(b.prepay+' '+(b.prepayCur||'')+(b.prepayDate?' · '+shortDate(b.prepayDate):'')):'—'}</span></div>
-        <div class="b-exp-item"><label>На месте</label><span>${b.onsite?(b.onsite+' '+(b.onsiteCur||'')):'—'}</span></div>
+        <div class="b-exp-item"><label>Предоплата</label><span>${b.prepay?(b.prepay+' '+(b.prepayCur||'')+(b.prepayDate?' · '+shortDate(b.prepayDate):'')):'—'}${b.prepay&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.prepay),b.prepayCur||'USD',currentRates)}</div>`:''}</span></div>
+        <div class="b-exp-item"><label>На месте</label><span>${b.onsite?(b.onsite+' '+(b.onsiteCur||'')):'—'}${(parseFloat(b.onsite)>0&&currentRates)?`<div class="pay-hint">${payLine(parseFloat(b.onsite),b.onsiteCur||'USD',currentRates)}</div>`:''}</span></div>
         <div class="b-exp-item"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
         ${(()=>{const _p=bDetectPlatform(b);return _p?`<div class="b-exp-item"><label>Платформа</label><span style="color:var(--accent);font-weight:600">${_p}</span></div>`:'';})()}
       </div>
@@ -1737,6 +1742,7 @@ function bEdit(id){
     }
   }
   bToggleInsertBtn();
+  payHints('f');
   document.getElementById('modalOverlay').classList.add('open');
 }
 function bCloseModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
@@ -1762,6 +1768,27 @@ function usdToPay(usd, cur, R){
 
 // Сумма оплаты подставляется сама — отдельная кнопка для этого не нужна.
 // Сохранённую бронь не трогаем: там сумма зафиксирована по курсу того дня.
+// Показываем сумму сразу во всех валютах — чтобы не ходить в прайс считать,
+// какой счёт выставлять клиенту.
+function payLine(sum, cur, R){
+  if(!sum||!R) return '';
+  const usd = payToUsd(sum, cur, R);
+  const части = [];
+  if(cur!=='USD')  части.push(Math.round(usd)+' $');
+  if(cur!=='RUB')  части.push(ceilTo(usd*R.RUB*(1+MARKUP.RUB), ROUND_STEP.RUB).toLocaleString('ru-RU')+' ₽');
+  if(cur!=='VND')  части.push(ceilTo(usd*R.VND*(1+MARKUP.VND), ROUND_STEP.VND).toLocaleString('ru-RU')+' ₫');
+  return части.length ? '= '+части.join('  ·  ') : '';
+}
+function payHints(p){
+  if(!currentRates) return;
+  [['Prepay','PrepayCur'],['Onsite','OnsiteCur']].forEach(([поле,валюта])=>{
+    const el=document.getElementById(p+поле+'Hint'); if(!el) return;
+    const сумма=parseFloat(document.getElementById(p+поле)?.value);
+    const cur=document.getElementById(p+валюта)?.value;
+    el.textContent = (сумма>0) ? payLine(сумма, cur, currentRates) : '';
+  });
+}
+
 const _autoAmt={};
 // Кнопка нужна только при правке старой брони, где сумма зафиксирована
 // по прежнему курсу. При создании сумма подставляется сама.
@@ -1816,6 +1843,7 @@ function prepayAutoFill(p) {
   const leftUsd = totalUsd - paidUsd;
   if (leftUsd < 1) { onsiteEl.value = 0; return; }   // округления, не долг
   onsiteEl.value = usdToPay(leftUsd, onsiteCurEl.value || prepayCur, currentRates);
+  payHints(p);
 }
 
 function fCurrencyChanged(p){
