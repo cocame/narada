@@ -2533,7 +2533,8 @@ function bRepeat(id){
 }
 async function bSaveAs(tripStatus){
   const data=bGetFormData();
-  if(!data.route){alert('Укажите маршрут');return;}
+  // «Ждёт» — как раз для брони, у которой даты пока нет, её не требуем
+  if(!data.route){ bRequire(mTab==='manual'?'fRoute':'pfRoute','Укажите маршрут'); return; }
   data.tripStatus=tripStatus;
   const btn=document.getElementById('saveBtn');
   btn.textContent='Сохранение…'; btn.disabled=true;
@@ -2543,9 +2544,24 @@ async function bSaveAs(tripStatus){
   } catch(e){ alert('Ошибка сохранения. Попробуйте ещё раз.'); }
   btn.textContent='Сохранить'; btn.disabled=false;
 }
+// Подсветить незаполненное поле и сказать, чего не хватает
+function bRequire(id, текст){
+  const el=document.getElementById(id);
+  if(el){
+    el.focus();
+    const было=el.style.borderColor;
+    el.style.borderColor='var(--red)';
+    setTimeout(()=>{el.style.borderColor=было;},2500);
+  }
+  toast(текст);
+}
+
 async function bSave(){
   const data=bGetFormData();
-  if(!data.route){alert('Укажите маршрут');return;}
+  const p=mTab==='manual'?'f':'pf';
+  if(!data.route){ bRequire(p+'Route','Укажите маршрут'); return; }
+  // Без даты бронь сохранялась и пропадала из списка — теперь не пускаем
+  if(!data.date){ bRequire(p+'Date','Укажите дату поездки'); return; }
   // если статус ждет и дата указана - меняем на обычный
   if(data.tripStatus==='waiting_date'&&data.date) data.tripStatus='waiting';
   const btn=document.getElementById('saveBtn');
