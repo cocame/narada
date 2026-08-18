@@ -420,7 +420,7 @@ body.ro .ro-badge{display:inline-block}
             <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px">Итого</div>
             <div id="fCalcTotal" style="font-family:'DM Mono',monospace;font-size:16px;color:var(--green);margin-bottom:8px"></div>
             <div id="fCalcBreak" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);line-height:1.7;margin-bottom:10px;white-space:pre-line"></div>
-            <button onclick="fInsertAmount()" style="width:100%;padding:8px 0;background:var(--accent);color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer">↓ Вставить сумму</button>
+            <button id="fInsertBtn" onclick="fInsertAmount()" style="width:100%;padding:8px 0;background:var(--accent);color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer">↓ Вставить сумму</button>
           </div>
         </div>
         <div style="margin-top:10px">
@@ -499,7 +499,7 @@ body.ro .ro-badge{display:inline-block}
               <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:4px">Итого</div>
               <div id="pfCalcTotal" style="font-family:'DM Mono',monospace;font-size:16px;color:var(--green);margin-bottom:8px"></div>
               <div id="pfCalcBreak" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);line-height:1.7;margin-bottom:10px;white-space:pre-line"></div>
-              <button onclick="pfInsertAmount()" style="width:100%;padding:8px 0;background:var(--accent);color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer">↓ Вставить сумму</button>
+              <button id="pfInsertBtn" onclick="pfInsertAmount()" style="width:100%;padding:8px 0;background:var(--accent);color:#fff;border:none;border-radius:6px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer">↓ Вставить сумму</button>
             </div>
           </div>
           <div style="margin-top:10px">
@@ -1125,7 +1125,8 @@ function bRender(){
   let filtered=allBookings.filter(b=>{
     if(routeF&&b.route!==routeF) return false;
     if(dateF&&b.date!==dateF) return false;
-    if(bFilter==='upcoming_waiting') return (b.date&&b.date>=tod&&b.tripStatus==='waiting')||b.tripStatus==='waiting_date';
+    // Бронь без даты тоже показываем — иначе она сохраняется и пропадает с глаз
+    if(bFilter==='upcoming_waiting') return (!b.date&&b.tripStatus!=='cancelled'&&b.tripStatus!=='done')||(b.date&&b.date>=tod&&b.tripStatus==='waiting')||b.tripStatus==='waiting_date';
     if(bFilter==='upcoming') return b.date&&b.date>=tod&&b.tripStatus!=='cancelled'&&b.tripStatus!=='waiting_date';
     if(bFilter==='waiting') return b.tripStatus==='waiting_date';
     if(bFilter==='done') return b.tripStatus==='done';
@@ -1144,7 +1145,7 @@ function bRender(){
   filtered.forEach(b=>{const d=b.date||'—';if(!groups[d])groups[d]=[];groups[d].push(b);});
   let html='';
   Object.keys(groups).sort(doneSort?(a,b)=>b.localeCompare(a):(a,b)=>a.localeCompare(b)).forEach(date=>{
-    html+='<div class="b-date-group"><div class="b-date-header"><div class="b-date-title">'+formatDateLabel(date)+'</div><div class="b-date-line"></div><div class="b-date-count">'+groups[date].length+' '+pluralB(groups[date].length)+'</div></div>'+groups[date].map(bCardHTML).join('')+'</div>';
+    html+='<div class="b-date-group"><div class="b-date-header"><div class="b-date-title">'+(date==='—'?'Без даты':formatDateLabel(date))+'</div><div class="b-date-line"></div><div class="b-date-count">'+groups[date].length+' '+pluralB(groups[date].length)+'</div></div>'+groups[date].map(bCardHTML).join('')+'</div>';
   });
   document.getElementById('bList').innerHTML=html;
 }
@@ -1668,6 +1669,7 @@ function bOpenModal(){
   editingId=null;
   document.getElementById('modalTitle').textContent='Новое бронирование';
   bClearForm(); mSwitchTab('paste');
+  bToggleInsertBtn();
   document.getElementById('modalOverlay').classList.add('open');
 }
 function bEdit(id){
@@ -1734,6 +1736,7 @@ function bEdit(id){
       if(_ce1){_ce1.value=b.customPriceChild;fRecalc();}
     }
   }
+  bToggleInsertBtn();
   document.getElementById('modalOverlay').classList.add('open');
 }
 function bCloseModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
@@ -1760,6 +1763,14 @@ function usdToPay(usd, cur, R){
 // Сумма оплаты подставляется сама — отдельная кнопка для этого не нужна.
 // Сохранённую бронь не трогаем: там сумма зафиксирована по курсу того дня.
 const _autoAmt={};
+// Кнопка нужна только при правке старой брони, где сумма зафиксирована
+// по прежнему курсу. При создании сумма подставляется сама.
+function bToggleInsertBtn(){
+  ['f','pf'].forEach(p=>{
+    const b=document.getElementById(p+'InsertBtn');
+    if(b) b.style.display = editingId ? '' : 'none';
+  });
+}
 function autoAmount(p, val){
   if (editingId) return;
   const el=document.getElementById(p+'Amount'); if(!el||!val) return;
