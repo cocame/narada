@@ -1757,6 +1757,16 @@ function usdToPay(usd, cur, R){
   return Math.ceil(usd);
 }
 
+// Сумма оплаты подставляется сама — отдельная кнопка для этого не нужна.
+// Сохранённую бронь не трогаем: там сумма зафиксирована по курсу того дня.
+const _autoAmt={};
+function autoAmount(p, val){
+  if (editingId) return;
+  const el=document.getElementById(p+'Amount'); if(!el||!val) return;
+  const сейчас=(el.value||'').trim();
+  if (сейчас==='' || сейчас===_autoAmt[p]) { el.value=val; _autoAmt[p]=val; }
+}
+
 function prepayAutoFill(p) {
   // Оплаченная бронь заморожена — ничего не досчитываем.
   if (editingId){
@@ -1765,6 +1775,11 @@ function prepayAutoFill(p) {
   }
   const prepay = parseFloat(document.getElementById(p+'Prepay').value);
   if (!prepay || prepay <= 0) return;
+
+  // Дату ставим сразу — она не зависит от того, посчитан ли уже тур.
+  const dateEl = document.getElementById(p+'PrepayDate');
+  if (dateEl && !dateEl.value) dateEl.value = todayStr();
+
   const prepayCur = document.getElementById(p+'PrepayCur').value;
   const calcEl = document.getElementById(p==='f'?'fCalcResult':'pfCalcResult');
   const totalUsd = parseFloat(calcEl?.dataset?.usd)||0;
@@ -1781,10 +1796,6 @@ function prepayAutoFill(p) {
     paidUsd = payToUsd(prepay, prepayCur, currentRates);
     if (usdEl) usdEl.value = ключ+'~'+paidUsd.toFixed(2);
   }
-
-  // Дату предоплаты проставляем сама, если она пустая
-  const dateEl = document.getElementById(p+'PrepayDate');
-  if (dateEl && !dateEl.value) dateEl.value = todayStr();
 
   // Остаток пересчитываем: раз ты правишь предоплату, значит ждёшь пересчёта.
   // От скачков курса защищает не это, а зафиксированные доллары платежа
@@ -2038,6 +2049,8 @@ function fOtherRecalc(){
     document.getElementById('fCalcResult').style.display='block';
     document.getElementById('fCalcResult').dataset.val=val;
     document.getElementById('fCalcResult').dataset.usd=total.usd;
+    autoAmount('f',val);
+    prepayAutoFill('f');
   } else {
     document.getElementById('fCalcResult').style.display='none';
   }
@@ -2057,6 +2070,8 @@ function pfOtherRecalc(){
     document.getElementById('pfCalcResult').style.display='block';
     document.getElementById('pfCalcResult').dataset.val=val;
     document.getElementById('pfCalcResult').dataset.usd=total.usd;
+    autoAmount('pf',val);
+    prepayAutoFill('pf');
   } else {
     document.getElementById('pfCalcResult').style.display='none';
   }
@@ -2190,6 +2205,8 @@ function fCalcTotal(tour, adults, children, currency, tourUSD){
   document.getElementById('fCalcResult').style.display='block';
   document.getElementById('fCalcResult').dataset.val=val;
   document.getElementById('fCalcResult').dataset.usd=total.usd;
+  autoAmount('f',val);
+  prepayAutoFill('f');
 }
 function fInsertAmount(){
   const val=document.getElementById('fCalcResult').dataset.val||'';
@@ -2410,6 +2427,8 @@ function pfCalcTotal(tour, adults, children, currency, tourUSD){
   document.getElementById('pfCalcBreak').textContent='';
   document.getElementById('pfCalcResult').style.display='block';
   document.getElementById('pfCalcResult').dataset.val=val;
+  autoAmount('pf',val);
+  prepayAutoFill('pf');
 }
 function pfInsertAmount(){
   const val=document.getElementById('pfCalcResult').dataset.val||'';
