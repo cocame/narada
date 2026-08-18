@@ -1180,7 +1180,7 @@ function bCardHTML(b){
         <div class="b-exp-item"><label>Отель</label><span>${b.hotel||'—'}</span></div>
         <div class="b-exp-item"><label>Валюта</label><span>${b.currency||'—'}</span></div>
         <div class="b-exp-item"><label>Оплата</label><span>${b.payMethod||'—'}</span></div>
-        <div class="b-exp-item"><label>Сумма</label><span>${b.totalAmount||'—'}</span></div>
+        <div class="b-exp-item"><label>Сумма</label><span>${b.totalAmount||'—'}${b.payStatus==='paid'?`<span style="color:var(--green);font-size:10px;margin-left:6px">оплачено${b.paidAt?' '+shortDate(b.paidAt):''}</span>`:''}</span></div>
         <div class="b-exp-item"><label>Предоплата</label><span>${b.prepay?(b.prepay+' '+(b.prepayCur||'')+(b.prepayDate?' · '+shortDate(b.prepayDate):'')):'—'}</span></div>
         <div class="b-exp-item"><label>На месте</label><span>${b.onsite?(b.onsite+' '+(b.onsiteCur||'')):'—'}</span></div>
         <div class="b-exp-item"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
@@ -1644,6 +1644,10 @@ async function bSaveNote(id,val){
 async function bCyclePay(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   b.payStatus=b.payStatus==='unpaid'?'paid':b.payStatus==='paid'?'refund':'unpaid';
+  // Отметка «оплачено» замораживает суммы: дальше их пересчитывает
+  // только сама пользовательница, вручную.
+  if(b.payStatus==='paid'){ if(!b.paidAt) b.paidAt=todayStr(); }
+  else b.paidAt='';
   await gasSave('updateBooking',b); bLoad();
 }
 async function bSetTrip(id,status){
@@ -1754,6 +1758,11 @@ function usdToPay(usd, cur, R){
 }
 
 function prepayAutoFill(p) {
+  // Оплаченная бронь заморожена — ничего не досчитываем.
+  if (editingId){
+    const _b=allBookings.find(x=>x.id==editingId);
+    if(_b && _b.payStatus==='paid') return;
+  }
   const prepay = parseFloat(document.getElementById(p+'Prepay').value);
   if (!prepay || prepay <= 0) return;
   const prepayCur = document.getElementById(p+'PrepayCur').value;
