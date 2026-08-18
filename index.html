@@ -1019,6 +1019,11 @@ async function gasGet(action, onAttempt){
 
 // Локальная копия списка броней: список показывается мгновенно из неё,
 // а свежие данные с сервера подменяют его, когда доедут.
+// Правишь состав брони — сумма идёт следом. Просто открыла бронь —
+// сумма остаётся прежней, иначе её собьёт скачок курса.
+let formTouched=false;
+function markTouched(){ formTouched=true; }
+
 const B_CACHE_KEY='narada_bookings_cache_v1';
 function bCacheRead(){
   try {
@@ -1682,6 +1687,7 @@ function bOpenModal(){
   document.getElementById('modalTitle').textContent='Новое бронирование';
   bClearForm(); mSwitchTab('paste');
   bToggleInsertBtn();
+  formTouched=false;
   document.getElementById('modalOverlay').classList.add('open');
 }
 function bEdit(id){
@@ -1750,9 +1756,17 @@ function bEdit(id){
   }
   bToggleInsertBtn();
   payHints('f');
+  formTouched=false;
   document.getElementById('modalOverlay').classList.add('open');
 }
 function bCloseModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
+// Считаем «тронуто» только настоящие действия мышью и клавиатурой.
+// Программное заполнение формы событий не порождает, поэтому не считается.
+(function(){
+  const о=document.getElementById('modalOverlay');
+  if(!о) return;
+  ['input','change','click'].forEach(e=>о.addEventListener(e,markTouched,true));
+})();
 
 // Оплаты приводим к долларам по рабочему курсу — тому же, по которому
 // называется цена клиенту. Тур стоит фиксированное число долларов,
@@ -1808,17 +1822,16 @@ function bToggleInsertBtn(){
 function autoAmount(p, val){
   const el=document.getElementById(p+'Amount'); if(!el||!val) return;
   const hint=document.getElementById(p+'AmountHint');
-  if (editingId){
-    // Старую бронь не трогаем — сумма зафиксирована по прежнему курсу.
-    // Но если расчёт разошёлся, честно об этом говорим и даём обновить.
-    const сейчас=(el.value||'').trim();
+  const сейчас=(el.value||'').trim();
+  if (editingId && !formTouched){
+    // Только открыли: показываем расхождение, но ничего не меняем
     if (hint) hint.innerHTML = (сейчас && сейчас!==val)
       ? 'по расчёту сейчас '+val+' · <a href="#" onclick="event.preventDefault();'+p+'InsertAmount()" style="color:var(--accent)">обновить</a>'
       : '';
     return;
   }
   if (hint) hint.textContent='';
-  const сейчас=(el.value||'').trim();
+  if (editingId) { el.value=val; _autoAmt[p]=val; return; }
   if (сейчас==='' || сейчас===_autoAmt[p]) { el.value=val; _autoAmt[p]=val; }
 }
 
