@@ -1584,21 +1584,26 @@ function bCopyGuide(id){
 function bCopyCard(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   const pax=[b.adults?b.adults+' взр':'',b.children?b.children+' дет':'',b.infants?b.infants+' мал':''].filter(Boolean).join(', ');
-  const payLine=[b.payMethod,b.currency].filter(Boolean).join(', ');
   const amountLine=b.totalAmount?(b.payStatus==='paid'?'Оплачено: '+b.totalAmount:'К оплате: '+b.totalAmount):'';
+  // Платёж не в долларах — дописываем, сколько это в долларах
+  const вДолларах=(сумма,вал)=>{
+    const n=parseFloat(сумма);
+    if(!(n>0)||!вал||вал==='USD'||!currentRates) return '';
+    return ' ('+Math.round(payToUsd(n,вал,currentRates))+' $)';
+  };
   const plat=bDetectPlatform(b);
   // Индивидуальную помечаем только здесь — в карточке гиду этого не пишем
   const _tour=TOURS.find(t=>t.key===b.route);
   const _isInd=!!(b.isIndividual||(b.notes||'').endsWith('​')||(_tour&&_tour.rows[0]&&_tour.rows[0].flat));
   const routeLine=[b.route||'—',plat,_isInd?'Индивидуально':''].filter(Boolean).join(' · ');
 
+  // Пустые поля и способ оплаты не пишем — суммы ниже говорят сами за себя
   const head=[
-    b.date?formatDateLabel(b.date):'—',
+    b.date?formatDateLabel(b.date):'',
     routeLine,
-    pax||'—',
-    b.contact||'—',
-    b.hotel||'—',
-    payLine||''
+    pax,
+    b.contact,
+    b.hotel
   ].filter(Boolean);
 
   // расклад: за что сколько
@@ -1614,8 +1619,8 @@ function bCopyCard(id){
 
   const tail=[
     amountLine||'',
-    b.prepay?'Предоплата: '+b.prepay+' '+(b.prepayCur||'')+(b.prepayDate?' · '+shortDate(b.prepayDate):''):'',
-    b.onsite?'На месте: '+b.onsite+' '+(b.onsiteCur||''):'',
+    b.prepay?'Предоплата: '+b.prepay+' '+(b.prepayCur||'')+вДолларах(b.prepay,b.prepayCur)+(b.prepayDate?' · '+shortDate(b.prepayDate):''):'',
+    b.onsite?'На месте: '+b.onsite+' '+(b.onsiteCur||'')+вДолларах(b.onsite,b.onsiteCur):'',
     // сначала метка платформы целиком (‌T/‌S), затем осиротевшие невидимки
     (b.notes||'').replace(/‌[TS]/g,'').replace(/[​‌‍]/g,'').trim()
   ].filter(Boolean);
