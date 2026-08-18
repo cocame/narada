@@ -391,6 +391,7 @@ body.ro .ro-badge{display:inline-block}
               <input type="text" id="fPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('f')">
               <select id="fPrepayCur" onchange="prepayAutoFill('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
               <input type="date" id="fPrepayDate" title="дата предоплаты" style="flex:0 0 138px">
+              <input type="hidden" id="fPrepayUsd">
             </div>
           </div>
           <div class="form-group">
@@ -470,6 +471,7 @@ body.ro .ro-badge{display:inline-block}
                 <input type="text" id="pfPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('pf')">
                 <select id="pfPrepayCur" onchange="prepayAutoFill('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
                 <input type="date" id="pfPrepayDate" title="дата предоплаты" style="flex:0 0 138px">
+                <input type="hidden" id="pfPrepayUsd">
               </div>
             </div>
             <div class="form-group">
@@ -1688,6 +1690,9 @@ function bEdit(id){
   document.getElementById('fPrepay').value=b.prepay||'';
   document.getElementById('fPrepayCur').value=b.prepay?(b.prepayCur||b.currency||'VND'):(b.currency||'VND');
   document.getElementById('fPrepayDate').value=b.prepayDate||'';
+  // возвращаем зафиксированные доллары предоплаты, чтобы их не пересчитало
+  document.getElementById('fPrepayUsd').value=(b.prepay&&b.prepayUsd)
+    ? (b.prepay+'|'+(b.prepayCur||'USD')+'~'+b.prepayUsd) : '';
   document.getElementById('fOnsite').value=b.onsite||'';
   document.getElementById('fOnsiteCur').value=b.onsite?(b.onsiteCur||b.currency||'VND'):(b.currency||'VND');
   document.getElementById('fNotes').value=(b.notes||'').replace(/​/g,'');
@@ -1729,26 +1734,55 @@ function bEdit(id){
 }
 function bCloseModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
 
+// Оплаты приводим к долларам по рабочему курсу — тому же, по которому
+// называется цена клиенту. Тур стоит фиксированное число долларов,
+// поэтому остаток не зависит от того, как за эти дни двинулся курс.
+function payToUsd(sum, cur, R){
+  if(!sum||!R) return 0;
+  if(cur==='USD')  return sum;
+  if(cur==='USDT') return sum/(R.USDT*(1+MARKUP.USDT));
+  if(cur==='RUB')  return sum/(R.RUB*(1+MARKUP.RUB));
+  if(cur==='VND')  return sum/(R.VND*(1+MARKUP.VND));
+  return 0;
+}
+function usdToPay(usd, cur, R){
+  if(!R) return Math.ceil(usd);
+  if(cur==='USDT') return ceilTo(usd*R.USDT*(1+MARKUP.USDT), ROUND_STEP.USDT);
+  if(cur==='RUB')  return ceilTo(usd*R.RUB*(1+MARKUP.RUB), ROUND_STEP.RUB);
+  if(cur==='VND')  return ceilTo(usd*R.VND*(1+MARKUP.VND), ROUND_STEP.VND);
+  return Math.ceil(usd);
+}
+
 function prepayAutoFill(p) {
   const prepay = parseFloat(document.getElementById(p+'Prepay').value);
   if (!prepay || prepay <= 0) return;
   const prepayCur = document.getElementById(p+'PrepayCur').value;
   const calcEl = document.getElementById(p==='f'?'fCalcResult':'pfCalcResult');
-  let totalStr = (calcEl?.dataset?.val) || document.getElementById(p+'Amount').value;
-  if (!totalStr) return;
-  const clean = totalStr.replace(/\s/g,'');
-  let cur = null;
-  if (clean.includes('₫')||/vnd/i.test(clean)) cur='VND';
-  else if (/usdt/i.test(clean)) cur='USDT';
-  else if (clean.includes('$')) cur='USD';
-  else if (clean.includes('₽')||/rub/i.test(clean)) cur='RUB';
-  if (!cur || cur !== prepayCur) return;
-  const total = parseFloat(clean.replace(/[^\d]/g,''));
-  if (!total || isNaN(total)) return;
-  const onsite = total - prepay;
-  if (onsite < 0) return;
-  document.getElementById(p+'OnsiteCur').value = prepayCur;
-  document.getElementById(p+'Onsite').value = onsite;
+  const totalUsd = parseFloat(calcEl?.dataset?.usd)||0;
+  if (!totalUsd || !currentRates) return;
+
+  // Доллары платежа фиксируем в момент внесения и больше не пересчитываем.
+  // Пересчёт только если изменилась сама сумма или её валюта.
+  const usdEl = document.getElementById(p+'PrepayUsd');
+  const ключ = prepay+'|'+prepayCur;
+  const было = (usdEl?.value||'').split('~');
+  let paidUsd;
+  if (было[0]===ключ && parseFloat(было[1])>0) paidUsd = parseFloat(было[1]);
+  else {
+    paidUsd = payToUsd(prepay, prepayCur, currentRates);
+    if (usdEl) usdEl.value = ключ+'~'+paidUsd.toFixed(2);
+  }
+
+  const onsiteEl = document.getElementById(p+'Onsite');
+  const onsiteCurEl = document.getElementById(p+'OnsiteCur');
+  // Уже выставленную доплату не трогаем: счёт клиенту выставлен по
+  // тогдашнему курсу, пересчёт по сегодняшнему снова разъедет суммы.
+  const уже = (onsiteEl.value||'').trim();
+  if (уже !== '' && parseFloat(уже) > 0) return;
+
+  const leftUsd = totalUsd - paidUsd;
+  if (leftUsd < 1) { onsiteEl.value = 0; return; }   // округления, не долг
+  onsiteEl.value = usdToPay(leftUsd, onsiteCurEl.value || prepayCur, currentRates);
 }
 
 function fCurrencyChanged(p){
@@ -2423,6 +2457,7 @@ function bGetFormData(){
     prepay:document.getElementById(p+'Prepay').value,
     prepayCur:document.getElementById(p+'PrepayCur').value,
     prepayDate:document.getElementById(p+'PrepayDate')?.value||'',
+    prepayUsd:parseFloat((document.getElementById(p+'PrepayUsd')?.value||'').split('~')[1])||0,
     onsite:document.getElementById(p+'Onsite').value,
     onsiteCur:document.getElementById(p+'OnsiteCur').value,
     ticketCounts:(()=>{const _c=p==='f'?fTickCounts:pfTickCounts;const _x=p==='f'?'f_':'pf_';return tour&&tour.tickets?tour.tickets.map((_,i)=>_c[_x+i]||0):[];})(),
