@@ -390,7 +390,7 @@ body.ro .ro-badge{display:inline-block}
             <label>Предоплата</label>
             <div style="display:flex;gap:6px">
               <input type="text" id="fPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('f')">
-              <select id="fPrepayCur" onchange="prepayAutoFill('f')"><option>USD</option><option>RUB</option><option>VND</option><option>USDT</option></select>
+              <select id="fPrepayCur" onchange="prepayAutoFill('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
               <input type="date" id="fPrepayDate" title="дата предоплаты" style="flex:0 0 138px">
               <input type="hidden" id="fPrepayUsd">
             </div>
@@ -400,7 +400,7 @@ body.ro .ro-badge{display:inline-block}
             <label>На месте</label>
             <div style="display:flex;gap:6px">
               <input type="text" id="fOnsite" placeholder="сумма" style="flex:1" oninput="payHints('f')">
-              <select id="fOnsiteCur" onchange="payHints('f')"><option>USD</option><option>RUB</option><option>VND</option><option>USDT</option></select>
+              <select id="fOnsiteCur" onchange="payHints('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
             </div>
             <div class="pay-hint" id="fOnsiteHint"></div>
           </div>
@@ -473,7 +473,7 @@ body.ro .ro-badge{display:inline-block}
               <label>Предоплата</label>
               <div style="display:flex;gap:6px">
                 <input type="text" id="pfPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('pf')">
-                <select id="pfPrepayCur" onchange="prepayAutoFill('pf')"><option>USD</option><option>RUB</option><option>VND</option><option>USDT</option></select>
+                <select id="pfPrepayCur" onchange="prepayAutoFill('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
                 <input type="date" id="pfPrepayDate" title="дата предоплаты" style="flex:0 0 138px">
                 <input type="hidden" id="pfPrepayUsd">
               </div>
@@ -483,7 +483,7 @@ body.ro .ro-badge{display:inline-block}
               <label>На месте</label>
               <div style="display:flex;gap:6px">
                 <input type="text" id="pfOnsite" placeholder="сумма" style="flex:1" oninput="payHints('pf')">
-                <select id="pfOnsiteCur" onchange="payHints('pf')"><option>USD</option><option>RUB</option><option>VND</option><option>USDT</option></select>
+                <select id="pfOnsiteCur" onchange="payHints('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
               </div>
               <div class="pay-hint" id="pfOnsiteHint"></div>
             </div>
@@ -1708,7 +1708,7 @@ function bEdit(id){
   document.getElementById('fInfants').value=b.infants||0;
   document.getElementById('fContact').value=b.contact||'';
   document.getElementById('fHotel').value=b.hotel||'';
-  document.getElementById('fCurrency').value=b.currency||'USD';
+  document.getElementById('fCurrency').value=b.currency||'VND';
   document.getElementById('fPayMethod').value=b.payMethod||'Наличные';
   document.getElementById('fAmount').value=b.totalAmount||'';
   document.getElementById('fPrepay').value=b.prepay||'';
@@ -2585,7 +2585,7 @@ function bRepeat(id){
   document.getElementById('fInfants').value=b.infants||0;
   document.getElementById('fContact').value=b.contact||'';
   document.getElementById('fHotel').value=b.hotel||'';
-  document.getElementById('fCurrency').value=b.currency||'USD';
+  document.getElementById('fCurrency').value=b.currency||'VND';
   document.getElementById('fPayMethod').value=b.payMethod||'Наличные';
   document.getElementById('fAmount').value='';
   document.getElementById('fNotes').value='';
