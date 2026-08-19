@@ -1064,7 +1064,10 @@ async function bLoad(){
       else if(el && n>1) el.innerHTML=`<div class="b-loading">Загрузка… попытка ${n} из ${total}</div>`;
     });
     console.log('GAS response:', data);
-    allBookings=Array.isArray(data)?data:[];
+    // Сервер вернул не список — значит отказ, а не «броней ноль».
+    // Пустым списком местную копию не затираем.
+    if(!Array.isArray(data)) throw new Error(data&&data.error ? data.error : 'неожиданный ответ');
+    allBookings=data;
     bCacheWrite(allBookings);
     bRender(); bUpdateStats();
     bSyncNote('');
@@ -1560,10 +1563,16 @@ async function bWarmGuide(){
   if(guideWarming) return;
   guideWarming=true;
   try{
-    for(const b of allBookings.slice()){
-      if(b.hotelVi || !/[а-яё]/i.test(b.hotel||'')) continue;
+    // Только те брони, что сейчас на экране: каждый перевод стоит секунды,
+    // а гонять всю историю незачем — остальные переведутся при раскрытии.
+    await new Promise(r=>setTimeout(r,2500));
+    const видимые=[...document.querySelectorAll('.booking-card')]
+      .map(c=>c.id.replace('bcard-',''));
+    for(const id of видимые){
+      const b=allBookings.find(x=>String(x.id)===String(id));
+      if(!b || b.hotelVi || !/[а-яё]/i.test(b.hotel||'')) continue;
       await bPrefetchGuide(b.id);
-      await new Promise(r=>setTimeout(r,120));  // не долбим скрипт очередью
+      await new Promise(r=>setTimeout(r,300));
     }
   } finally { guideWarming=false; }
 }
@@ -2827,15 +2836,20 @@ async function loadWallet(){
   updateStatusBar(rates);
   renderPriceCards(rates,false);
 })();
-document.addEventListener('DOMContentLoaded', async () => {
-  await loadAccess();
-  document.body.classList.toggle('ro', !canEdit());
-  if(!canRead()){
-    const el=document.getElementById('bList');
-    if(el) el.innerHTML='<div class="b-loading">Нет доступа к бронированиям.<br><span style="font-size:11px">Откройте страницу по ссылке с ключом.</span></div>';
-    return;
-  }
-  bLoad(); loadWallet();
+document.addEventListener('DOMContentLoaded', () => {
+  // Каждый запрос к скрипту идёт около двух секунд, поэтому пускаем их
+  // разом, а не по очереди: список не ждёт проверку доступа.
+  if(editKey()) bLoad();
+  loadAccess().then(()=>{
+    document.body.classList.toggle('ro', !canEdit());
+    if(!canRead()){
+      const el=document.getElementById('bList');
+      if(el) el.innerHTML='<div class="b-loading">Нет доступа к бронированиям.<br><span style="font-size:11px">Откройте страницу по ссылке с ключом.</span></div>';
+      return;
+    }
+    if(!editKey()) bLoad();
+    loadWallet();
+  });
 });
 </script>
 </body>
