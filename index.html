@@ -327,8 +327,6 @@ body.ro .ro-badge{display:inline-block}
       <select class="b-filter-select" id="bFilterStatus" onchange="bSetFilter(this.value)">
         <option value="all">Все</option>
         <option value="upcoming_waiting" selected>Скоро</option>
-        <option value="upcoming">Скоро</option>
-        
         <option value="done">Ездил</option>
         <option value="cancelled">Отказ</option>
       </select>
@@ -1140,7 +1138,6 @@ function bRender(){
     if(dateF&&b.date!==dateF) return false;
     // Бронь без даты тоже показываем — иначе она сохраняется и пропадает с глаз
     if(bFilter==='upcoming_waiting') return (!b.date&&b.tripStatus!=='cancelled'&&b.tripStatus!=='done')||(b.date&&b.date>=tod&&b.tripStatus==='waiting');
-    if(bFilter==='upcoming') return b.date&&b.date>=tod&&b.tripStatus!=='cancelled';
     if(bFilter==='done') return b.tripStatus==='done';
     if(bFilter==='cancelled') return b.tripStatus==='cancelled';
     if(bFilter==='base') return !!b.inBase;
