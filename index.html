@@ -1223,21 +1223,10 @@ function bCardHTML(b){
         if(tour.tickets&&tour.tickets.length){
           let tkLines='';
           tour.tickets.forEach((tk,tkIdx)=>{
-            if(flatRow0){
-              const cnt=(b.ticketCounts&&b.ticketCounts[tkIdx])||0;
-              if(!cnt) return;
-              const unitFmt=fmtVNDticket(tk.vnd_fixed);
-              const label=cnt>1?`${tk.label} × ${cnt}`:tk.label;
-              const total=cnt>1?fmtVNDticket(tk.vnd_fixed*cnt):unitFmt;
-              tkLines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted);font-style:italic">${label}</span><span style="font-family:'DM Mono',monospace;color:var(--accent2)">${total}</span></div>`;
-              return;
-            }
-            const isChild=/детск|дети/i.test(tk.label);
-            const pax=isChild?b.children:b.adults;
-            if(!pax) return;
-            const unitFmt=fmtVNDticket(tk.vnd_fixed);
-            const label=`${tk.label} × ${pax}`;
-            const total=fmtVNDticket(tk.vnd_fixed*pax);
+            const cnt=bTicketCount(b,tour,tkIdx,flatRow0);
+            if(!cnt) return;
+            const label=cnt>1?`${tk.label} × ${cnt}`:tk.label;
+            const total=fmtVNDticket(tk.vnd_fixed*cnt);
             tkLines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted);font-style:italic">${label}</span><span style="font-family:'DM Mono',monospace;color:var(--accent2)">${total}</span></div>`;
           });
           if(tkLines) lines+=`<div style="margin-top:4px;padding-top:4px;border-top:1px dashed var(--border2)"><div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;font-family:'DM Mono',monospace;padding:2px 0">Входные билеты</div>${tkLines}</div>`;
@@ -1398,6 +1387,17 @@ function bDetectPlatform(b){
 
 // Состав брони: из чего складывается сумма к оплате.
 // Правила те же, что в раскрытой карточке.
+// Сколько входных билетов в брони. Раньше число билетов брали из числа людей,
+// поэтому удалённые билеты продолжали показываться в карточке и в копии.
+// Теперь верим сохранённым данным; по людям считаем только старые брони,
+// записанные до того, как счётчик билетов вообще появился.
+function bTicketCount(b, tour, i, flatRow0){
+  if(Array.isArray(b.ticketCounts)) return Number(b.ticketCounts[i])||0;
+  if(flatRow0) return 0;
+  const t=tour.tickets[i];
+  return (/детск|дети/i.test(t.label) ? b.children : b.adults)||0;
+}
+
 function bBreakdown(b){
   const tour=TOURS.find(t=>t.key===b.route);
   if(!tour||!currentRates) return [];
@@ -1422,15 +1422,9 @@ function bBreakdown(b){
   if(tour.tickets&&tour.tickets.length){
     const tk=[];
     tour.tickets.forEach((t,i)=>{
-      if(flatRow0){
-        const cnt=(b.ticketCounts&&b.ticketCounts[i])||0;
-        if(!cnt) return;
-        tk.push({label:cnt>1?t.label+' × '+cnt:t.label,val:fmtVNDticket(t.vnd_fixed*(cnt>1?cnt:1))});
-        return;
-      }
-      const pax=/детск|дети/i.test(t.label)?b.children:b.adults;
-      if(!pax) return;
-      tk.push({label:t.label+' × '+pax,val:fmtVNDticket(t.vnd_fixed*pax)});
+      const cnt=bTicketCount(b,tour,i,flatRow0);
+      if(!cnt) return;
+      tk.push({label:cnt>1?t.label+' × '+cnt:t.label,val:fmtVNDticket(t.vnd_fixed*cnt)});
     });
     if(tk.length) out.push({section:'Входные билеты',items:tk});
   }
