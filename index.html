@@ -541,19 +541,26 @@ const PLATFORMS = [{name:'Tripster', rate:0.22}, {name:'Sputnik8', rate:0.24}];
 
 // Цена строки прайса для площадки: сначала цена, прописанная в прайсе,
 // и только если её нет — считаем от базовой через комиссию площадки.
-function platPrice(row, rate){
+function platPrice(row, rate, tour){
   if(!rate) return row.usd;
   // У Трипстера своя шкала наценки, её никто не знает. Поэтому там показываем
   // только вписанную цену; нет цены — значит на Трипстере этого нет. null.
   if(rate===0.22) return row.tr || null;
-  if(rate===0.24 && row.sp8) return row.sp8;
+  if(row.sp8) return row.sp8;
+  // Индивидуальный тур — это четыре взрослых билета. Считаем его от цены
+  // билета площадки, иначе округление даёт сумму, не кратную четырём:
+  // у Островов Чам выходило 369 вместо 93 × 4 = 372.
+  if(row.flat && tour){
+    const взр=tour.rows.find(r=>!r.flat);
+    if(взр && row.usd===взр.usd*4) return platPrice(взр, rate, tour)*4;
+  }
   return Math.ceil(row.usd/(1-rate));
 }
 // На Трипстере показываем только то, что вписано в прайс руками.
 // Нет вписанной цены — значит на Трипстере этого нет: строки не будет.
 // Базы и Спутника это не касается, там расчёт от базовой цены сохраняется.
-function rowOff(row, rate){
-  return rate===0.22 && !platPrice(row, rate);
+function rowOff(row, rate, tour){
+  return rate===0.22 && !platPrice(row, rate, tour);
 }
 
 // Доплата за каждого следующего человека в индивидуальном туре.
@@ -563,7 +570,7 @@ function extraPrice(tour, rate){
   if(rate===0.22) return tour.extraPerPersonTr || null;   // Трипстер — только вписанное
   if(rate===0.24 && tour.extraPerPersonSp8) return tour.extraPerPersonSp8;
   const adult = tour.rows.find(r=>!r.flat);
-  if(adult) return platPrice(adult, rate);
+  if(adult) return platPrice(adult, rate, tour);
   const base = tour.extraPerPerson||0;
   return rate ? Math.ceil(base/(1-rate)) : base;
 }
@@ -862,7 +869,7 @@ function platformPricesHTML(t, rates, skeleton) {
   PLATFORMS.forEach(pl => {
     html += `<div class="ticket-section-label">${pl.name}</div><div class="price-rows" style="padding-top:0">`;
     mainRows.forEach(r => {
-      const platUSD = platPrice(r, pl.rate);
+      const platUSD = platPrice(r, pl.rate, t);
       const p = rates ? calcFromUSD(platUSD, rates) : null;
       html += skeleton ? skelRowHTML(true) : priceRowHTML(lbl(r.label), p, true);
     });
@@ -925,10 +932,10 @@ function pCalcUpdate(idx){
   const t=TOURS[idx]; if(!t||!currentRates) return;
   const R=currentRates; const cc=calcCounts[idx]||{};
   const selRate=pCalcPlatforms[idx]||0;
-  const pPlatPrice=(r)=>platPrice(r, selRate);
+  const pPlatPrice=(r)=>platPrice(r, selRate, t);
   let total=zeroP(); let hasAny=false; const rows=[]; const tickets=[];
   t.rows.forEach((r,i)=>{
-    const скрыта=rowOff(r,selRate);
+    const скрыта=rowOff(r,selRate,t);
     const rowEl=document.getElementById(`pc-${idx}-row${i}`);
     if(rowEl) rowEl.style.display=скрыта?'none':'';
     if(скрыта){ cc['r'+i]=0; const numEl=document.getElementById(`pc-${idx}-r${i}`); if(numEl) numEl.textContent='0'; return; }
@@ -980,7 +987,7 @@ function pCalcUpdate(idx){
     PLATFORMS.forEach(pl=>{
       let platTotalUSD=0; let нетЦены=false;
       t.rows.forEach((r,i)=>{const n=cc['r'+i]||0; if(!n) return;
-        const ц=platPrice(r,pl.rate); if(!ц){ нетЦены=true; return; }
+        const ц=platPrice(r,pl.rate,t); if(!ц){ нетЦены=true; return; }
         platTotalUSD+=ц*n;});
       const дополн=cc['extra']||0;
       if(pFlatN>0&&дополн){
@@ -1237,7 +1244,7 @@ function bCardHTML(b){
         const R=currentRates;
         const _dp=bDetectPlatform(b);const _dpl=_dp?PLATFORMS.find(x=>x.name===_dp):null;
         const _ba=tour.rows[0].usd,_bc=tour.rows[1]?tour.rows[1].usd:0;
-        const _platP=(row,pl)=>platPrice(row, pl?pl.rate:0);
+        const _platP=(row,pl)=>platPrice(row, pl?pl.rate:0, tour);
         const aPrice=(b.customPriceAdult&&b.customPriceAdult!==_ba)?b.customPriceAdult:_platP(tour.rows[0],_dpl);
         const cPrice=(b.customPriceChild&&b.customPriceChild!==_bc)?b.customPriceChild:(tour.rows[1]?_platP(tour.rows[1],_dpl):_bc);
         const flatRow0=tour.rows[0].flat;
@@ -1417,7 +1424,7 @@ function bDetectPlatform(b){
   if(bPlatMentioned(nt,/трипстер|tripster/g)) return 'Tripster';
   if(!b.customPriceAdult) return '';
   const tour=TOURS.find(t=>t.key===b.route); if(!tour||!tour.rows[0]) return '';
-  for(const pl of PLATFORMS){ const _pp=platPrice(tour.rows[0], pl.rate); if(_pp && _pp==b.customPriceAdult) return pl.name; }
+  for(const pl of PLATFORMS){ const _pp=platPrice(tour.rows[0], pl.rate, tour); if(_pp && _pp==b.customPriceAdult) return pl.name; }
   return '';
 }
 
@@ -1436,7 +1443,7 @@ function bBreakdown(b){
   if(!tour||!currentRates) return [];
   const _dp=bDetectPlatform(b); const _dpl=_dp?PLATFORMS.find(x=>x.name===_dp):null;
   const _ba=tour.rows[0].usd,_bc=tour.rows[1]?tour.rows[1].usd:0;
-  const _platP=(row,pl)=>platPrice(row, pl?pl.rate:0);
+  const _platP=(row,pl)=>platPrice(row, pl?pl.rate:0, tour);
   const aPrice=(b.customPriceAdult&&b.customPriceAdult!==_ba)?b.customPriceAdult:_platP(tour.rows[0],_dpl);
   const cPrice=(b.customPriceChild&&b.customPriceChild!==_bc)?b.customPriceChild:(tour.rows[1]?_platP(tour.rows[1],_dpl):_bc);
   const flatRow0=tour.rows[0].flat;
@@ -2009,10 +2016,10 @@ function fSetPlatformPrices(rate){
   fPlatformName=rate===0.22?'Tripster':rate===0.24?'Sputnik8':'';
   const route=document.getElementById('fRoute').value;
   const tour=TOURS.find(t=>t.key===route); if(!tour) return;
-  tour.rows.forEach((row,i)=>{const el=document.getElementById(`fPriceRow${i}`); if(el) el.value=platPrice(row,rate)||'';});
+  tour.rows.forEach((row,i)=>{const el=document.getElementById(`fPriceRow${i}`); if(el) el.value=platPrice(row,rate,tour)||'';});
   const fExtraPlat=extraPrice(tour, rate);
   tour.rows.forEach((row,i)=>{if(row.flat){const ep=document.getElementById(`fExtraPrice${i}`);if(ep)ep.value=fExtraPlat||'';}});
-  tour.rows.forEach((row,i)=>{const el=document.getElementById(`fCalcRow${i}`); if(el&&!row.flat) el.style.display=rowOff(row,rate)?'none':'flex';});
+  tour.rows.forEach((row,i)=>{const el=document.getElementById(`fCalcRow${i}`); if(el&&!row.flat) el.style.display=rowOff(row,rate,tour)?'none':'flex';});
   fRecalc();
 }
 function pfSetPlatformPrices(rate){
@@ -2020,10 +2027,10 @@ function pfSetPlatformPrices(rate){
   pfPlatformName=rate===0.22?'Tripster':rate===0.24?'Sputnik8':'';
   const route=document.getElementById('pfRoute').value;
   const tour=TOURS.find(t=>t.key===route); if(!tour) return;
-  tour.rows.forEach((row,i)=>{const el=document.getElementById(`pfPriceRow${i}`); if(el) el.value=platPrice(row,rate)||'';});
+  tour.rows.forEach((row,i)=>{const el=document.getElementById(`pfPriceRow${i}`); if(el) el.value=platPrice(row,rate,tour)||'';});
   const pfExtraPlat=extraPrice(tour, rate);
   tour.rows.forEach((row,i)=>{if(row.flat){const ep=document.getElementById(`pfExtraPrice${i}`);if(ep)ep.value=pfExtraPlat||'';}});
-  tour.rows.forEach((row,i)=>{const el=document.getElementById(`pfCalcRow${i}`); if(el&&!row.flat) el.style.display=rowOff(row,rate)?'none':'flex';});
+  tour.rows.forEach((row,i)=>{const el=document.getElementById(`pfCalcRow${i}`); if(el&&!row.flat) el.style.display=rowOff(row,rate,tour)?'none':'flex';});
   pfRecalc();
 }
 function pCalcSetPlat(idx,rate){
@@ -2261,7 +2268,7 @@ function fRecalc(){
     } else {
       count=hasFlatChecked?0:(i===0?adults:i===1?children:parseInt(document.getElementById(`fCountRow${i}`)?.value)||0);
     }
-    if(rowOff(row,fCurrentPlatRate)) count=0;
+    if(rowOff(row,fCurrentPlatRate,tour)) count=0;
     const sub=price*count;
     tourUSD+=sub;
     const tot=document.getElementById(`fTotRow${i}`); if(tot) tot.textContent=fmtVal(sub);
@@ -2508,7 +2515,7 @@ function pfRecalc(){
     } else {
       count=hasFlatChecked?0:(i===0?adults:i===1?children:parseInt(document.getElementById(`pfCountRow${i}`)?.value)||0);
     }
-    if(rowOff(row,pfCurrentPlatRate)) count=0;
+    if(rowOff(row,pfCurrentPlatRate,tour)) count=0;
     const sub=price*count;
     tourUSD+=sub;
     const tot=document.getElementById(`pfTotRow${i}`); if(tot) tot.textContent=fmtVal(sub);
