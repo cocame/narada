@@ -543,31 +543,25 @@ const PLATFORMS = [{name:'Tripster', rate:0.22}, {name:'Sputnik8', rate:0.24}];
 // и только если её нет — считаем от базовой через комиссию площадки.
 function platPrice(row, rate){
   if(!rate) return row.usd;
+  // У Трипстера своя шкала наценки, её никто не знает. Поэтому там показываем
+  // только вписанную цену; нет цены — значит на Трипстере этого нет. null.
+  if(rate===0.22) return row.tr || null;
   if(rate===0.24 && row.sp8) return row.sp8;
-  if(rate===0.22 && row.tr)  return row.tr;
   return Math.ceil(row.usd/(1-rate));
 }
-// Что продаётся на Трипстере, у каждой экскурсии своё:
-//   trIndOnly — только индивидуальный тур и доплата за следующего человека;
-//   trNone    — на Трипстере не продаётся вовсе.
-// Детского билета на Трипстере нет нигде. Базы и Спутника это не касается.
-// Дополнения («+ Рыбалка», «Лодка», «Групповой») билетами не считаются и остаются.
-function isChildRow(row){ return !row.flat && /^\s*(ребёнок|ребенок|детск)/i.test(row.label); }
-function isAdultRow(row){ return !row.flat && /^\s*взрослый/i.test(row.label); }
-function rowOff(row, rate, tour){
-  if(rate!==0.22) return false;
-  if(tour && tour.trNone) return true;      // на Трипстере не продаётся вовсе
-  if(row.flat) return false;                // сам индивидуальный тур остаётся
-  if(tour && tour.trIndOnly) return true;   // кроме него на Трипстере ничего нет
-  return isChildRow(row);                   // детского на Трипстере нет нигде
+// На Трипстере показываем только то, что вписано в прайс руками.
+// Нет вписанной цены — значит на Трипстере этого нет: строки не будет.
+// Базы и Спутника это не касается, там расчёт от базовой цены сохраняется.
+function rowOff(row, rate){
+  return rate===0.22 && !platPrice(row, rate);
 }
 
 // Доплата за каждого следующего человека в индивидуальном туре.
 // Своя цена тура важнее цены взрослого билета: на части маршрутов площадка
 // берёт за дополнительного человека отдельную сумму, не равную взрослому.
 function extraPrice(tour, rate){
+  if(rate===0.22) return tour.extraPerPersonTr || null;   // Трипстер — только вписанное
   if(rate===0.24 && tour.extraPerPersonSp8) return tour.extraPerPersonSp8;
-  if(rate===0.22 && tour.extraPerPersonTr)  return tour.extraPerPersonTr;
   const adult = tour.rows.find(r=>!r.flat);
   if(adult) return platPrice(adult, rate);
   const base = tour.extraPerPerson||0;
@@ -575,25 +569,25 @@ function extraPrice(tour, rate){
 }
 
 const TOURS = [
-  { icon:'🏯', name:'Хюэ', key:'ХЮЭ', trIndOnly:true,
+  { icon:'🏯', name:'Хюэ', key:'ХЮЭ',
     extraPerPersonTr:120,
-    rows:[{label:'Взрослый',usd:88,tr:120,sp8:116},{label:'Ребёнок до 10',usd:44,tr:58,sp8:58},{label:'Индивидуально',usd:352,tr:480,sp8:464,flat:true}] },
-  { icon:'🏮', name:'Хойан', key:'ХОЙАН', trIndOnly:true,
+    rows:[{label:'Взрослый',usd:88,sp8:116},{label:'Ребёнок до 10',usd:44,sp8:58},{label:'Индивидуально',usd:352,tr:480,sp8:464,flat:true}] },
+  { icon:'🏮', name:'Хойан', key:'ХОЙАН',
     extraPerPersonTr:89,
     rows:[{label:'Взрослый',usd:65},{label:'Ребёнок до 10',usd:33},{label:'Индивидуально',usd:260,tr:355,flat:true}] },
   { icon:'🏝', name:'Острова Чам', key:'ОСТРОВА ЧАМ',
     rows:[{label:'Взрослый',usd:70},{label:'Ребёнок до 10',usd:35},{label:'+ Рыбалка',usd:90},{label:'+ Дайвинг',usd:100},{label:'Индивидуально',usd:280,flat:true}]},
-  { icon:'🌉', name:'Обзорный Дананг', key:'ДАНАНГ', trIndOnly:true,
+  { icon:'🌉', name:'Обзорный Дананг', key:'ДАНАНГ',
     extraPerPersonTr:93,
     rows:[{label:'Взрослый',usd:67,sp8:84},{label:'Ребёнок до 10',usd:34,sp8:42},{label:'Индивидуально',usd:268,tr:370,sp8:336,flat:true}] },
-  { icon:'⛰', name:'Ба На Хиллс', key:'БА НА ХИЛЛС', trIndOnly:true,
+  { icon:'⛰', name:'Ба На Хиллс', key:'БА НА ХИЛЛС',
     extraPerPerson:50, extraPerPersonTr:68, extraPerPersonSp8:68,
-    rows:[{label:'Взрослый / >140 см',usd:50,tr:68,sp8:68},{label:'Ребёнок 100–140 см',usd:25,tr:34,sp8:34},{label:'Индивидуально',usd:200,tr:275,sp8:275,flat:true}],
+    rows:[{label:'Взрослый / >140 см',usd:50,sp8:68},{label:'Ребёнок 100–140 см',usd:25,sp8:34},{label:'Индивидуально',usd:200,tr:275,sp8:275,flat:true}],
     tickets:[
       {id:'bana_adult_day', label:'Входной взрослый',         vnd_fixed:1300000},
       {id:'bana_child_day', label:'Входной детский 100-140 см', vnd_fixed:1000000}
     ]},
-  { icon:'🌆', name:'БХ Вечер', key:'БХ ВЕЧЕР', trIndOnly:true,
+  { icon:'🌆', name:'БХ Вечер', key:'БХ ВЕЧЕР',
     extraPerPerson:50, extraPerPersonSp8:68, extraPerPersonTr:68,
     rows:[{label:'Индивидуально',usd:200,tr:275,sp8:275,flat:true}],
     tickets:[
@@ -616,9 +610,9 @@ const TOURS = [
     rows:[{label:'Взрослый',usd:75,tr:97},{label:'Лодка',usd:360},{label:'Индивидуально',usd:360,flat:true}] },
   { icon:'⛵', name:'Морская прогулка', key:'МОРСКАЯ ПРОГУЛКА',
     rows:[{label:'Взрослый / >140 см',usd:70,tr:90},{label:'Ребёнок 100–140 см',usd:35},{label:'Индивидуально',usd:360,flat:true}] },
-  { icon:'🌊', name:'Хайван', key:'ХАЙВАН', trNone:true, rows:[{label:'Взрослый',usd:65},{label:'Ребёнок до 10',usd:33},{label:'Индивидуально',usd:260,flat:true}] },
-  { icon:'🏯', name:'Донг Зянг', key:'ДОНГ ЗЯНГ', trIndOnly:true, extraPerPersonTr:95,
-    rows:[{label:'Групповой (за чел.)',usd:70,sp8:95,tr:95},{label:'Индивидуально (до 4 чел)',usd:280,sp8:380,tr:380,flat:true}] },
+  { icon:'🌊', name:'Хайван', key:'ХАЙВАН', rows:[{label:'Взрослый',usd:65},{label:'Ребёнок до 10',usd:33},{label:'Индивидуально',usd:260,flat:true}] },
+  { icon:'🏯', name:'Донг Зянг', key:'ДОНГ ЗЯНГ', extraPerPersonTr:95,
+    rows:[{label:'Групповой (за чел.)',usd:70,sp8:95},{label:'Индивидуально (до 4 чел)',usd:280,sp8:380,tr:380,flat:true}] },
 ];
 
 // Очень расширенный алиас-словарь маршрутов
@@ -934,7 +928,7 @@ function pCalcUpdate(idx){
   const pPlatPrice=(r)=>selRate?((selRate===0.24&&r.sp8)?r.sp8:(selRate===0.22&&r.tr)?r.tr:Math.ceil(r.usd/(1-selRate))):r.usd;
   let total=zeroP(); let hasAny=false; const rows=[]; const tickets=[];
   t.rows.forEach((r,i)=>{
-    const скрыта=rowOff(r,selRate,t);
+    const скрыта=rowOff(r,selRate);
     const rowEl=document.getElementById(`pc-${idx}-row${i}`);
     if(rowEl) rowEl.style.display=скрыта?'none':'';
     if(скрыта){ cc['r'+i]=0; const numEl=document.getElementById(`pc-${idx}-r${i}`); if(numEl) numEl.textContent='0'; return; }
@@ -984,17 +978,20 @@ function pCalcUpdate(idx){
   if(platRowsEl) platRowsEl.style.display=selRate?'none':'block';
   if(!selRate){
     PLATFORMS.forEach(pl=>{
-      let platTotalUSD=0;
-      t.rows.forEach((r,i)=>{const n=cc['r'+i]||0; if(n&&!rowOff(r,pl.rate,t)) platTotalUSD+=platPrice(r,pl.rate)*n;});
-      if(pFlatN>0){
+      let platTotalUSD=0; let нетЦены=false;
+      t.rows.forEach((r,i)=>{const n=cc['r'+i]||0; if(!n) return;
+        const ц=platPrice(r,pl.rate); if(!ц){ нетЦены=true; return; }
+        platTotalUSD+=ц*n;});
+      const дополн=cc['extra']||0;
+      if(pFlatN>0&&дополн){
         const platExtraP=extraPrice(t, pl.rate);
-        platTotalUSD+=platExtraP*(cc['extra']||0);
+        if(platExtraP) platTotalUSD+=platExtraP*дополн; else нетЦены=true;
       }
       if(t.tickets) t.tickets.forEach((_tk,tkI)=>{const n=cc['t'+tkI]||0;if(n) platTotalUSD+=calcFromVND(_tk.vnd_fixed,R).usd*n;});
       if(transferUSD) platTotalUSD+=transferUSD;
       const key=pl.name==='Tripster'?'trip':'sp8';
       const el=document.getElementById(`cplat-${key}-${idx}`);
-      if(el) el.textContent=platTotalUSD?formatPrice(calcFromUSD(platTotalUSD,R),cursF):'—';
+      if(el) el.textContent=(нетЦены||!platTotalUSD)?'—':formatPrice(calcFromUSD(platTotalUSD,R),cursF);
     });
   }
   // store for copy
@@ -2012,10 +2009,10 @@ function fSetPlatformPrices(rate){
   fPlatformName=rate===0.22?'Tripster':rate===0.24?'Sputnik8':'';
   const route=document.getElementById('fRoute').value;
   const tour=TOURS.find(t=>t.key===route); if(!tour) return;
-  tour.rows.forEach((row,i)=>{const el=document.getElementById(`fPriceRow${i}`); if(el) el.value=rate?((rate===0.24&&row.sp8)?row.sp8:(rate===0.22&&row.tr)?row.tr:Math.ceil(row.usd/(1-rate))):row.usd;});
+  tour.rows.forEach((row,i)=>{const el=document.getElementById(`fPriceRow${i}`); if(el) el.value=platPrice(row,rate)||'';});
   const fExtraPlat=extraPrice(tour, rate);
-  tour.rows.forEach((row,i)=>{if(row.flat){const ep=document.getElementById(`fExtraPrice${i}`);if(ep)ep.value=fExtraPlat;}});
-  tour.rows.forEach((row,i)=>{const el=document.getElementById(`fCalcRow${i}`); if(el&&!row.flat) el.style.display=rowOff(row,rate,tour)?'none':'flex';});
+  tour.rows.forEach((row,i)=>{if(row.flat){const ep=document.getElementById(`fExtraPrice${i}`);if(ep)ep.value=fExtraPlat||'';}});
+  tour.rows.forEach((row,i)=>{const el=document.getElementById(`fCalcRow${i}`); if(el&&!row.flat) el.style.display=rowOff(row,rate)?'none':'flex';});
   fRecalc();
 }
 function pfSetPlatformPrices(rate){
@@ -2023,10 +2020,10 @@ function pfSetPlatformPrices(rate){
   pfPlatformName=rate===0.22?'Tripster':rate===0.24?'Sputnik8':'';
   const route=document.getElementById('pfRoute').value;
   const tour=TOURS.find(t=>t.key===route); if(!tour) return;
-  tour.rows.forEach((row,i)=>{const el=document.getElementById(`pfPriceRow${i}`); if(el) el.value=rate?((rate===0.24&&row.sp8)?row.sp8:(rate===0.22&&row.tr)?row.tr:Math.ceil(row.usd/(1-rate))):row.usd;});
+  tour.rows.forEach((row,i)=>{const el=document.getElementById(`pfPriceRow${i}`); if(el) el.value=platPrice(row,rate)||'';});
   const pfExtraPlat=extraPrice(tour, rate);
-  tour.rows.forEach((row,i)=>{if(row.flat){const ep=document.getElementById(`pfExtraPrice${i}`);if(ep)ep.value=pfExtraPlat;}});
-  tour.rows.forEach((row,i)=>{const el=document.getElementById(`pfCalcRow${i}`); if(el&&!row.flat) el.style.display=rowOff(row,rate,tour)?'none':'flex';});
+  tour.rows.forEach((row,i)=>{if(row.flat){const ep=document.getElementById(`pfExtraPrice${i}`);if(ep)ep.value=pfExtraPlat||'';}});
+  tour.rows.forEach((row,i)=>{const el=document.getElementById(`pfCalcRow${i}`); if(el&&!row.flat) el.style.display=rowOff(row,rate)?'none':'flex';});
   pfRecalc();
 }
 function pCalcSetPlat(idx,rate){
@@ -2264,7 +2261,7 @@ function fRecalc(){
     } else {
       count=hasFlatChecked?0:(i===0?adults:i===1?children:parseInt(document.getElementById(`fCountRow${i}`)?.value)||0);
     }
-    if(rowOff(row,fCurrentPlatRate,tour)) count=0;
+    if(rowOff(row,fCurrentPlatRate)) count=0;
     const sub=price*count;
     tourUSD+=sub;
     const tot=document.getElementById(`fTotRow${i}`); if(tot) tot.textContent=fmtVal(sub);
@@ -2511,7 +2508,7 @@ function pfRecalc(){
     } else {
       count=hasFlatChecked?0:(i===0?adults:i===1?children:parseInt(document.getElementById(`pfCountRow${i}`)?.value)||0);
     }
-    if(rowOff(row,pfCurrentPlatRate,tour)) count=0;
+    if(rowOff(row,pfCurrentPlatRate)) count=0;
     const sub=price*count;
     tourUSD+=sub;
     const tot=document.getElementById(`pfTotRow${i}`); if(tot) tot.textContent=fmtVal(sub);
