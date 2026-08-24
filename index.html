@@ -556,10 +556,10 @@ function isChildRow(row){ return !row.flat && /^\s*(ребёнок|ребено�
 function isAdultRow(row){ return !row.flat && /^\s*взрослый/i.test(row.label); }
 function rowOff(row, rate, tour){
   if(rate!==0.22) return false;
-  if(tour && tour.trNone) return true;
-  if(isChildRow(row)) return true;
-  if(tour && tour.trIndOnly) return isAdultRow(row);
-  return false;
+  if(tour && tour.trNone) return true;      // на Трипстере не продаётся вовсе
+  if(row.flat) return false;                // сам индивидуальный тур остаётся
+  if(tour && tour.trIndOnly) return true;   // кроме него на Трипстере ничего нет
+  return isChildRow(row);                   // детского на Трипстере нет нигде
 }
 
 // Доплата за каждого следующего человека в индивидуальном туре.
@@ -617,7 +617,7 @@ const TOURS = [
   { icon:'⛵', name:'Морская прогулка', key:'МОРСКАЯ ПРОГУЛКА',
     rows:[{label:'Взрослый / >140 см',usd:70,tr:90},{label:'Ребёнок 100–140 см',usd:35},{label:'Индивидуально',usd:360,flat:true}] },
   { icon:'🌊', name:'Хайван', key:'ХАЙВАН', trNone:true, rows:[{label:'Взрослый',usd:65},{label:'Ребёнок до 10',usd:33},{label:'Индивидуально',usd:260,flat:true}] },
-  { icon:'🏯', name:'Донг Зянг', key:'ДОНГ ЗЯНГ', extraPerPersonTr:95,
+  { icon:'🏯', name:'Донг Зянг', key:'ДОНГ ЗЯНГ', trIndOnly:true, extraPerPersonTr:95,
     rows:[{label:'Групповой (за чел.)',usd:70,sp8:95,tr:95},{label:'Индивидуально (до 4 чел)',usd:280,sp8:380,tr:380,flat:true}] },
 ];
 
