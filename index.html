@@ -329,6 +329,7 @@ body.ro .ro-badge{display:inline-block}
         <option value="upcoming_waiting" selected>Скоро</option>
         <option value="done">Ездил</option>
         <option value="cancelled">Отказ</option>
+        <option value="deleted">Удалённые</option>
       </select>
       <select class="b-filter-select" id="bFilterRoute" onchange="bRender()">
         <option value="">Маршрут</option>
@@ -1180,8 +1181,12 @@ function bRender(){
   const dateF=document.getElementById('bFilterDate').value;
   const tod=todayStr();
   let filtered=allBookings.filter(b=>{
+    // Удалённые живут отдельно: в обычных фильтрах их нет, они только в корзине.
+    if(bFilter==='deleted') { if(!b.deleted) return false; }
+    else if(b.deleted) return false;
     if(routeF&&b.route!==routeF) return false;
     if(dateF&&b.date!==dateF) return false;
+    if(bFilter==='deleted') return true;
     // Бронь без даты тоже показываем — иначе она сохраняется и пропадает с глаз
     if(bFilter==='upcoming_waiting') return (!b.date&&b.tripStatus!=='cancelled'&&b.tripStatus!=='done')||(b.date&&b.date>=tod&&b.tripStatus==='waiting');
     if(bFilter==='done') return b.tripStatus==='done';
@@ -1287,9 +1292,14 @@ function bCardHTML(b){
         <button class="b-copy-card-btn b-copy-guide-btn" onclick="event.stopPropagation();bCopyGuide('${b.id}')">Гиду</button>
       </div>
       <div class="b-status-row">
+        ${b.deleted ? `
+        <button class="b-status-btn act-waiting" onclick="event.stopPropagation();bRestore('${b.id}')">Вернуть</button>
+        <button class="b-status-btn" onclick="event.stopPropagation();bPurge('${b.id}')" style="margin-left:auto;color:var(--red);border-color:var(--red)">Стереть навсегда</button>
+        ` : `
         <button class="b-status-btn ${b.tripStatus==='done'?'act-done':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','done')">Ездил</button>
         <button class="b-status-btn ${b.tripStatus==='cancelled'?'act-cancel':''}" onclick="event.stopPropagation();bSetTrip('${b.id}','cancelled')">Отмена</button>
         <button class="b-status-btn" onclick="event.stopPropagation();bDelete('${b.id}')" style="margin-left:auto;color:var(--red);border-color:var(--red)">Удалить</button>
+        `}
       </div>
     </div>
   </div>`;
@@ -1671,10 +1681,12 @@ function bCopyCard(id){
 function bUpdateStats(){
   const tod=todayStr(),tom=tomorrowStr();
   const nm=new Date().getMonth(),ny=new Date().getFullYear();
-  document.getElementById('bStatToday').textContent=allBookings.filter(b=>b.date===tod&&b.tripStatus!=='cancelled').length;
-  document.getElementById('bStatTomorrow').textContent=allBookings.filter(b=>b.date===tom&&b.tripStatus!=='cancelled').length;
+  // Удалённые лежат в общем списке ради корзины, но в счётчики и деньги не идут.
+  const live=allBookings.filter(b=>!b.deleted);
+  document.getElementById('bStatToday').textContent=live.filter(b=>b.date===tod&&b.tripStatus!=='cancelled').length;
+  document.getElementById('bStatTomorrow').textContent=live.filter(b=>b.date===tom&&b.tripStatus!=='cancelled').length;
   let earn=0;
-  allBookings.forEach(b=>{if(b.tripStatus==='done'&&b.date){const bd=new Date(b.date+'T00:00:00');if(bd.getMonth()===nm&&bd.getFullYear()===ny)earn+=parseFloat(b.commission)||0;}});
+  live.forEach(b=>{if(b.tripStatus==='done'&&b.date){const bd=new Date(b.date+'T00:00:00');if(bd.getMonth()===nm&&bd.getFullYear()===ny)earn+=parseFloat(b.commission)||0;}});
   document.getElementById('bStatEarn').textContent='$'+(Math.round(earn*100)/100);
 }
 
@@ -1706,11 +1718,25 @@ async function bCyclePay(id){
 async function bSetTrip(id,status){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   b.tripStatus=status;
-  await gasSave('updateBooking',b); bLoad();
+  const r=await gasSave('updateBooking',b); bWarnBackup(r); bLoad();
 }
+// Удаление обратимо: бронь уходит в фильтр «Удалённые», откуда её можно вернуть.
 async function bDelete(id){
-  if(!confirm('Удалить бронирование?')) return;
-  await gasDelete(id); bLoad();
+  if(!confirm('Удалить бронирование?\n\nОно уйдёт в «Удалённые», откуда его можно вернуть.')) return;
+  const r=await gasDelete(id); bWarnBackup(r); bLoad();
+  toast('Удалено — фильтр «Удалённые»');
+}
+async function bRestore(id){
+  const r=await gasSave('restoreBooking',{id}); bWarnBackup(r); bLoad();
+  toast('Бронь возвращена');
+}
+async function bPurge(id){
+  if(!confirm('Стереть навсегда?\n\nЭто уже нельзя отменить.')) return;
+  const r=await gasSave('purgeBooking',{id}); bWarnBackup(r); bLoad();
+}
+// Раньше сбой резервной копии проходил незаметно и копий не было месяцами.
+function bWarnBackup(r){
+  if(r&&r.backupError) toast('⚠️ Копия не сохранилась: '+r.backupError);
 }
 
 // ══════════════════════════════════════
@@ -2809,6 +2835,7 @@ function renderEarnHistory(){
   const el=document.getElementById('earnHistoryList');
   const months={};
   allBookings.forEach(b=>{
+    if(b.deleted) return;
     if(b.tripStatus==='done'&&b.date){
       const d=new Date(b.date+'T00:00:00'); if(isNaN(d)) return;
       const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
@@ -2831,6 +2858,7 @@ function renderEarnHistory(){
 function calcTotalEarned(){
   let t=0;
   allBookings.forEach(b=>{
+    if(b.deleted) return;
     if(b.tripStatus==='done'&&b.date) t+=parseFloat(b.commission)||0;
   });
   return Math.round(t*100)/100;
