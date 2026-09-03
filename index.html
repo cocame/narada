@@ -1293,6 +1293,7 @@ function bCardHTML(b){
       </div>
       <div class="b-status-row">
         ${b.deleted ? `
+        <span style="font-size:11px;color:var(--muted);margin-right:8px">${bTrashLabel(b)}</span>
         <button class="b-status-btn act-waiting" onclick="event.stopPropagation();bRestore('${b.id}')">Вернуть</button>
         <button class="b-status-btn" onclick="event.stopPropagation();bPurge('${b.id}')" style="margin-left:auto;color:var(--red);border-color:var(--red)">Стереть навсегда</button>
         ` : `
@@ -1720,6 +1721,17 @@ async function bSetTrip(id,status){
   b.tripStatus=status;
   const r=await gasSave('updateBooking',b); bWarnBackup(r); bLoad();
 }
+// Корзина живёт 7 дней — показываем, когда удалили и сколько осталось.
+const TRASH_DAYS=7;
+function bTrashLabel(b){
+  if(!b.deletedAt) return 'удалена';
+  const d=new Date(b.deletedAt);
+  const when=String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+' '+
+             String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  const left=Math.ceil((d.getTime()+TRASH_DAYS*864e5-Date.now())/864e5);
+  return 'удалена '+when+' · сотрётся через '+(left>0?left:0)+' дн.';
+}
+
 // Удаление обратимо: бронь уходит в фильтр «Удалённые», откуда её можно вернуть.
 async function bDelete(id){
   if(!confirm('Удалить бронирование?\n\nОно уйдёт в «Удалённые», откуда его можно вернуть.')) return;
