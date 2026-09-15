@@ -1427,10 +1427,14 @@ function bPlatMentioned(txt,re){
 }
 function bDetectPlatform(b){
   const n=b.notes||'';
+  // «База» — это осознанный выбор «площадки нет». Он должен перебивать любое
+  // угадывание ниже: раньше бронь с ценой, совпавшей с ценой площадки, снова
+  // подписывалась этой площадкой, и снять подпись было нечем.
+  if(n.includes('‌B') || b.platform==='База') return '';
   if(n.includes('‌S')) return 'Sputnik8';
   if(n.includes('‌T')) return 'Tripster';
   if(b.platform) return b.platform;
-  const nt=n.replace(/‌[TS]/g,'').replace(/​/g,'').toLowerCase();
+  const nt=n.replace(/‌[TSB]/g,'').replace(/​/g,'').toLowerCase();
   if(bPlatMentioned(nt,/спутник|sputnik|sp8/g)) return 'Sputnik8';
   if(bPlatMentioned(nt,/трипстер|tripster/g)) return 'Tripster';
   if(!b.customPriceAdult) return '';
@@ -1769,7 +1773,12 @@ function bEdit(id){
   Object.keys(fTickCounts).forEach(k=>delete fTickCounts[k]);
   Object.keys(fExtraAdults).forEach(k=>delete fExtraAdults[k]);
   fCalcRoute=''; pfCalcRoute=''; fDrawnRoute='';
-  const _ep=bDetectPlatform(b); fPlatformName=_ep; const _epl=PLATFORMS.find(x=>x.name===_ep); fCurrentPlatRate=_epl?_epl.rate:0;
+  const _ep=bDetectPlatform(b);
+  // пустая площадка бывает двух видов: «выбрали Базу» и «не указывали».
+  // Первое надо сохранить при пересохранении, иначе подпись вернётся.
+  const _wasBase=(b.notes||'').includes('‌B') || b.platform==='База';
+  fPlatformName=_ep || (_wasBase?'База':'');
+  const _epl=PLATFORMS.find(x=>x.name===_ep); fCurrentPlatRate=_epl?_epl.rate:0;
   const fb=document.getElementById('fCalcBlock'); if(fb){fb.style.display='none';delete fb.dataset.route;}
   document.getElementById('modalTitle').textContent='Редактировать';
   mSwitchTab('manual');
@@ -2051,7 +2060,7 @@ let fPlatformName='';
 
 function fSetPlatformPrices(rate){
   fCurrentPlatRate=rate||0;
-  fPlatformName=rate===0.22?'Tripster':rate===0.24?'Sputnik8':'';
+  fPlatformName=rate===0.22?'Tripster':rate===0.24?'Sputnik8':'База';
   const route=document.getElementById('fRoute').value;
   const tour=TOURS.find(t=>t.key===route); if(!tour) return;
   tour.rows.forEach((row,i)=>{const el=document.getElementById(`fPriceRow${i}`); if(el) el.value=platPrice(row,rate,tour)||'';});
@@ -2062,7 +2071,7 @@ function fSetPlatformPrices(rate){
 }
 function pfSetPlatformPrices(rate){
   pfCurrentPlatRate=rate||0;
-  pfPlatformName=rate===0.22?'Tripster':rate===0.24?'Sputnik8':'';
+  pfPlatformName=rate===0.22?'Tripster':rate===0.24?'Sputnik8':'База';
   const route=document.getElementById('pfRoute').value;
   const tour=TOURS.find(t=>t.key===route); if(!tour) return;
   tour.rows.forEach((row,i)=>{const el=document.getElementById(`pfPriceRow${i}`); if(el) el.value=platPrice(row,rate,tour)||'';});
@@ -2671,7 +2680,7 @@ function bGetFormData(){
     platform:mTab==='manual'?fPlatformName:pfPlatformName,
     payStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.payStatus||'unpaid') : 'unpaid',
     tripStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.tripStatus||'waiting') : (document.getElementById(p+'TripStatus')?.value||'waiting'),
-    notes:(()=>{const _pn=mTab==='manual'?fPlatformName:pfPlatformName;const _pm=_pn==='Sputnik8'?'‌S':_pn==='Tripster'?'‌T':'';return(document.getElementById(p+'Notes').value||'').replace(/​/g,'').replace(/‌[TS]/g,'')+_pm+(isIndividual?'​':'');})()
+    notes:(()=>{const _pn=mTab==='manual'?fPlatformName:pfPlatformName;const _pm=_pn==='Sputnik8'?'‌S':_pn==='Tripster'?'‌T':_pn==='База'?'‌B':'';return(document.getElementById(p+'Notes').value||'').replace(/​/g,'').replace(/‌[TSB]/g,'')+_pm+(isIndividual?'​':'');})()
   };
 }
 function bRepeat(id){
