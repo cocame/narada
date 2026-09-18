@@ -1194,13 +1194,28 @@ function bRender(){
     if(bFilter==='base') return !!b.inBase;
     return true;
   });
-  const doneSort=bFilter==='done';
-  filtered.sort((a,b)=>{if(!a.date&&!b.date) return 0;if(!a.date) return 1;if(!b.date) return -1;return doneSort?b.date.localeCompare(a.date):a.date.localeCompare(b.date);});
+  // Списки про прошлое читают сверху вниз от свежего: «Ездил», «Отказ», «Удалённые».
+  // «Скоро» — наоборот, от ближайшей даты. В «Все» сначала будущее по возрастанию,
+  // потом прошлое от свежего к старому: иначе наверху оказывались брони годичной давности.
+  const pastSort=bFilter==='done'||bFilter==='cancelled'||bFilter==='deleted';
+  filtered.sort((a,b)=>{
+    if(!a.date&&!b.date) return 0;
+    if(!a.date) return 1;
+    if(!b.date) return -1;
+    if(bFilter==='all'){
+      const aPast=a.date<tod, bPast=b.date<tod;
+      if(aPast!==bPast) return aPast?1:-1;
+      return aPast ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date);
+    }
+    return pastSort?b.date.localeCompare(a.date):a.date.localeCompare(b.date);
+  });
   if(!filtered.length){document.getElementById('bList').innerHTML='<div class="b-empty">Нет бронирований</div>';return;}
   const groups={};
   filtered.forEach(b=>{const d=b.date||'—';if(!groups[d])groups[d]=[];groups[d].push(b);});
   let html='';
-  Object.keys(groups).sort(doneSort?(a,b)=>b.localeCompare(a):(a,b)=>a.localeCompare(b)).forEach(date=>{
+  // порядок групп берём из уже отсортированного списка, а не сортируем ключи заново —
+  // иначе заголовки дат шли в одном порядке, а карточки внутри в другом
+  Object.keys(groups).forEach(date=>{
     html+='<div class="b-date-group"><div class="b-date-header"><div class="b-date-title">'+(date==='—'?'Без даты':formatDateLabel(date))+'</div><div class="b-date-line"></div><div class="b-date-count">'+groups[date].length+' '+pluralB(groups[date].length)+'</div></div>'+groups[date].map(bCardHTML).join('')+'</div>';
   });
   document.getElementById('bList').innerHTML=html;
