@@ -1142,16 +1142,23 @@ const KEY_STORE='naradaEditKey';
 function editKey(){ try{ return localStorage.getItem(KEY_STORE)||''; }catch(e){ return ''; } }
 
 // Уровень доступа определяет скрипт, а не страница: подделать нельзя.
-let ACCESS={read:false,write:false};
+// Пока ответ идёт, считаем по ключу: с ключом — можно править. Это не дыра,
+// запись всё равно проверяет сервер. Зато не приходится сидеть в режиме
+// просмотра те несколько секунд, что отвечает Google.
+let ACCESS={read:true,write:!!editKey()};
 async function loadAccess(){
-  try{
-    const r=await fetch(GAS_URL+'?action=access&key='+encodeURIComponent(editKey())+'&_='+Date.now(),{mode:'cors'});
-    const j=await r.json();
-    ACCESS={read:!!j.read,write:!!j.write};
-  }catch(e){
-    // Скрипт ещё не знает про access — работаем по-старому,
-    // доступ на запись всё равно проверяет сервер.
-    ACCESS={read:true,write:!!editKey()};
+  for(let i=0;i<3;i++){
+    const ctl=new AbortController();
+    const timer=setTimeout(()=>ctl.abort(), 7000);
+    try{
+      const r=await fetch(GAS_URL+'?action=access&key='+encodeURIComponent(editKey())+'&_='+Date.now(),{mode:'cors',signal:ctl.signal});
+      const j=await r.json();
+      ACCESS={read:!!j.read,write:!!j.write};
+      return ACCESS;
+    }catch(e){
+      // не ответил — пробуем ещё, но права оставляем по ключу
+    }finally{ clearTimeout(timer); }
+    if(i<2) await new Promise(res=>setTimeout(res,600*(i+1)));
   }
   return ACCESS;
 }
@@ -2952,6 +2959,8 @@ async function loadWallet(){
 document.addEventListener('DOMContentLoaded', () => {
   // Каждый запрос к скрипту идёт около двух секунд, поэтому пускаем их
   // разом, а не по очереди: список не ждёт проверку доступа.
+  // права ставим сразу по ключу, не дожидаясь ответа Google
+  document.body.classList.toggle('ro', !canEdit());
   if(editKey()) bLoad();
   loadAccess().then(()=>{
     document.body.classList.toggle('ro', !canEdit());
