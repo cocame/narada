@@ -2042,8 +2042,10 @@ function fCurrencyChanged(p){
 }
 
 function bClearForm(){
-  ['fDate','fContact','fHotel','fAmount','fNotes','fPrepay','fPrepayDate','fOnsite','pfDate','pfContact','pfHotel','pfAmount','pfNotes','pfPrepay','pfPrepayDate','pfOnsite'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  ['fPrepayCur','fOnsiteCur','pfPrepayCur','pfOnsiteCur'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='USD';});
+  ['fDate','fContact','fHotel','fAmount','fNotes','fPrepay','fPrepayDate','fOnsite','fPlat','fPlatDate','fPlatUsd','fPlatFx','pfDate','pfContact','pfHotel','pfAmount','pfNotes','pfPrepay','pfPrepayDate','pfOnsite','pfPlat','pfPlatDate','pfPlatUsd','pfPlatFx'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fPrepayCur','pfPrepayCur','fPlatCur','pfPlatCur'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='USD';});
+  // На месте платят донгами — там по умолчанию ₫, площадки платят долларами.
+  ['fOnsiteCur','pfOnsiteCur'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='VND';});
   ['fRoute','pfRoute'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('fAdults').value=1; document.getElementById('fChildren').value=0; document.getElementById('fInfants').value=0;
   const pa=document.getElementById('pfAdults');
