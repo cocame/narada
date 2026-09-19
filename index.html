@@ -397,8 +397,8 @@ body.ro .ro-badge{display:inline-block}
           <div class="form-group">
             <label>Предоплата</label>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <input type="text" id="fPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('f');payHints('f')">
-              <select id="fPrepayCur" onchange="prepayAutoFill('f');payHints('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+              <input type="text" id="fPrepay" placeholder="сумма" style="flex:1" oninput="this.dataset.usd='';prepayAutoFill('f');payHints('f')">
+              <select id="fPrepayCur" onchange="сменаВалюты('f','Prepay');prepayAutoFill('f');payHints('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
               <input type="date" id="fPrepayDate" title="дата предоплаты" style="flex:1 1 138px;min-width:128px">
               <input type="hidden" id="fPrepayUsd">
               <input type="hidden" id="fPrepayFx">
@@ -408,8 +408,8 @@ body.ro .ro-badge{display:inline-block}
           <div class="form-group">
             <label>Площадка</label>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <input type="text" id="fPlat" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('f');payHints('f')">
-              <select id="fPlatCur" onchange="prepayAutoFill('f');payHints('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+              <input type="text" id="fPlat" placeholder="сумма" style="flex:1" oninput="this.dataset.usd='';prepayAutoFill('f');payHints('f')">
+              <select id="fPlatCur" onchange="сменаВалюты('f','Plat');prepayAutoFill('f');payHints('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
               <input type="date" id="fPlatDate" title="дата платежа площадке" style="flex:1 1 138px;min-width:128px">
               <input type="hidden" id="fPlatUsd">
               <input type="hidden" id="fPlatFx">
@@ -419,10 +419,17 @@ body.ro .ro-badge{display:inline-block}
           <div class="form-group">
             <label>На месте</label>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <input type="text" id="fOnsite" placeholder="сумма" style="flex:1" oninput="payHints('f')">
-              <select id="fOnsiteCur" onchange="payHints('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+              <input type="text" id="fOnsite" placeholder="сумма" style="flex:1" oninput="this.dataset.usd='';payHints('f')">
+              <select id="fOnsiteCur" onchange="сменаВалюты('f','Onsite');payHints('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
             </div>
             <div class="pay-hint" id="fOnsiteHint"></div>
+          </div>
+          <div class="form-group">
+            <label>Сдача</label>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <input type="text" id="fChange" placeholder="сумма в $" style="flex:1" oninput="считатьСдачу('f')">
+            </div>
+            <div class="pay-hint" id="fChangeHint"></div>
           </div>
           <div class="form-group full"><label>Примечание</label><textarea id="fNotes"></textarea></div>
         </div>
@@ -492,8 +499,8 @@ body.ro .ro-badge{display:inline-block}
             <div class="form-group">
               <label>Предоплата</label>
               <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <input type="text" id="pfPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('pf');payHints('pf')">
-                <select id="pfPrepayCur" onchange="prepayAutoFill('pf');payHints('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+                <input type="text" id="pfPrepay" placeholder="сумма" style="flex:1" oninput="this.dataset.usd='';prepayAutoFill('pf');payHints('pf')">
+                <select id="pfPrepayCur" onchange="сменаВалюты('pf','Prepay');prepayAutoFill('pf');payHints('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
                 <input type="date" id="pfPrepayDate" title="дата предоплаты" style="flex:1 1 138px;min-width:128px">
                 <input type="hidden" id="pfPrepayUsd">
               <input type="hidden" id="pfPrepayFx">
@@ -503,8 +510,8 @@ body.ro .ro-badge{display:inline-block}
             <div class="form-group">
               <label>Площадка</label>
               <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <input type="text" id="pfPlat" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('pf');payHints('pf')">
-                <select id="pfPlatCur" onchange="prepayAutoFill('pf');payHints('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+                <input type="text" id="pfPlat" placeholder="сумма" style="flex:1" oninput="this.dataset.usd='';prepayAutoFill('pf');payHints('pf')">
+                <select id="pfPlatCur" onchange="сменаВалюты('pf','Plat');prepayAutoFill('pf');payHints('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
                 <input type="date" id="pfPlatDate" title="дата платежа площадке" style="flex:1 1 138px;min-width:128px">
                 <input type="hidden" id="pfPlatUsd">
                 <input type="hidden" id="pfPlatFx">
@@ -514,10 +521,17 @@ body.ro .ro-badge{display:inline-block}
             <div class="form-group">
               <label>На месте</label>
               <div style="display:flex;gap:6px;flex-wrap:wrap">
-                <input type="text" id="pfOnsite" placeholder="сумма" style="flex:1" oninput="payHints('pf')">
-                <select id="pfOnsiteCur" onchange="payHints('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+                <input type="text" id="pfOnsite" placeholder="сумма" style="flex:1" oninput="this.dataset.usd='';payHints('pf')">
+                <select id="pfOnsiteCur" onchange="сменаВалюты('pf','Onsite');payHints('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
               </div>
               <div class="pay-hint" id="pfOnsiteHint"></div>
+            </div>
+            <div class="form-group">
+              <label>Сдача</label>
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <input type="text" id="pfChange" placeholder="сумма в $" style="flex:1" oninput="считатьСдачу('pf')">
+              </div>
+              <div class="pay-hint" id="pfChangeHint"></div>
             </div>
             <div class="form-group full"><label>Примечание</label><textarea id="pfNotes"></textarea></div>
           </div>
@@ -1861,6 +1875,7 @@ function bEdit(id){
   document.getElementById('fPrepayFx').value=b.prepayFx||'';
   document.getElementById('fOnsite').value=b.onsite||'';
   document.getElementById('fOnsiteCur').value=b.onsite?(b.onsiteCur||b.currency||'VND'):(b.currency||'VND');
+  запомнитьВалюты();
   document.getElementById('fNotes').value=(b.notes||'').replace(/​/g,'');
   // трансфер: без этого он обнулялся при каждом открытии на редактирование
   const _etr=document.getElementById('fTransfer'); if(_etr) _etr.value=b.transfer||'';
@@ -1950,6 +1965,49 @@ function payLine(sum, cur, R, fx){
   if(cur!=='VND')  части.push(ceilTo(usd*R.VND*(1+MARKUP.VND), ROUND_STEP.VND).toLocaleString('ru-RU')+' ₫');
   return части.length ? '= '+части.join('  ·  ') : '';
 }
+// Переключил валюту — сумма пересчиталась, а не осталась прежним числом.
+// Туристы спрашивают «а если в долларах?», и цифру надо показать сразу.
+// Доллары платежа при этом те же: меняется только валюта показа.
+function сменаВалюты(p, поле){
+  const el=document.getElementById(p+поле);
+  const sel=document.getElementById(p+поле+'Cur');
+  if(!el||!sel) return;
+  const старая=sel.dataset.prev;
+  const сумма=parseFloat(el.value);
+  if(старая && старая!==sel.value && сумма>0 && currentRates){
+    // Пересчитываем всегда от первоначальных долларов, а не от того, что
+    // на экране: у конвертации есть наценка и округление вверх, и прогон
+    // $ → ₫ → ₽ → $ возвращал бы не ту сумму, с которой начали.
+    const usdEl=document.getElementById(p+поле+'Usd');
+    const сохранено=parseFloat(el.dataset.usd) || parseFloat((usdEl?.value||'').split('~')[1]);
+    const usd = сохранено>0 ? сохранено : payToUsd(сумма, старая, currentRates);
+    el.value=usdToPay(usd, sel.value, currentRates);
+    el.dataset.usd=usd.toFixed(2);
+    if(usdEl) usdEl.value=el.value+'|'+sel.value+'~'+usd.toFixed(2);
+  }
+  sel.dataset.prev=sel.value;
+}
+// Запоминаем валюту до переключения — иначе не от чего пересчитывать.
+function запомнитьВалюты(){
+  ['f','pf'].forEach(p=>['Prepay','Plat','Onsite'].forEach(поле=>{
+    const sel=document.getElementById(p+поле+'Cur');
+    if(sel) sel.dataset.prev=sel.value;
+  }));
+}
+
+// Сдача считается по фиксированному курсу — это наличные в кармане,
+// а не платёж по броне, и к расчёту тура отношения не имеет.
+const КУРС_СДАЧИ = 25000;
+function считатьСдачу(p){
+  const el=document.getElementById(p+'Change');
+  const hint=document.getElementById(p+'ChangeHint');
+  if(!el||!hint) return;
+  const usd=parseFloat(el.value);
+  hint.textContent = usd>0
+    ? '= '+Math.round(usd*КУРС_СДАЧИ).toLocaleString('ru-RU')+' ₫  (по '+КУРС_СДАЧИ.toLocaleString('ru-RU')+')'
+    : '';
+}
+
 function payHints(p){
   if(!currentRates) return;
   [['Plat','PlatCur'],['Prepay','PrepayCur'],['Onsite','OnsiteCur']].forEach(([поле,валюта])=>{
@@ -2046,6 +2104,9 @@ function bClearForm(){
   ['fPrepayCur','pfPrepayCur','fPlatCur','pfPlatCur'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='USD';});
   // На месте платят донгами — там по умолчанию ₫, площадки платят долларами.
   ['fOnsiteCur','pfOnsiteCur'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='VND';});
+  ['fChange','pfChange'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fChangeHint','pfChangeHint'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='';});
+  запомнитьВалюты();
   ['fRoute','pfRoute'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('fAdults').value=1; document.getElementById('fChildren').value=0; document.getElementById('fInfants').value=0;
   const pa=document.getElementById('pfAdults');
