@@ -386,7 +386,18 @@ body.ro .ro-badge{display:inline-block}
             <select id="fPayMethod"><option>Наличные</option><option>Перевод</option><option>USDT</option></select>
           </div>
           <div class="form-group">
-            <label>Предоплата</label>
+            <label>Предоплата площадке</label>
+            <div style="display:flex;gap:6px">
+              <input type="text" id="fPlat" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('f');payHints('f')">
+              <select id="fPlatCur" onchange="prepayAutoFill('f');payHints('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+              <input type="date" id="fPlatDate" title="дата платежа площадке" style="flex:0 0 138px">
+              <input type="hidden" id="fPlatUsd">
+              <input type="hidden" id="fPlatFx">
+            </div>
+            <div class="pay-hint" id="fPlatHint"></div>
+          </div>
+          <div class="form-group">
+            <label>Предоплата нам</label>
             <div style="display:flex;gap:6px">
               <input type="text" id="fPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('f');payHints('f')">
               <select id="fPrepayCur" onchange="prepayAutoFill('f');payHints('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
@@ -470,7 +481,18 @@ body.ro .ro-badge{display:inline-block}
               <select id="pfPayMethod"><option>Наличные</option><option>Перевод</option><option>USDT</option></select>
             </div>
             <div class="form-group">
-              <label>Предоплата</label>
+              <label>Предоплата площадке</label>
+              <div style="display:flex;gap:6px">
+                <input type="text" id="pfPlat" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('pf');payHints('pf')">
+                <select id="pfPlatCur" onchange="prepayAutoFill('pf');payHints('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
+                <input type="date" id="pfPlatDate" title="дата платежа площадке" style="flex:0 0 138px">
+                <input type="hidden" id="pfPlatUsd">
+                <input type="hidden" id="pfPlatFx">
+              </div>
+              <div class="pay-hint" id="pfPlatHint"></div>
+            </div>
+            <div class="form-group">
+              <label>Предоплата нам</label>
               <div style="display:flex;gap:6px">
                 <input type="text" id="pfPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('pf');payHints('pf')">
                 <select id="pfPrepayCur" onchange="prepayAutoFill('pf');payHints('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
@@ -1237,7 +1259,7 @@ function bCardHTML(b){
   const sc=b.tripStatus==='done'?' s-done':b.tripStatus==='cancelled'?' s-cancelled':(b.date&&b.date===tom)?' s-tomorrow':'';
   const _bTourInd=TOURS.find(t=>t.key===b.route);const _flatOnly=_bTourInd&&_bTourInd.rows[0]&&_bTourInd.rows[0].flat;
   const scInd=(b.isIndividual||(b.notes||'').endsWith('​')||_flatOnly)?' s-individual':'';
-  const payIcon=b.payStatus==='refund'?'🤑':(b.payStatus==='paid'||b.prepay)?'💲':'💳';
+  const payIcon=b.payStatus==='refund'?'🤑':(b.payStatus==='paid'||b.prepay||b.plat)?'💲':'💳';
   const comm=b.tripStatus==='done'?'$'+(parseFloat(b.commission)||0):'';
   const starCol=b.inBase?'#7c5cbf':'#ccc';
 
@@ -1260,7 +1282,8 @@ function bCardHTML(b){
         <div class="b-exp-item"><label>Валюта</label><span>${b.currency||'—'}</span></div>
         <div class="b-exp-item"><label>Оплата</label><span>${b.payMethod||'—'}</span></div>
         <div class="b-exp-item"><label>Сумма</label><span>${b.totalAmount||'—'}${b.payStatus==='paid'?`<span style="color:var(--green);font-size:10px;margin-left:6px">оплачено${b.paidAt?' '+shortDate(b.paidAt):''}</span>`:''}</span></div>
-        <div class="b-exp-item"><label>Предоплата</label><span>${b.prepay?(b.prepay+' '+(b.prepayCur||'')+(b.prepayDate?' · '+shortDate(b.prepayDate):'')):'—'}${b.prepay&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.prepay),b.prepayCur||'USD',currentRates,b.prepayFx)}</div>`:''}</span></div>
+        <div class="b-exp-item"><label>Предоплата площадке</label><span>${b.plat?(b.plat+' '+(b.platCur||'')+(b.platDate?' · '+shortDate(b.platDate):'')):'—'}${b.plat&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.plat),b.platCur||'USD',currentRates,b.platFx)}</div>`:''}</span></div>
+        <div class="b-exp-item"><label>Предоплата нам</label><span>${b.prepay?(b.prepay+' '+(b.prepayCur||'')+(b.prepayDate?' · '+shortDate(b.prepayDate):'')):'—'}${b.prepay&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.prepay),b.prepayCur||'USD',currentRates,b.prepayFx)}</div>`:''}</span></div>
         <div class="b-exp-item"><label>На месте</label><span>${b.onsite?(b.onsite+' '+(b.onsiteCur||'')):'—'}${(parseFloat(b.onsite)>0&&currentRates)?`<div class="pay-hint">${payLine(parseFloat(b.onsite),b.onsiteCur||'USD',currentRates)}</div>`:''}</span></div>
         <div class="b-exp-item"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
         ${(()=>{const _p=bDetectPlatform(b);return _p?`<div class="b-exp-item"><label>Платформа</label><span style="color:var(--accent);font-weight:600">${_p}</span></div>`:'';})()}
@@ -1696,7 +1719,8 @@ function bCopyCard(id){
 
   const tail=[
     amountLine||'',
-    b.prepay?'Предоплата: '+b.prepay+' '+(b.prepayCur||'')+вДолларах(b.prepay,b.prepayCur,b.prepayFx)+(b.prepayDate?' · '+shortDate(b.prepayDate):''):'',
+    b.plat?'Предоплата площадке: '+b.plat+' '+(b.platCur||'')+вДолларах(b.plat,b.platCur,b.platFx)+(b.platDate?' · '+shortDate(b.platDate):''):'',
+    b.prepay?'Предоплата нам: '+b.prepay+' '+(b.prepayCur||'')+вДолларах(b.prepay,b.prepayCur,b.prepayFx)+(b.prepayDate?' · '+shortDate(b.prepayDate):''):'',
     b.onsite?'На месте: '+b.onsite+' '+(b.onsiteCur||'')+вДолларах(b.onsite,b.onsiteCur):'',
     // сначала метка платформы целиком (‌T/‌S), затем осиротевшие невидимки
     (b.notes||'').replace(/‌[TS]/g,'').replace(/[​‌‍]/g,'').trim()
@@ -1814,6 +1838,11 @@ function bEdit(id){
   document.getElementById('fCurrency').value=b.currency||'VND';
   document.getElementById('fPayMethod').value=b.payMethod||'Наличные';
   document.getElementById('fAmount').value=b.totalAmount||'';
+  document.getElementById('fPlat').value=b.plat||'';
+  document.getElementById('fPlatCur').value=b.plat?(b.platCur||b.currency||'USD'):(b.currency||'USD');
+  document.getElementById('fPlatDate').value=b.platDate||'';
+  document.getElementById('fPlatUsd').value=(b.plat&&b.platUsd)?(b.plat+'|'+(b.platCur||'USD')+'~'+b.platUsd):'';
+  document.getElementById('fPlatFx').value=b.platFx||'';
   document.getElementById('fPrepay').value=b.prepay||'';
   document.getElementById('fPrepayCur').value=b.prepay?(b.prepayCur||b.currency||'VND'):(b.currency||'VND');
   document.getElementById('fPrepayDate').value=b.prepayDate||'';
@@ -1914,11 +1943,11 @@ function payLine(sum, cur, R, fx){
 }
 function payHints(p){
   if(!currentRates) return;
-  [['Prepay','PrepayCur'],['Onsite','OnsiteCur']].forEach(([поле,валюта])=>{
+  [['Plat','PlatCur'],['Prepay','PrepayCur'],['Onsite','OnsiteCur']].forEach(([поле,валюта])=>{
     const el=document.getElementById(p+поле+'Hint'); if(!el) return;
     const сумма=parseFloat(document.getElementById(p+поле)?.value);
     const cur=document.getElementById(p+валюта)?.value;
-    const fx = (поле==='Prepay') ? (document.getElementById(p+'PrepayFx')?.value||'') : '';
+    const fx = (поле==='Onsite') ? '' : (document.getElementById(p+поле+'Fx')?.value||'');
     el.textContent = (сумма>0) ? payLine(сумма, cur, currentRates, fx) : '';
   });
 }
@@ -1954,41 +1983,45 @@ function prepayAutoFill(p) {
     const _b=allBookings.find(x=>x.id==editingId);
     if(_b && _b.payStatus==='paid') return;
   }
-  const prepay = parseFloat(document.getElementById(p+'Prepay').value);
-  if (!prepay || prepay <= 0) return;
+  // Платежей два: площадке и нам. Каждый со своей датой и своим курсом на день
+  // внесения — раньше они сливались в одну предоплату и было не разобрать,
+  // откуда деньги и когда пришли.
+  function платёж(поле){
+    const el=document.getElementById(p+поле);
+    const сумма=parseFloat(el?.value);
+    if(!сумма || сумма<=0) return 0;
+    const dateEl=document.getElementById(p+поле+'Date');
+    if(dateEl && !dateEl.value) dateEl.value = todayStr();
+    if(!currentRates) return 0;
+    const cur=document.getElementById(p+поле+'Cur').value;
+    // Доллары платежа фиксируем в момент внесения и больше не пересчитываем.
+    // Пересчёт только если изменилась сама сумма или её валюта.
+    const usdEl=document.getElementById(p+поле+'Usd');
+    const ключ=сумма+'|'+cur;
+    const было=(usdEl?.value||'').split('~');
+    if(было[0]===ключ && parseFloat(было[1])>0) return parseFloat(было[1]);
+    const usd=payToUsd(сумма, cur, currentRates);
+    if(usdEl) usdEl.value=ключ+'~'+usd.toFixed(2);
+    const fxEl=document.getElementById(p+поле+'Fx');
+    if(fxEl) fxEl.value=currentRates.RUB+'|'+currentRates.VND+'|'+currentRates.USDT;
+    return usd;
+  }
+  const platUsd = платёж('Plat');
+  const ourUsd  = платёж('Prepay');
+  if (!platUsd && !ourUsd) return;
 
-  // Дату ставим сразу — она не зависит от того, посчитан ли уже тур.
-  const dateEl = document.getElementById(p+'PrepayDate');
-  if (dateEl && !dateEl.value) dateEl.value = todayStr();
-
-  const prepayCur = document.getElementById(p+'PrepayCur').value;
   const calcEl = document.getElementById(p==='f'?'fCalcResult':'pfCalcResult');
   const totalUsd = parseFloat(calcEl?.dataset?.usd)||0;
   if (!totalUsd || !currentRates) return;
 
-  // Доллары платежа фиксируем в момент внесения и больше не пересчитываем.
-  // Пересчёт только если изменилась сама сумма или её валюта.
-  const usdEl = document.getElementById(p+'PrepayUsd');
-  const ключ = prepay+'|'+prepayCur;
-  const было = (usdEl?.value||'').split('~');
-  let paidUsd;
-  if (было[0]===ключ && parseFloat(было[1])>0) paidUsd = parseFloat(было[1]);
-  else {
-    paidUsd = payToUsd(prepay, prepayCur, currentRates);
-    if (usdEl) usdEl.value = ключ+'~'+paidUsd.toFixed(2);
-    // курс на день оплаты — чтобы позже не пересчитать по новому
-    const fxEl=document.getElementById(p+'PrepayFx');
-    if (fxEl) fxEl.value = currentRates.RUB+'|'+currentRates.VND+'|'+currentRates.USDT;
-  }
-
   // Остаток пересчитываем: раз ты правишь предоплату, значит ждёшь пересчёта.
-  // От скачков курса защищает не это, а зафиксированные доллары платежа
+  // От скачков курса защищает не это, а зафиксированные доллары платежей
   // и заморозка после отметки «оплачено».
   const onsiteEl = document.getElementById(p+'Onsite');
   const onsiteCurEl = document.getElementById(p+'OnsiteCur');
-  const leftUsd = totalUsd - paidUsd;
-  if (leftUsd < 1) { onsiteEl.value = 0; return; }   // округления, не долг
-  onsiteEl.value = usdToPay(leftUsd, onsiteCurEl.value || prepayCur, currentRates);
+  const leftUsd = totalUsd - platUsd - ourUsd;
+  if (leftUsd < 1) { onsiteEl.value = 0; payHints(p); return; }   // округления, не долг
+  onsiteEl.value = usdToPay(leftUsd, onsiteCurEl.value || document.getElementById(p+'PrepayCur').value, currentRates);
   payHints(p);
 }
 
@@ -2686,6 +2719,11 @@ function bGetFormData(){
     currency:document.getElementById(p+'Currency').value,
     payMethod:document.getElementById(p+'PayMethod').value,
     totalAmount:document.getElementById(p+'Amount').value,
+    plat:document.getElementById(p+'Plat')?.value||'',
+    platCur:document.getElementById(p+'PlatCur')?.value||'',
+    platDate:document.getElementById(p+'PlatDate')?.value||'',
+    platUsd:parseFloat((document.getElementById(p+'PlatUsd')?.value||'').split('~')[1])||0,
+    platFx:document.getElementById(p+'PlatFx')?.value||'',
     prepay:document.getElementById(p+'Prepay').value,
     prepayCur:document.getElementById(p+'PrepayCur').value,
     prepayDate:document.getElementById(p+'PrepayDate')?.value||'',
