@@ -395,7 +395,7 @@ body.ro .ro-badge{display:inline-block}
             <select id="fPayMethod"><option>Наличные</option><option>Перевод</option><option>USDT</option></select>
           </div>
           <div class="form-group">
-            <label>Предоплата нам</label>
+            <label>Предоплата</label>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               <input type="text" id="fPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('f');payHints('f')">
               <select id="fPrepayCur" onchange="prepayAutoFill('f');payHints('f')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
@@ -490,7 +490,7 @@ body.ro .ro-badge{display:inline-block}
               <select id="pfPayMethod"><option>Наличные</option><option>Перевод</option><option>USDT</option></select>
             </div>
             <div class="form-group">
-              <label>Предоплата нам</label>
+              <label>Предоплата</label>
               <div style="display:flex;gap:6px;flex-wrap:wrap">
                 <input type="text" id="pfPrepay" placeholder="сумма" style="flex:1" oninput="prepayAutoFill('pf');payHints('pf')">
                 <select id="pfPrepayCur" onchange="prepayAutoFill('pf');payHints('pf')"><option>VND</option><option>USD</option><option>RUB</option><option>USDT</option></select>
@@ -1291,7 +1291,7 @@ function bCardHTML(b){
         <div class="b-exp-item"><label>Валюта</label><span>${b.currency||'—'}</span></div>
         <div class="b-exp-item"><label>Оплата</label><span>${b.payMethod||'—'}</span></div>
         <div class="b-exp-item"><label>Сумма</label><span>${b.totalAmount||'—'}${b.payStatus==='paid'?`<span style="color:var(--green);font-size:10px;margin-left:6px">оплачено${b.paidAt?' '+shortDate(b.paidAt):''}</span>`:''}</span></div>
-        <div class="b-exp-item"><label>Предоплата нам</label><span>${b.prepay?(b.prepay+' '+(b.prepayCur||'')+(b.prepayDate?' · '+shortDate(b.prepayDate):'')):'—'}${b.prepay&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.prepay),b.prepayCur||'USD',currentRates,b.prepayFx)}</div>`:''}</span></div>
+        <div class="b-exp-item"><label>Предоплата</label><span>${b.prepay?(b.prepay+' '+(b.prepayCur||'')+(b.prepayDate?' · '+shortDate(b.prepayDate):'')):'—'}${b.prepay&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.prepay),b.prepayCur||'USD',currentRates,b.prepayFx)}</div>`:''}</span></div>
         <div class="b-exp-item"><label>Предоплата площадке</label><span>${b.plat?(b.plat+' '+(b.platCur||'')+(b.platDate?' · '+shortDate(b.platDate):'')):'—'}${b.plat&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.plat),b.platCur||'USD',currentRates,b.platFx)}</div>`:''}</span></div>
         <div class="b-exp-item"><label>На месте</label><span>${b.onsite?(b.onsite+' '+(b.onsiteCur||'')):'—'}${(parseFloat(b.onsite)>0&&currentRates)?`<div class="pay-hint">${payLine(parseFloat(b.onsite),b.onsiteCur||'USD',currentRates)}</div>`:''}</span></div>
         <div class="b-exp-item"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
@@ -1728,7 +1728,7 @@ function bCopyCard(id){
 
   const tail=[
     amountLine||'',
-    parseFloat(b.prepay)>0?'Предоплата нам: '+b.prepay+' '+(b.prepayCur||'')+вДолларах(b.prepay,b.prepayCur,b.prepayFx)+(b.prepayDate?' · '+shortDate(b.prepayDate):''):'',
+    parseFloat(b.prepay)>0?'Предоплата: '+b.prepay+' '+(b.prepayCur||'')+вДолларах(b.prepay,b.prepayCur,b.prepayFx)+(b.prepayDate?' · '+shortDate(b.prepayDate):''):'',
     parseFloat(b.plat)>0?'Предоплата площадке: '+b.plat+' '+(b.platCur||'')+вДолларах(b.plat,b.platCur,b.platFx)+(b.platDate?' · '+shortDate(b.platDate):''):'',
     parseFloat(b.onsite)>0?'На месте: '+b.onsite+' '+(b.onsiteCur||'')+вДолларах(b.onsite,b.onsiteCur):'',
     // сначала метка платформы целиком (‌T/‌S), затем осиротевшие невидимки
