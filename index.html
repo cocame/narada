@@ -1214,15 +1214,32 @@ async function loadAccess(){
 function canEdit(){ return !!ACCESS.write; }
 function canRead(){ return !!ACCESS.read; }
 
+// Запись шла голым fetch: без таймаута, без проверки статуса и без разбора
+// того, что вернулось. GAS отвечает 9-15 секунд и изредка отдаёт 404 — тогда
+// в r.json() прилетала HTML-страница ошибки, вызов падал с SyntaxError, и
+// «Ошибка сохранения» показывалась поверх уже сохранённой брони.
+const GAS_POST_TIMEOUT_MS = 40000;
+async function gasPost(body){
+  const ctl=new AbortController();
+  const timer=setTimeout(()=>ctl.abort(), GAS_POST_TIMEOUT_MS);
+  try{
+    const r=await fetch(GAS_URL,{method:'POST',mode:'cors',body:JSON.stringify(body),headers:{'Content-Type':'text/plain'},signal:ctl.signal});
+    if(!r.ok) throw new Error('сервер ответил '+r.status);
+    const текст=await r.text();
+    try{ return JSON.parse(текст); }
+    catch(_){ throw new Error('сервер вернул не ответ, а страницу'); }
+  } catch(e){
+    if(e.name==='AbortError') throw new Error('сервер не ответил за 40 секунд');
+    throw e;
+  } finally { clearTimeout(timer); }
+}
 async function gasSave(action,data){
   if(!canEdit()){ toast('Только просмотр'); return {success:false,readonly:true}; }
-  const r=await fetch(GAS_URL,{method:'POST',mode:'cors',body:JSON.stringify({action,key:editKey(),...data}),headers:{'Content-Type':'text/plain'}});
-  return r.json();
+  return gasPost({action,key:editKey(),...data});
 }
 async function gasDelete(id){
   if(!canEdit()){ toast('Только просмотр'); return {success:false,readonly:true}; }
-  const r=await fetch(GAS_URL,{method:'POST',mode:'cors',body:JSON.stringify({action:'deleteBooking',key:editKey(),id}),headers:{'Content-Type':'text/plain'}});
-  return r.json();
+  return gasPost({action:'deleteBooking',key:editKey(),id});
 }
 
 // ══════════════════════════════════════
@@ -2877,11 +2894,45 @@ async function bSave(){
   // если статус ждет и дата указана - меняем на обычный
   const btn=document.getElementById('saveBtn');
   btn.textContent='Сохранение…'; btn.disabled=true;
+  const былиДоЭтого=allBookings.filter(b=>!b.deleted&&сутьБрони(b)===сутьБрони(data)).length;
   try {
-    await gasSave(editingId?'updateBooking':'addBooking',data);
+    const res=await gasSave(editingId?'updateBooking':'addBooking',data);
+    if(res&&res.readonly){ btn.textContent='Сохранить'; btn.disabled=false; return; }
+    if(res&&res.success===false) throw new Error(res.error||'сервер отказал');
     bCloseModal(); bClearForm(); await bLoad();
-  } catch(e){ alert('Ошибка сохранения. Попробуйте ещё раз.'); }
+  } catch(e){
+    // Ответ мог потеряться уже после записи. Раньше здесь просто звали
+    // повторить — и каждый повтор добавлял ещё одну такую же бронь.
+    // Сначала смотрим на сервере, что там на самом деле.
+    btn.textContent='Проверяю…';
+    if(await броньДошла(былиДоЭтого,data)){
+      bCloseModal(); bClearForm(); await bLoad();
+      toast('✓ Бронь сохранилась, ответ просто не дошёл');
+    } else {
+      alert('Не сохранилось: '+(e.message||e)+'\nБронь не создана — можно сохранить ещё раз.');
+    }
+  }
   btn.textContent='Сохранить'; btn.disabled=false;
+}
+
+// Совпадение ищем по сути брони, а не по id: id новой броне присваивает
+// сервер, и клиент его не знает, когда ответ потерялся. «Только что
+// появилась» — значит такой брони не было в списке до попытки.
+function сутьБрони(b){
+  return [b.route||'',b.date||'',b.contact||'',b.hotel||'',b.adults||0,b.children||0].join('|');
+}
+async function броньДошла(былиДоЭтого,data){
+  try{
+    const list=await gasGet('getBookings');
+    if(!Array.isArray(list)) return false;
+    if(editingId){
+      const b=list.find(x=>x.id==editingId);
+      return !!b && сутьБрони(b)===сутьБрони(data);
+    }
+    const суть=сутьБрони(data);
+    const стало=list.filter(b=>!b.deleted&&сутьБрони(b)===суть).length;
+    return стало>былиДоЭтого;
+  }catch(_){ return false; }
 }
 
 // ══════════════════════════════════════
