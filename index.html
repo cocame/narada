@@ -2863,36 +2863,66 @@ async function bSave(){
 // ══════════════════════════════════════
 // PARSER
 // ══════════════════════════════════════
+// названия отелей часто содержат куски названий маршрутов («Little Hoian»,
+// «Golden Sand», «Novotel Danang»), поэтому алиасы сверяем по целым словам,
+// а не по подстроке — иначе отель уезжает в маршрут
+const ROUTE_WORD_CACHE={};
+function routeWordRe(a){
+  if(!ROUTE_WORD_CACHE[a]) ROUTE_WORD_CACHE[a]=new RegExp('(?:^|[^\\p{L}\\p{N}])'+a.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?:$|[^\\p{L}\\p{N}])','u');
+  return ROUTE_WORD_CACHE[a];
+}
 function normalizeRoute(str){
   if(!str) return '';
   const s=str.toLowerCase().trim().replace(/ё/g,'е');
   for(const [r,aliases] of Object.entries(ROUTE_ALIASES)){
-    if(aliases.some(a=>s.includes(a.replace(/ё/g,'е')))) return r;
+    if(aliases.some(a=>routeWordRe(a.replace(/ё/g,'е')).test(s))) return r;
   }
   // fuzzy fallback
-  if(s.match(/хю|хy|хь|hue|hué|huê/)) return 'ХЮЭ';
-  if(s.match(/хой|хаи|хои|hoi|hoian/)) return 'ХОЙАН';
+  if(s.match(/хюэ|хуэ|хье|hue|hué|huê/)) return 'ХЮЭ';
+  if(s.match(/хойан|хоян|хаян|хой.?ан|хои.?ан|hoi.?an|hoian/)) return 'ХОЙАН';
   if(s.match(/чам|cham/)) return 'ОСТРОВА ЧАМ';
   if(s.match(/морская|прогулка|sea trip|sea walk/)) return 'МОРСКАЯ ПРОГУЛКА';
   if(s.match(/vinwonders|вин вондер|винвондер/)) return 'VINWONDERS';
-  if(s.match(/данан|da.?nan|нанг|нан[^ь]/)) return 'ДАНАНГ';
-  if(s.match(/бан|ба.?на|bana|ba.?na|хилл|hill|золот|golden/)) return 'БА НА ХИЛЛС';
-  if(s.match(/горяч|источн|терм|spring|спринг|хот.?с/)) return 'HOT SPRINGS';
+  if(s.match(/данан|da.?nan/)) return 'ДАНАНГ';
+  if(s.match(/ба.?на.?хилл|bana.?hill|ba.?na.?hill|банахилл|золотой мост|golden bridge/)) return 'БА НА ХИЛЛС';
+  if(s.match(/горяч|источн|термальн|hot.?spring|хот.?спринг/)) return 'HOT SPRINGS';
   return '';
 }
 
+// «Novotel Danang», «Little Hoian» — название маршрута внутри названия отеля.
+// Отличаем по чужому слову рядом: в запросе клиента рядом с маршрутом стоят
+// слова-маркеры (хочу, тур, 2 взрослых), а не бренд отеля.
+const ASK_WORDS=/^(хочу|хотим|хотел|хотела|нужн\p{L}*|надо|интересует|можно|тур\p{L}*|экскурс\p{L}*|поезд\p{L}*|едем|ехать|поехать|съездить|заказ\p{L}*|брон\p{L}*|записат\p{L}*|взросл\p{L}*|дет\p{L}*|ребен\p{L}*|ребён\p{L}*|человек\p{L}*|чел|пакс|pax|дата|числ\p{L}*|утро|вечер|завтра|послезавтра|сегодня|пожалуйста|будет|быть|семь\p{L}*|нас|вас|они|adult\p{L}*|child\p{L}*|tour\p{L}*|book\p{L}*|want|need|pers\p{L}*|people)$/u;
+function looksLikeHotelName(lower){
+  const route=normalizeRoute(lower);
+  if(!route) return false;
+  const aliasWords=new Set();
+  (ROUTE_ALIASES[route]||[]).forEach(a=>a.toLowerCase().replace(/ё/g,'е').split(/\s+|-/).forEach(w=>{if(w)aliasWords.add(w)}));
+  const words=lower.replace(/ё/g,'е').split(/[^\p{L}]+/u).filter(w=>w.length>2);
+  return words.some(w=>!aliasWords.has(w)&&!ASK_WORDS.test(w));
+}
 function bParseText(){
   const text=document.getElementById('pasteText').value; if(!text.trim()) return;
   const result={adults:0,children:0,infants:0,date:'',route:'',contact:'',hotel:'',notes:'',totalAmount:'',payMethod:'',currency:''};
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
+  const HOTEL_KW=/hotel|hostel|отель|отел[ья]|гостиниц|инн\b|\binn\b|resort|резорт|villa|вилла|апарт|apart|комнат|room|residence|резиденс|homestay|хоумстей|хостел|garden|ocean|tourane|robin|sands|cocoon|palace|plaza|beach|naman|хотел|boutique|suite/;
+  const leftovers=[];
   lines.forEach((line,lineIdx)=>{
-    const lineNum=((line.match(/^(\d+)[):.\s]/)||[])[1]);
+    // номер пункта — только «1) » или «1. »; иначе «15.05» и «2 взрослых»
+    // теряли цифру: дата пропадала, а количество людей не читалось
+    const lineNum=((line.match(/^(\d+)[).]\s+/)||[])[1]);
     if(lineNum&&parseInt(lineNum)>6) return;
-    const clean=line.replace(/^[\d]+[):.\s]+/,'').trim();
+    const clean=line.replace(/^\d+[).]\s+/,'').trim();
     const lower=clean.toLowerCase().replace(/ё/g,'е');
-    // маршрут
-    const r=normalizeRoute(clean);
+    // строка-название отеля — короткая и без слов запроса; длинная фраза
+    // «хотим на Хюэ, отель Sanouva» остаётся сообщением, маршрут из неё берём
+    const words=lower.split(/[^\p{L}]+/u).filter(Boolean);
+    const hasAsk=words.some(w=>ASK_WORDS.test(w));
+    const isHotelLine=!hasAsk&&words.length<=6&&(HOTEL_KW.test(lower)||looksLikeHotelName(lower));
+    // маршрут — но не из строки с отелем, иначе «Hoi An Resort» станет туром
+    const r=isHotelLine?'':normalizeRoute(clean);
     if(r&&!result.route) result.route=r;
+    if(!r&&!isHotelLine) leftovers.push(clean);
     // дата
     if(!result.date){
       const dm=clean.match(/(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?/);
@@ -2918,8 +2948,9 @@ function bParseText(){
     // количество
     const numW={один:1,одна:1,one:1,два:2,две:2,two:2,три:3,three:3,четыре:4,four:4,пять:5,five:5,шесть:6,six:6,семь:7,seven:7,восемь:8,eight:8,девять:9,nine:9,десять:10,ten:10};
     if(lower.match(/взрос|adult|чел(?!овек)|pax|пакс/)){
-      const n=clean.match(/(\d+)/);
-      if(n) result.adults=parseInt(n[1]);
+      // число берём вплотную к слову, иначе «Хюэ 20.05 4 взрослых» → 20 человек
+      const am=lower.match(/(\d+)\s*(?:взросл\p{L}*|adult\p{L}*|чел\p{L}*|pax|пакс\p{L}*)|(?:взросл\p{L}*|adult\p{L}*|чел\p{L}*|pax|пакс\p{L}*)[^\d\p{L}]{0,3}(\d+)/u);
+      if(am) result.adults=parseInt(am[1]||am[2]);
       else for(const[w,v] of Object.entries(numW)) if(lower.includes(w)){result.adults=v;break;}
     }
     if(lower.match(/(?:^|\s|\+|,)(?:дет|ребен)|ребенок|дети|child|малыш/)&&!lower.match(/возраст|билет|примечан|купить|удобн/)){
@@ -2935,8 +2966,13 @@ function bParseText(){
         result.contact=clean;
     }
     // отель
-    if(!result.hotel&&lower.match(/hotel|отель|inn|resort|villa|апарт|комнат|room|garden|ocean|tourane|robin|sands|cocoon|palace|plaza|beach|danang|naman|хотел|boutique|suite/))
-      result.hotel=clean;
+    if(!result.hotel){
+      if(isHotelLine) result.hotel=clean;
+      else{
+        const hm=clean.match(/(?:отель|отеле|гостиниц\p{L}*|hotel|проживани\p{L}*)[:\s]+([^,;.]+)/iu);
+        if(hm&&hm[1].trim().length>2) result.hotel=hm[1].trim();
+      }
+    }
     // оплата
     if(lower.match(/налич|cash/)) result.payMethod='Наличные';
     if(lower.match(/донг|vnd|донгов/)) result.currency='VND';
@@ -2951,6 +2987,12 @@ function bParseText(){
     const tm=clean.match(/[Ии]того[:\s]+([0-9][0-9\s]*)\s*(₫|vnd|VND|\$|USD|₽|RUB)?/);
     if(tm) result.totalAmount=tm[1].replace(/\s/g,'')+(tm[2]?' '+tm[2]:'');
   });
+  // отель без слова «отель» («Muong Thanh», «Sanouva») — берём строку,
+  // которая не ушла ни в маршрут, ни в контакт, ни в примечание, ни в цифры
+  if(!result.hotel){
+    const cand=leftovers.find(l=>l!==result.contact&&l!==result.notes&&!/\d/.test(l)&&l.replace(/[^\p{L}]/gu,'').length>2);
+    if(cand) result.hotel=cand;
+  }
   if(!result.adults&&!result.children) result.adults=1;
   const pr=document.getElementById('parseResult'); pr.classList.add('show');
   pr.innerHTML='<strong style="color:var(--accent)">Распознано:</strong><br>'+Object.entries(result).filter(([,v])=>v).map(([k,v])=>k+': '+v).join('<br>');
