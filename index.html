@@ -239,6 +239,16 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
   .price-row,.col-headers{grid-template-columns:1.4fr 0.8fr 1fr 1.4fr 0.9fr}
   .price-cell{font-size:10.5px}
   .tour-name{font-size:14px}
+  /* Строка брони: девять колонок фиксированной ширины не помещались в
+     экран телефона. Маршрут ломался пополам, контакт обрезался, а колонки
+     суммы и комиссии держали место справа, даже когда пустые. Теперь
+     маршрут занимает свою строку, ниже — состав, контакт и кнопки. */
+  .b-card-main{display:flex;flex-wrap:wrap;align-items:center;gap:4px 7px}
+  .b-card-route{flex:1 1 100%;line-height:1.2}
+  .b-card-pax,.b-card-amount,.b-card-comm{flex:none}
+  .b-card-contact{flex:1 1 60px;min-width:0}
+  .b-card-main>span,.b-card-main>.b-action-btn{flex:none}
+  .b-card-amount:empty,.b-card-comm:empty{display:none}
 }
 /* режим только для чтения */
 body.ro .b-add-btn,
