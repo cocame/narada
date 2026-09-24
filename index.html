@@ -155,6 +155,8 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .b-exp-item label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;display:block;margin-bottom:3px}
 .b-exp-item span{font-size:12px}
 .b-comm-val{cursor:pointer;border-bottom:1px dashed var(--accent);color:var(--accent);font-size:12px}
+.b-src-total{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:10px;font-size:12.5px;color:var(--muted);font-family:'DM Mono',monospace;text-align:center}
+.b-src-total b{color:var(--accent)}
 .b-card-note{padding:8px 12px 10px;margin-top:2px;border-top:1px dashed var(--border2);font-size:12px;color:var(--muted);line-height:1.4;cursor:pointer;white-space:pre-wrap;word-break:break-word}
 .b-card-note::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--red);margin-right:7px;vertical-align:middle}
 .b-notes-row{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
@@ -358,6 +360,7 @@ body.ro .ro-badge{display:inline-block}
         <option>ДАНАНГ</option><option>БА НА ХИЛЛС</option><option>БХ ВЕЧЕР</option><option>HOT SPRINGS</option>
         <option>РЫБАЛКА</option><option>МОРСКАЯ ПРОГУЛКА</option><option>VINWONDERS</option><option>ХАЙВАН</option><option>ДОНГ ЗЯНГ</option>
       </select>
+      <select class="b-filter-select" id="bFilterSource" onchange="bRender()"></select>
       <input type="date" class="b-filter-select" id="bFilterDate" onchange="bRender()">
       <button class="b-add-btn" onclick="bOpenModal()">+</button>
       <span class="ro-badge">только просмотр</span>
@@ -400,6 +403,9 @@ body.ro .ro-badge{display:inline-block}
           </div>
           <div class="form-group full"><label>Контакт</label><input type="text" id="fContact" placeholder="Иван, +79001234567"></div>
           <div class="form-group full"><label>Отель</label><input type="text" id="fHotel" placeholder="Tourane Hotel, к. 204"></div>
+          <div class="form-group full"><label>Откуда клиент</label>
+            <select id="fSource"></select>
+          </div>
           <div class="form-group"><label>Валюта</label>
             <select id="fCurrency" onchange="fCurrencyChanged('f')"><option>USD</option><option>VND</option><option>RUB</option><option>USDT</option></select>
           </div>
@@ -504,6 +510,9 @@ body.ro .ro-badge{display:inline-block}
             </div>
             <div class="form-group full"><label>Контакт</label><input type="text" id="pfContact"></div>
             <div class="form-group full"><label>Отель</label><input type="text" id="pfHotel"></div>
+            <div class="form-group full"><label>Откуда клиент</label>
+              <select id="pfSource"></select>
+            </div>
             <div class="form-group"><label>Валюта</label>
               <select id="pfCurrency" onchange="fCurrencyChanged('pf')"><option>USD</option><option>VND</option><option>RUB</option><option>USDT</option></select>
             </div>
@@ -600,6 +609,35 @@ const MARKUP     = { RUB:0.15, VND:0.06, USDT:0.00 };
 const ROUND_STEP = { RUB:100, VND:100000, USDT:1 };
 const COMM_RATES = { 'ХЮЭ':8.5,'ХОЙАН':6.5,'ОСТРОВА ЧАМ':7,'ДАНАНГ':6.5,'БА НА ХИЛЛС':5,'БХ ВЕЧЕР':19.5,'HOT SPRINGS':7.5,'МОРСКАЯ ПРОГУЛКА':7,'РЫБАЛКА':9,'VINWONDERS':6,'ХАЙВАН':6.5,'ДОНГ ЗЯНГ':6.5 };
 const PLATFORMS = [{name:'Tripster', rate:0.22}, {name:'Sputnik8', rate:0.24}];
+
+// Откуда пришёл клиент. Площадки определяются сами по метке в примечании,
+// а всё остальное до сих пор сваливалось в «прямые» — и понять, отбивается
+// ли платная реклама, было нечем.
+const SOURCES = [
+  'Чат «Гиды Вьетнам»',
+  'Другой чат или канал',
+  'Рекомендация',
+  'Повторный клиент',
+  'Сайт или инстаграм',
+  'Отель',
+  'Другое'
+];
+function заполнитьИсточники(){
+  ['fSource','pfSource','bFilterSource'].forEach(id=>{
+    const el=document.getElementById(id); if(!el||el.dataset.готов) return;
+    const фильтр=id==='bFilterSource';
+    el.innerHTML=(фильтр?'<option value="">Откуда</option>':'<option value="">— не указано —</option>')
+      +(фильтр?'<option value="__нет">Не указано</option>':'')
+      +SOURCES.map(s=>`<option>${s}</option>`).join('')
+      +(фильтр?PLATFORMS.map(p=>`<option>${p.name}</option>`).join(''):'');
+    el.dataset.готов='1';
+  });
+}
+// У брони с площадки источник и так известен по метке — не заставляем
+// выбирать его руками второй раз.
+function источникБрони(b){
+  return bDetectPlatform(b) || b.source || '';
+}
 
 // Цена строки прайса для площадки: сначала цена, прописанная в прайсе,
 // и только если её нет — считаем от базовой через комиссию площадки.
@@ -1264,6 +1302,7 @@ function bSetFilter(f){
 function bRender(){
   const routeF=document.getElementById('bFilterRoute').value;
   const dateF=document.getElementById('bFilterDate').value;
+  const srcF=document.getElementById('bFilterSource')?.value||'';
   const tod=todayStr();
   let filtered=allBookings.filter(b=>{
     // Удалённые живут отдельно: в обычных фильтрах их нет, они только в корзине.
@@ -1271,6 +1310,7 @@ function bRender(){
     else if(b.deleted) return false;
     if(routeF&&b.route!==routeF) return false;
     if(dateF&&b.date!==dateF) return false;
+    if(srcF){ const s=источникБрони(b); if(srcF==='__нет'?s:s!==srcF) return false; }
     if(bFilter==='deleted') return true;
     // Бронь без даты тоже показываем — иначе она сохраняется и пропадает с глаз
     if(bFilter==='upcoming_waiting') return (!b.date&&b.tripStatus!=='cancelled'&&b.tripStatus!=='done')||(b.date&&b.date>=tod&&b.tripStatus==='waiting');
@@ -1303,6 +1343,14 @@ function bRender(){
   Object.keys(groups).forEach(date=>{
     html+='<div class="b-date-group"><div class="b-date-header"><div class="b-date-title">'+(date==='—'?'Без даты':formatDateLabel(date))+'</div><div class="b-date-line"></div><div class="b-date-count">'+groups[date].length+' '+pluralB(groups[date].length)+'</div></div>'+groups[date].map(bCardHTML).join('')+'</div>';
   });
+  // Ради этой строки всё и затевалось: выбрала источник — сразу видно,
+  // сколько туров он дал и на сколько денег, а не «вроде кто-то писал».
+  if(srcF){
+    const съезжено=filtered.filter(b=>b.tripStatus==='done');
+    const деньги=Math.round(съезжено.reduce((s,b)=>s+(parseFloat(b.commission)||0),0)*100)/100;
+    html='<div class="b-src-total"><b>'+filtered.length+'</b> '+pluralB(filtered.length)
+      +' · съездили <b>'+съезжено.length+'</b> · заработано <b>$'+деньги+'</b></div>'+html;
+  }
   document.getElementById('bList').innerHTML=html;
 }
 
@@ -1353,6 +1401,7 @@ function bCardHTML(b){
         ${(()=>{const c=сдачаПоБрони(b);return c?`<div class="b-exp-item"><label>Сдача</label><span>${c.сдача} $<div class="pay-hint">с ${c.дают} $ · ${c.донги.toLocaleString('ru-RU')} ₫</div></span></div>`:'';})()}
         <div class="b-exp-item"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
         ${(()=>{const _p=bDetectPlatform(b);return _p?`<div class="b-exp-item"><label>Платформа</label><span style="color:var(--accent);font-weight:600">${_p}</span></div>`:'';})()}
+        ${(()=>{const s=b.source;return s&&s!==bDetectPlatform(b)?`<div class="b-exp-item"><label>Откуда</label><span>${экран(s)}</span></div>`:'';})()}
       </div>
       ${(()=>{
         const tour=TOURS.find(t=>t.key===b.route);
@@ -1904,6 +1953,7 @@ function bEdit(id){
   document.getElementById('fInfants').value=b.infants||0;
   document.getElementById('fContact').value=b.contact||'';
   document.getElementById('fHotel').value=b.hotel||'';
+  { const _s=document.getElementById('fSource'); if(_s) _s.value=b.source||''; }
   document.getElementById('fCurrency').value=b.currency||'VND';
   document.getElementById('fPayMethod').value=b.payMethod||'Наличные';
   document.getElementById('fAmount').value=b.totalAmount||'';
@@ -2206,6 +2256,7 @@ function bClearForm(){
   ['fChangeHint','pfChangeHint'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='';});
   запомнитьВалюты();
   ['fRoute','pfRoute'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fSource','pfSource'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('fAdults').value=1; document.getElementById('fChildren').value=0; document.getElementById('fInfants').value=0;
   const pa=document.getElementById('pfAdults');
   if(pa){pa.value=1;document.getElementById('pfChildren').value=0;document.getElementById('pfInfants').value=0;}
@@ -2886,6 +2937,7 @@ function bGetFormData(){
     infants:parseInt(document.getElementById(p+'Infants').value)||0,
     contact:document.getElementById(p+'Contact').value,
     hotel:document.getElementById(p+'Hotel').value,
+    source:document.getElementById(p+'Source')?.value||'',
     currency:document.getElementById(p+'Currency').value,
     payMethod:document.getElementById(p+'PayMethod').value,
     totalAmount:document.getElementById(p+'Amount').value,
@@ -2925,6 +2977,7 @@ function bRepeat(id){
   document.getElementById('fInfants').value=b.infants||0;
   document.getElementById('fContact').value=b.contact||'';
   document.getElementById('fHotel').value=b.hotel||'';
+  { const _s=document.getElementById('fSource'); if(_s) _s.value=b.source||''; }
   document.getElementById('fCurrency').value=b.currency||'VND';
   document.getElementById('fPayMethod').value=b.payMethod||'Наличные';
   document.getElementById('fAmount').value='';
@@ -3245,6 +3298,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // разом, а не по очереди: список не ждёт проверку доступа.
   // права ставим сразу по ключу, не дожидаясь ответа Google
   document.body.classList.toggle('ro', !canEdit());
+  заполнитьИсточники();
   if(editKey()) bLoad();
   loadAccess().then(()=>{
     document.body.classList.toggle('ro', !canEdit());
