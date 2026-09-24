@@ -1350,7 +1350,7 @@ function bCardHTML(b){
         <div class="b-exp-item"><label>Предоплата</label><span>${b.prepay?(b.prepay+' '+(b.prepayCur||'')+(b.prepayDate?' · '+shortDate(b.prepayDate):'')):'—'}${b.prepay&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.prepay),b.prepayCur||'USD',currentRates,b.prepayFx)}</div>`:''}</span></div>
         <div class="b-exp-item"><label>Площадка</label><span>${b.plat?(b.plat+' '+(b.platCur||'')+(b.platDate?' · '+shortDate(b.platDate):'')):'—'}${b.plat&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.plat),b.platCur||'USD',currentRates,b.platFx)}</div>`:''}</span></div>
         <div class="b-exp-item"><label>На месте</label><span>${b.onsite?(b.onsite+' '+(b.onsiteCur||'')):'—'}${(parseFloat(b.onsite)>0&&currentRates)?`<div class="pay-hint">${payLine(parseFloat(b.onsite),b.onsiteCur||'USD',currentRates)}</div>`:''}</span></div>
-        ${(()=>{const c=расчётСдачи(b.onsite,b.onsiteCur);return c?`<div class="b-exp-item"><label>Сдача</label><span>${c.сдача} $<div class="pay-hint">с ${c.дают} $ · ${c.донги.toLocaleString('ru-RU')} ₫</div></span></div>`:'';})()}
+        ${(()=>{const c=сдачаПоБрони(b);return c?`<div class="b-exp-item"><label>Сдача</label><span>${c.сдача} $<div class="pay-hint">с ${c.дают} $ · ${c.донги.toLocaleString('ru-RU')} ₫</div></span></div>`:'';})()}
         <div class="b-exp-item"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
         ${(()=>{const _p=bDetectPlatform(b);return _p?`<div class="b-exp-item"><label>Платформа</label><span style="color:var(--accent);font-weight:600">${_p}</span></div>`:'';})()}
       </div>
@@ -1789,7 +1789,7 @@ function bCopyCard(id){
     parseFloat(b.plat)>0?'Площадка: '+b.plat+' '+(b.platCur||'')+вДолларах(b.plat,b.platCur,b.platFx)+(b.platDate?' · '+shortDate(b.platDate):''):'',
     parseFloat(b.onsite)>0?'На месте: '+b.onsite+' '+(b.onsiteCur||'')+вДолларах(b.onsite,b.onsiteCur):'',
     // сдачу гид готовит наличными — донги нужны прямо в карточке
-    (()=>{const c=расчётСдачи(b.onsite,b.onsiteCur);
+    (()=>{const c=сдачаПоБрони(b);
       return c&&c.сдача>0?'Сдача с '+c.дают+' $: '+c.сдача+' $ = '+c.донги.toLocaleString('ru-RU')+' ₫':'';})(),
     // сначала метка платформы целиком (‌T/‌S), затем осиротевшие невидимки
     (b.notes||'').replace(/‌[TS]/g,'').replace(/[​‌‍]/g,'').trim()
@@ -2055,11 +2055,48 @@ function расчётСдачи(сумма, вал){
   const сдача=Math.round((дают-usd)*100)/100;
   return {usd:Math.round(usd*100)/100, дают, сдача, донги:Math.round(сдача*КУРС_СДАЧИ)};
 }
+// Сумма брони хранится строкой: «232 $», «2 500 000 ₫».
+function суммаВДоллары(текст){
+  if(!текст) return 0;
+  const s=String(текст).replace(/\s/g,'').replace(',','.');
+  const n=parseFloat(s);
+  if(!(n>0)) return 0;
+  if(/₫|vnd/i.test(s)) return currentRates?payToUsd(n,'VND',currentRates):0;
+  if(/₽|rub/i.test(s)) return currentRates?payToUsd(n,'RUB',currentRates):0;
+  return n;
+}
+// Сдача нужна там, где на месте платят наличными долларами: клиент даёт
+// круглую сотню, сдачу получает донгами. Поле «На месте» заполняется само
+// только когда есть предоплата — без неё оно пустое, хотя на месте платят
+// всё. Поэтому, если поле пустое, берём остаток к оплате.
+function сдачаПоБрони(b){
+  if(!b || b.payStatus==='paid') return null;
+  const наМесте=parseFloat(b.onsite);
+  if(наМесте>0){
+    if((b.onsiteCur||'USD')!=='USD') return null;
+    return расчётСдачи(наМесте,'USD');
+  }
+  if(/₫|vnd|₽|rub/i.test(String(b.totalAmount||''))) return null;
+  const всего=суммаВДоллары(b.totalAmount);
+  if(!(всего>0)) return null;
+  const платёжUsd=(usd,сумма,вал)=>parseFloat(usd)||суммаВДоллары(сумма?сумма+(вал==='VND'?'₫':вал==='RUB'?'₽':''):'');
+  const внесено=платёжUsd(b.prepayUsd,b.prepay,b.prepayCur)+платёжUsd(b.platUsd,b.plat,b.platCur);
+  const остаток=Math.round((всего-внесено)*100)/100;
+  if(остаток<1) return null;
+  return расчётСдачи(остаток,'USD');
+}
 function считатьСдачу(p){
   const el=document.getElementById(p+'Change');
   const hint=document.getElementById(p+'ChangeHint');
   if(!el||!hint) return;
-  const c=расчётСдачи(document.getElementById(p+'Onsite')?.value, document.getElementById(p+'OnsiteCur')?.value);
+  // Сдача с круглой сотни — про наличные доллары. Платят на месте донгами
+  // или рублями — сдачу в долларах готовить не из чего.
+  const вал=document.getElementById(p+'OnsiteCur')?.value||'USD';
+  if(вал!=='USD'){
+    el.value=''; hint.textContent='на месте платят в '+вал+' — сдача не считается';
+    return;
+  }
+  const c=расчётСдачи(document.getElementById(p+'Onsite')?.value,'USD');
   if(!c||c.сдача<=0){
     el.value = c ? '0' : '';
     hint.textContent = c ? 'клиент даёт ровно '+c.дают+' $ — сдача не нужна' : '';
