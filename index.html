@@ -633,10 +633,20 @@ function заполнитьИсточники(){
     el.dataset.готов='1';
   });
 }
-// У брони с площадки источник и так известен по метке — не заставляем
+// Источник храним меткой в примечании, как платформу: Apps Script
+// записывает только поля из своего списка, а чужие молча отбрасывает —
+// проверено записью, поле source до сервера не доехало.
+const МЕТКА_ИСТОЧНИКА=/\u200C(\d)/;
+function меткаИсточника(имя){
+  const i=SOURCES.indexOf(имя);
+  return i>=0?'\u200C'+i:'';
+}
+// У брони с площадки источник и так известен по своей метке — не заставляем
 // выбирать его руками второй раз.
 function источникБрони(b){
-  return bDetectPlatform(b) || b.source || '';
+  const пл=bDetectPlatform(b); if(пл) return пл;
+  const m=(b.notes||'').match(МЕТКА_ИСТОЧНИКА);
+  return m?(SOURCES[+m[1]]||''):'';
 }
 
 // Цена строки прайса для площадки: сначала цена, прописанная в прайсе,
@@ -1357,7 +1367,7 @@ function bRender(){
 // В примечании живут невидимые метки — платформа (‌T/‌S) и признак
 // «индивидуально». В строке списка они не нужны, нужен только текст.
 function чистоеПримечание(b){
-  return (b.notes||'').replace(/‌[TS]/g,'').replace(/[​‌‍]/g,'').trim();
+  return (b.notes||'').replace(/‌[TSB]/g,'').replace(МЕТКА_ИСТОЧНИКА,'').replace(/[​‌‍]/g,'').trim();
 }
 function экран(s){
   return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1401,7 +1411,7 @@ function bCardHTML(b){
         ${(()=>{const c=сдачаПоБрони(b);return c?`<div class="b-exp-item"><label>Сдача</label><span>${c.сдача} $<div class="pay-hint">с ${c.дают} $ · ${c.донги.toLocaleString('ru-RU')} ₫</div></span></div>`:'';})()}
         <div class="b-exp-item"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
         ${(()=>{const _p=bDetectPlatform(b);return _p?`<div class="b-exp-item"><label>Платформа</label><span style="color:var(--accent);font-weight:600">${_p}</span></div>`:'';})()}
-        ${(()=>{const s=b.source;return s&&s!==bDetectPlatform(b)?`<div class="b-exp-item"><label>Откуда</label><span>${экран(s)}</span></div>`:'';})()}
+        ${(()=>{const m=(b.notes||'').match(МЕТКА_ИСТОЧНИКА);const s=m?SOURCES[+m[1]]:'';return s?`<div class="b-exp-item"><label>Откуда</label><span>${экран(s)}</span></div>`:'';})()}
       </div>
       ${(()=>{
         const tour=TOURS.find(t=>t.key===b.route);
@@ -1445,7 +1455,7 @@ function bCardHTML(b){
       })()}
       <div class="b-notes-row">
         <label>Примечание</label>
-        <textarea onclick="event.stopPropagation()" onchange="event.stopPropagation();bSaveNote('${b.id}',this.value)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:40px;color:var(--text)">${(b.notes||'').replace(/​/g,'').replace(/‌[TS]/g,'')}</textarea>
+        <textarea onclick="event.stopPropagation()" onchange="event.stopPropagation();bSaveNote('${b.id}',this.value)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:40px;color:var(--text)">${экран(чистоеПримечание(b))}</textarea>
       </div>
       <div class="b-copy-row">
         <button class="b-copy-card-btn" onclick="event.stopPropagation();bCopyCard('${b.id}')">Скопировать карточку</button>
@@ -1871,8 +1881,9 @@ async function bToggleBase(id){
 async function bSaveNote(id,val){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   const isInd=(b.notes||'').endsWith('​')||b.isIndividual;
-  const platMark=(b.notes||'').match(/‌[TS]/)?.[0]||'';
-  b.notes=val.replace(/​/g,'').replace(/‌[TS]/g,'')+platMark+(isInd?'​':'');
+  const platMark=(b.notes||'').match(/‌[TSB]/)?.[0]||'';
+  const srcMark=(b.notes||'').match(МЕТКА_ИСТОЧНИКА)?.[0]||'';
+  b.notes=val.replace(/​/g,'').replace(/‌[TSB]/g,'').replace(МЕТКА_ИСТОЧНИКА,'')+platMark+srcMark+(isInd?'​':'');
   await gasSave('updateBooking',b);
 }
 async function bCyclePay(id){
@@ -1953,7 +1964,7 @@ function bEdit(id){
   document.getElementById('fInfants').value=b.infants||0;
   document.getElementById('fContact').value=b.contact||'';
   document.getElementById('fHotel').value=b.hotel||'';
-  { const _s=document.getElementById('fSource'); if(_s) _s.value=b.source||''; }
+  { const _s=document.getElementById('fSource'); if(_s){const _m=(b.notes||'').match(МЕТКА_ИСТОЧНИКА); _s.value=_m?(SOURCES[+_m[1]]||''):'';} }
   document.getElementById('fCurrency').value=b.currency||'VND';
   document.getElementById('fPayMethod').value=b.payMethod||'Наличные';
   document.getElementById('fAmount').value=b.totalAmount||'';
@@ -2937,7 +2948,6 @@ function bGetFormData(){
     infants:parseInt(document.getElementById(p+'Infants').value)||0,
     contact:document.getElementById(p+'Contact').value,
     hotel:document.getElementById(p+'Hotel').value,
-    source:document.getElementById(p+'Source')?.value||'',
     currency:document.getElementById(p+'Currency').value,
     payMethod:document.getElementById(p+'PayMethod').value,
     totalAmount:document.getElementById(p+'Amount').value,
@@ -2962,7 +2972,7 @@ function bGetFormData(){
     platform:mTab==='manual'?fPlatformName:pfPlatformName,
     payStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.payStatus||'unpaid') : 'unpaid',
     tripStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.tripStatus||'waiting') : (document.getElementById(p+'TripStatus')?.value||'waiting'),
-    notes:(()=>{const _pn=mTab==='manual'?fPlatformName:pfPlatformName;const _pm=_pn==='Sputnik8'?'‌S':_pn==='Tripster'?'‌T':_pn==='База'?'‌B':'';return(document.getElementById(p+'Notes').value||'').replace(/​/g,'').replace(/‌[TSB]/g,'')+_pm+(isIndividual?'​':'');})()
+    notes:(()=>{const _pn=mTab==='manual'?fPlatformName:pfPlatformName;const _pm=_pn==='Sputnik8'?'‌S':_pn==='Tripster'?'‌T':_pn==='База'?'‌B':'';const _sm=меткаИсточника(document.getElementById(p+'Source')?.value||'');return(document.getElementById(p+'Notes').value||'').replace(/​/g,'').replace(/‌[TSB]/g,'').replace(МЕТКА_ИСТОЧНИКА,'')+_pm+_sm+(isIndividual?'​':'');})()
   };
 }
 function bRepeat(id){
@@ -2977,7 +2987,7 @@ function bRepeat(id){
   document.getElementById('fInfants').value=b.infants||0;
   document.getElementById('fContact').value=b.contact||'';
   document.getElementById('fHotel').value=b.hotel||'';
-  { const _s=document.getElementById('fSource'); if(_s) _s.value=b.source||''; }
+  { const _s=document.getElementById('fSource'); if(_s){const _m=(b.notes||'').match(МЕТКА_ИСТОЧНИКА); _s.value=_m?(SOURCES[+_m[1]]||''):'';} }
   document.getElementById('fCurrency').value=b.currency||'VND';
   document.getElementById('fPayMethod').value=b.payMethod||'Наличные';
   document.getElementById('fAmount').value='';
