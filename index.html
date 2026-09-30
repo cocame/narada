@@ -793,7 +793,9 @@ function calcFromUSD(usd, R) {
 function calcFromVND(vnd, R) {
   if (!R) return {usd:null,rub:null,vnd,usdt:null};
   const usd = vnd/R.VND;
-  return { usd, rub: usd*R.RUB, vnd, usdt: usd*R.USDT };
+  // Цена билета фиксирована в донгах — в ₫ наценки нет.
+  // В рублях наценка начисляется, как и на всё остальное.
+  return { usd, rub: usd*R.RUB*(1+MARKUP.RUB), vnd, usdt: usd*R.USDT*(1+MARKUP.USDT) };
 }
 function addP(a,b){ return {usd:a.usd+b.usd,rub:a.rub+b.rub,vnd:a.vnd+b.vnd,usdt:a.usdt+b.usdt}; }
 function mulP(p,n){ return {usd:p.usd*n,rub:p.rub*n,vnd:p.vnd*n,usdt:p.usdt*n}; }
