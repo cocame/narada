@@ -734,20 +734,20 @@ const TOURS = [
   // Туры партнёра «Мир Тур»: продаём по его цене, заработок — комиссия 5 %.
   // Ставка стоит у каждого тура отдельно, а не у региона: свои программы
   // на Фукуоке, когда появятся, будут считаться по обычным 10 %.
-  { icon:'🎆', name:'Фукуок — Сансет Таун', key:'ФК САНСЕТ', comm:0.05, noPlat:true,
-    rows:[{label:'За человека',usd:124}] },
-  { icon:'🚡', name:'Фукуок — канатка и острова', key:'ФК КАНАТКА', comm:0.05, noPlat:true,
-    rows:[{label:'Взрослый',usd:75},{label:'Ребёнок до 140 см',usd:65}] },
-  { icon:'🦒', name:'Фукуок — сафари и Старфиш', key:'ФК САФАРИ', comm:0.05, noPlat:true,
-    rows:[{label:'Взрослый',usd:75},{label:'Ребёнок 100–140 см',usd:65}] },
-  { icon:'🤿', name:'Фукуок — южные острова', key:'ФК ОСТРОВА', comm:0.05, noPlat:true,
-    rows:[{label:'Взрослый / >140 см',usd:54},{label:'Ребёнок до 140 см',usd:44}] },
-  { icon:'🦪', name:'Фукуок — жемчужина севера', key:'ФК СЕВЕР', comm:0.05, noPlat:true,
-    rows:[{label:'Взрослый',usd:75},{label:'Детский',usd:65}] },
-  { icon:'🏝', name:'Фукуок — сокровища юга', key:'ФК ЮГ', comm:0.05, noPlat:true,
-    rows:[{label:'Взрослый',usd:30},{label:'Дети 5–10 лет',usd:20}] },
-  { icon:'🎣', name:'Фукуок — морская рыбалка', key:'ФК РЫБАЛКА', comm:0.05, noPlat:true,
-    rows:[{label:'За человека, группа от 5',usd:85}] },
+  { icon:'🎆', name:'Фукуок — Сансет Таун', key:'ФК САНСЕТ', noPlat:true,
+    rows:[{label:'За человека',usd:124,comm:6.2}] },
+  { icon:'🚡', name:'Фукуок — канатка и острова', key:'ФК КАНАТКА', noPlat:true,
+    rows:[{label:'Взрослый',usd:75,comm:3.75},{label:'Ребёнок до 140 см',usd:65,comm:3.25}] },
+  { icon:'🦒', name:'Фукуок — сафари и Старфиш', key:'ФК САФАРИ', noPlat:true,
+    rows:[{label:'Взрослый',usd:75,comm:3.75},{label:'Ребёнок 100–140 см',usd:65,comm:3.25}] },
+  { icon:'🤿', name:'Фукуок — южные острова', key:'ФК ОСТРОВА', noPlat:true,
+    rows:[{label:'Взрослый / >140 см',usd:54,comm:2.7},{label:'Ребёнок до 140 см',usd:44,comm:2.2}] },
+  { icon:'🦪', name:'Фукуок — жемчужина севера', key:'ФК СЕВЕР', noPlat:true,
+    rows:[{label:'Взрослый',usd:75,comm:3.75},{label:'Детский',usd:65,comm:3.25}] },
+  { icon:'🏝', name:'Фукуок — сокровища юга', key:'ФК ЮГ', noPlat:true,
+    rows:[{label:'Взрослый',usd:30,comm:1.5},{label:'Дети 5–10 лет',usd:20,comm:1.0}] },
+  { icon:'🎣', name:'Фукуок — морская рыбалка', key:'ФК РЫБАЛКА', noPlat:true,
+    rows:[{label:'За человека, группа от 5',usd:85,comm:4.25}] },
 ];
 
 // ── Комиссия ──
@@ -755,11 +755,22 @@ const TOURS = [
 // Партнёрские туры на Фукуоке дают 5 %, поэтому ставка переехала к туру:
 // нет своей — берётся обычная. Округление вверх до 0.5 $ как было.
 const COMM_DEFAULT = 0.10;
-function ставкаКомиссии(tour){
-  return tour && typeof tour.comm === 'number' ? tour.comm : COMM_DEFAULT;
+// Свои туры: 10 % от суммы, вверх до 0.5 $ — как было всегда.
+// Партнёрские: комиссия задана прайсом Мир Тур в долларах за каждый билет
+// (3.75 за взрослого, 3.25 за ребёнка) и округлению не подлежит — это
+// не наша ставка, а сумма, которую партнёр заплатит. Поэтому у таких туров
+// комиссия стоит в строках, а не процентом у тура.
+function фиксированнаяКомиссия(tour){
+  return !!(tour && tour.rows && tour.rows[0] && typeof tour.rows[0].comm === 'number');
 }
-function комиссияОт(base, tour){
-  return base > 0 ? Math.ceil(base * ставкаКомиссии(tour) * 2) / 2 : 0;
+function комиссияТура(tour, adults, children, baseUSD){
+  if (фиксированнаяКомиссия(tour)) {
+    let сумма = tour.rows[0].comm * (adults || 0);
+    const детская = tour.rows[1];
+    if (детская && typeof детская.comm === 'number') сумма += детская.comm * (children || 0);
+    return Math.round(сумма * 100) / 100;   // только чистка копеечной погрешности
+  }
+  return baseUSD > 0 ? Math.ceil(baseUSD * COMM_DEFAULT * 2) / 2 : 0;
 }
 
 // Очень расширенный алиас-словарь маршрутов
@@ -2357,13 +2368,13 @@ function bUpdatePreview(){
   if(tour){
     const flatRow0=tour.rows[0]&&tour.rows[0].flat;
     if(flatRow0){
-      commRaw=tour.rows[0].usd*ставкаКомиссии(tour);
+      commRaw=tour.rows[0].usd;
     } else {
-      commRaw+=tour.rows[0].usd*adults*ставкаКомиссии(tour);
-      if(tour.rows[1]&&!tour.rows[1].flat) commRaw+=tour.rows[1].usd*children*ставкаКомиссии(tour);
+      commRaw+=tour.rows[0].usd*adults;
+      if(tour.rows[1]&&!tour.rows[1].flat) commRaw+=tour.rows[1].usd*children;
     }
   }
-  const comm = Math.ceil(commRaw*2)/2; // округление до 0.5
+  const comm = комиссияТура(tour, adults, children, commRaw);
   const sfx=mTab==='manual'?'':'2';
   const cEl=document.getElementById('previewComm'+sfx);
   const pEl=document.getElementById('previewPax'+sfx);
@@ -2535,7 +2546,7 @@ function fExtraChange(i,d){
 
 function fOtherRecalc(){
   const sum=parseFloat(document.getElementById('fOtherPriceInput').value)||0;
-  const comm=комиссияОт(sum, null);   // «Другое» — свободная цена, ставка обычная
+  const comm=комиссияТура(null, 0, 0, sum);   // «Другое» — свободная цена, ставка обычная
   const cEl=document.getElementById('previewComm');if(cEl)cEl.textContent='$'+comm;
   const transferUSD=parseFloat(document.getElementById('fTransfer')?.value)||0;
   if((sum>0||transferUSD)&&currentRates){
@@ -2556,7 +2567,7 @@ function fOtherRecalc(){
 }
 function pfOtherRecalc(){
   const sum=parseFloat(document.getElementById('pfOtherPriceInput').value)||0;
-  const comm=комиссияОт(sum, null);   // «Другое» — свободная цена, ставка обычная
+  const comm=комиссияТура(null, 0, 0, sum);   // «Другое» — свободная цена, ставка обычная
   const cEl=document.getElementById('previewComm2');if(cEl)cEl.textContent='$'+comm;
   const transferUSD=parseFloat(document.getElementById('pfTransfer')?.value)||0;
   if((sum>0||transferUSD)&&currentRates){
@@ -2662,7 +2673,7 @@ function fRecalc(){
   tourUSD+=fExtraUSD;
   fCalcTotal(tour, adults, children, currency, tourUSD);
   const baseForComm=hasFlatChecked?tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(`fFlatCheck${i}`)?.checked?r.usd:0),0)+fExtraUSD:(tour.rows[0]?.flat?tour.rows[0].usd:adults*(tour.rows[0]?.usd||0)+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0))+fExtraUSD;
-  const comm=комиссияОт(baseForComm, tour);
+  const comm=комиссияТура(tour, adults, children, baseForComm);
   const cEl=document.getElementById('previewComm'); if(cEl) cEl.textContent='$'+comm;
 }
 function fOptChange(i,d){
@@ -2909,7 +2920,7 @@ function pfRecalc(){
   tourUSD+=pfExtraUSDTotal;
   pfCalcTotal(tour, adults, children, currency, tourUSD);
   const baseForComm=hasFlatChecked?tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(`pfFlatCheck${i}`)?.checked?r.usd:0),0)+pfExtraUSDTotal:(tour.rows[0]?.flat?tour.rows[0].usd:adults*(tour.rows[0]?.usd||0)+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0))+pfExtraUSDTotal;
-  const comm=комиссияОт(baseForComm, tour);
+  const comm=комиссияТура(tour, adults, children, baseForComm);
   const cEl=document.getElementById('previewComm2'); if(cEl) cEl.textContent='$'+comm;
 }
 function pfCalcTotal(tour, adults, children, currency, tourUSD){
@@ -2953,7 +2964,7 @@ function bGetFormData(){
     const on=document.getElementById(p+'OtherName')?.value.trim();
     if(on) routeName=on.toUpperCase();
     const sum=parseFloat(document.getElementById(p+'OtherPriceInput')?.value)||0;
-    comm=комиссияОт(sum, null);   // «Другое» — тура нет, ставка обычная
+    comm=комиссияТура(null, 0, 0, sum);   // «Другое» — тура нет, ставка обычная
   } else {
     adultUSD=parseFloat(document.getElementById(p+'PriceRow0')?.value)||(tour?tour.rows[0].usd:0);
     const row1=tour&&tour.rows[1];
@@ -2976,7 +2987,7 @@ function bGetFormData(){
       if(flatActive){tourUSD=flatSum; isIndividual=true;}
       else if(flatRow0) isIndividual=true;
     }
-    if(tour){let baseComm=isIndividual?(flatRow0?tour.rows[0].usd:tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(p+'FlatCheck'+i)?.checked?r.usd:0),0)):(flatRow0?tour.rows[0].usd:adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0));comm=комиссияОт(baseComm, tour);}
+    if(tour){let baseComm=isIndividual?(flatRow0?tour.rows[0].usd:tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(p+'FlatCheck'+i)?.checked?r.usd:0),0)):(flatRow0?tour.rows[0].usd:adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0));comm=комиссияТура(tour, adults, children, baseComm);}
   }
   return {
     id:editingId,
