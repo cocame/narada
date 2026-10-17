@@ -661,17 +661,8 @@ function extraPrice(tour, rate){
 }
 
 const TOURS = [
-  { icon:'🏯', name:'Хюэ', key:'ХЮЭ',
-    extraPerPersonTr:120,
-    rows:[{label:'Взрослый',usd:88},{label:'Ребёнок до 10',usd:44},{label:'Индивидуально',usd:352,tr:480,flat:true}] },
-  { icon:'🏮', name:'Хойан', key:'ХОЙАН',
-    extraPerPersonTr:93,
-    rows:[{label:'Взрослый',usd:65},{label:'Ребёнок до 10',usd:33},{label:'Индивидуально',usd:260,tr:375,sp8:375,flat:true}] },
-  { icon:'🏝', name:'Острова Чам', key:'ОСТРОВА ЧАМ',
-    rows:[{label:'Взрослый',usd:70},{label:'Ребёнок до 10',usd:35},{label:'+ Рыбалка',usd:90},{label:'+ Дайвинг',usd:100},{label:'Индивидуально',usd:280,flat:true}]},
-  { icon:'🌉', name:'Обзорный Дананг', key:'ДАНАНГ',
-    extraPerPersonTr:93,
-    rows:[{label:'Взрослый',usd:67},{label:'Ребёнок до 10',usd:34},{label:'Индивидуально',usd:268,tr:370,flat:true}] },
+  // Ба На Хиллс и вечерняя программа спрашивают чаще всего — держим их первыми,
+  // остальной Дананг идёт прежним порядком от Хюэ.
   { icon:'⛰', name:'Ба На Хиллс', key:'БА НА ХИЛЛС',
     extraPerPerson:50, extraPerPersonTr:68,
     rows:[{label:'Взрослый / >140 см',usd:50},{label:'Ребёнок 100–140 см',usd:25},{label:'Индивидуально',usd:200,tr:275,flat:true}],
@@ -686,6 +677,17 @@ const TOURS = [
       {id:'bh_eve_adult', label:'Вечер — взрослый', vnd_fixed:1100000},
       {id:'bh_eve_child', label:'Вечер — детский',  vnd_fixed:900000}
     ]},
+  { icon:'🏯', name:'Хюэ', key:'ХЮЭ',
+    extraPerPersonTr:120,
+    rows:[{label:'Взрослый',usd:88},{label:'Ребёнок до 10',usd:44},{label:'Индивидуально',usd:352,tr:480,flat:true}] },
+  { icon:'🏮', name:'Хойан', key:'ХОЙАН',
+    extraPerPersonTr:93,
+    rows:[{label:'Взрослый',usd:65},{label:'Ребёнок до 10',usd:33},{label:'Индивидуально',usd:260,tr:375,sp8:375,flat:true}] },
+  { icon:'🏝', name:'Острова Чам', key:'ОСТРОВА ЧАМ',
+    rows:[{label:'Взрослый',usd:70},{label:'Ребёнок до 10',usd:35},{label:'+ Рыбалка',usd:90},{label:'+ Дайвинг',usd:100},{label:'Индивидуально',usd:280,flat:true}]},
+  { icon:'🌉', name:'Обзорный Дананг', key:'ДАНАНГ',
+    extraPerPersonTr:93,
+    rows:[{label:'Взрослый',usd:67},{label:'Ребёнок до 10',usd:34},{label:'Индивидуально',usd:268,tr:370,flat:true}] },
   { icon:'♨️', name:'Hot Springs', key:'HOT SPRINGS',
     rows:[{label:'Взрослый / >140 см',usd:72},{label:'Ребёнок 100–140 см',usd:36},{label:'Индивидуально',usd:288,flat:true}],
     tickets:[
