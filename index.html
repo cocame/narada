@@ -2686,18 +2686,11 @@ function pfOtherRecalc(){
   }
 }
 // ── Трансфер ──
-// Маршрут, стоимость и комиссию вписывают руками; калькулятор тура не нужен.
+// Маршрут, стоимость, комиссию и сумму оплаты вписывают руками — ничего не пересчитываем.
 function трансферПересчёт(p){
-  const price=parseFloat(document.getElementById(p+'TrPrice').value)||0;
+  // Ничего не считаем: всё вписано руками, только показываем комиссию в шапке.
   const comm=parseFloat(document.getElementById(p+'TrComm').value)||0;
   const cEl=document.getElementById(p==='f'?'previewComm':'previewComm2'); if(cEl) cEl.textContent='$'+comm;
-  if(price>0&&currentRates){
-    const currency=document.getElementById(p+'Currency').value;
-    const total=calcFromUSD(price,currentRates);
-    const val=currency==='USD'?fmtUSD(total.usd):currency==='RUB'?fmtRUB(total.rub):currency==='USDT'?fmtUSDT(total.usdt):fmtVND(total.vnd);
-    autoAmount(p,val);
-    prepayAutoFill(p);
-  }
 }
 function трансферПоказ(p, route){
   const on=route==='ТРАНСФЕР';
