@@ -392,6 +392,7 @@ body.ro .ro-badge{display:inline-block}
               <option value="ДРУГОЕ">Другое...</option>
             </select>
             <div id="fOtherBlock" style="display:none"><label>Название</label><input type="text" id="fOtherName"></div>
+            <div id="fTrBlock" style="display:none;margin-top:6px"><label>Маршрут трансфера</label><input type="text" id="fTrRoute" placeholder="Аэропорт — отель" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;margin-bottom:6px"><label>Стоимость трансфера $</label><input type="number" id="fTrPrice" min="0" placeholder="0" oninput="трансферПересчёт('f')" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;margin-bottom:6px"><label>Комиссия $</label><input type="number" id="fTrComm" min="0" placeholder="0" oninput="трансферПересчёт('f')" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;margin-bottom:6px"></div>
           </div>
           <div class="form-group full"><label>Количество человек</label>
             <div class="pax-grid">
@@ -412,7 +413,7 @@ body.ro .ro-badge{display:inline-block}
         <!-- КАЛЬКУЛЯТОР В ФОРМЕ -->
         <div id="fCalcBlock" style="display:none;margin-top:12px;background:var(--note-bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
           <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:8px">Расчёт стоимости</div>
-          <div id="fOtherPriceSection" style="display:none"><div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2)"><div style="font-size:12px;color:var(--muted)">Стоимость тура $</div><input type="number" id="fOtherPriceInput" min="0" placeholder="0" oninput="fOtherRecalc()" style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)"></div><div id="fOtherCommRow" style="display:none;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2)"><div style="font-size:12px;color:var(--muted)">Комиссия $</div><input type="number" id="fOtherCommInput" min="0" placeholder="0" oninput="fOtherRecalc()" style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)"></div></div>
+          <div id="fOtherPriceSection" style="display:none"><div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2)"><div style="font-size:12px;color:var(--muted)">Стоимость тура $</div><input type="number" id="fOtherPriceInput" min="0" placeholder="0" oninput="fOtherRecalc()" style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)"></div></div>
           <div id="fCalcRows"></div>
           <div id="fTicketSection" style="display:none">
             <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;font-family:'DM Mono',monospace;padding:8px 0 4px;border-top:1px dashed var(--border);margin-top:4px">Входные билеты</div>
@@ -493,6 +494,7 @@ body.ro .ro-badge{display:inline-block}
                 <option value="ДРУГОЕ">Другое...</option>
               </select>
               <div id="pfOtherBlock" style="display:none"><label>Название</label><input type="text" id="pfOtherName"></div>
+            <div id="pfTrBlock" style="display:none;margin-top:6px"><label>Маршрут трансфера</label><input type="text" id="pfTrRoute" placeholder="Аэропорт — отель" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;margin-bottom:6px"><label>Стоимость трансфера $</label><input type="number" id="pfTrPrice" min="0" placeholder="0" oninput="трансферПересчёт('pf')" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;margin-bottom:6px"><label>Комиссия $</label><input type="number" id="pfTrComm" min="0" placeholder="0" oninput="трансферПересчёт('pf')" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;margin-bottom:6px"></div>
             </div>
             <div class="form-group full"><label>Количество человек</label>
               <div class="pax-grid">
@@ -512,7 +514,7 @@ body.ro .ro-badge{display:inline-block}
           </div>
           <div id="pfCalcBlock" style="display:none;margin-top:12px;background:var(--note-bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
             <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:8px">Расчёт стоимости</div>
-            <div id="pfOtherPriceSection" style="display:none"><div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2)"><div style="font-size:12px;color:var(--muted)">Стоимость тура $</div><input type="number" id="pfOtherPriceInput" min="0" placeholder="0" oninput="pfOtherRecalc()" style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)"></div><div id="pfOtherCommRow" style="display:none;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2)"><div style="font-size:12px;color:var(--muted)">Комиссия $</div><input type="number" id="pfOtherCommInput" min="0" placeholder="0" oninput="pfOtherRecalc()" style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)"></div></div>
+            <div id="pfOtherPriceSection" style="display:none"><div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2)"><div style="font-size:12px;color:var(--muted)">Стоимость тура $</div><input type="number" id="pfOtherPriceInput" min="0" placeholder="0" oninput="pfOtherRecalc()" style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)"></div></div>
             <div id="pfCalcRows"></div>
             <div id="pfTicketSection" style="display:none">
               <div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#bbb;font-family:'DM Mono',monospace;padding:8px 0 4px;border-top:1px dashed var(--border);margin-top:4px">Входные билеты</div>
@@ -721,10 +723,9 @@ const TOURS = [
   { icon:'🏯', name:'Донг Зянг', key:'ДОНГ ЗЯНГ', extraPerPersonTr:95,
     rows:[{label:'Групповой (за чел.)',usd:70},{label:'Индивидуально (до 4 чел)',usd:280,tr:380,flat:true}] },
   // ── ТРАНСФЕР ──
-  // Цены нет: каждый раз считаем под заказ. Стоимость и комиссию вписываем
-  // в брони руками (manual), в прайсе вместо цены — «по запросу».
-  { icon:'🚐', name:'Трансфер — аэропорт', key:'ТР АЭРОПОРТ', manual:true, noPlat:true,
-    rows:[{label:'Машина',usd:0,flat:true}] },
+  // Цены нет, считаем под заказ: маршрут, стоимость и комиссию вписывают
+  // в брони руками. В прайсе вместо цены — «по запросу».
+  { icon:'🚐', name:'Трансфер', key:'ТРАНСФЕР', noPlat:true, rows:[{label:'Трансфер',usd:0,flat:true}] },
   // ── ФУКУОК ──
   // Туры партнёра «Мир Тур»: продаём по его цене, заработок — комиссия 5 %.
   // Ставка стоит у каждого тура отдельно, а не у региона: свои программы
@@ -785,17 +786,11 @@ const TOURS = [
 // Направление тура определяется по ключу: у партнёрских маршрутов он
 // начинается с «ФК» или «НТ». Отдельного поля не заводим, чтобы список
 // туров оставался в одном месте и не расходился сам с собой.
-// Цену и комиссию у такого маршрута вписывают руками — как у «Другого».
-function ручнойМаршрут(route){
-  if(route==='ДРУГОЕ') return true;
-  const t=TOURS.find(x=>x.key===route);
-  return !!(t&&t.manual);
-}
 function регионТура(tour){
   if(!tour || !tour.key) return 'Дананг';
   if(tour.key.startsWith('ФК ')) return 'Фукуок';
   if(tour.key.startsWith('НТ ')) return 'Нячанг';
-  if(tour.key.startsWith('ТР ')) return 'Трансфер';
+  if(tour.key==='ТРАНСФЕР') return 'Трансфер';
   return 'Дананг';
 }
 const РЕГИОНЫ = ['Дананг','Фукуок','Нячанг','Трансфер'];
@@ -813,6 +808,8 @@ function опцииМаршрутов(){
       подпись = подпись.charAt(0).toUpperCase() + подпись.slice(1);
       return `<option value="${t.key}">${t.icon} ${подпись}</option>`;
     }).join('');
+    // Трансфер — один пункт, группа над ним не нужна
+    if(регион === 'Трансфер') return свои.map(t => `<option value="${t.key}">${t.icon} ${t.name}</option>`).join('');
     return `<optgroup label="${регион}">${opts}</optgroup>`;
   }).join('');
 }
@@ -1141,7 +1138,7 @@ function renderPriceCards(rates, skeleton) {
     // Номер тура считаем по полному списку: на него завязаны калькулятор
     // и кнопка «Скопировать прайс». Отфильтрованные просто не рисуем.
     if(прайсРегион && регионТура(t)!==прайсРегион) return '';
-    if(t.manual) return `<div class="tour-card">
+    if(t.key==='ТРАНСФЕР') return `<div class="tour-card">
       <div class="tour-header"><div class="tour-icon">${t.icon}</div><div class="tour-name">${t.name}</div></div>
       <div class="price-rows"><div style="padding:8px 0;color:var(--muted);font-size:13px">Цена по запросу — считаем под маршрут</div></div>
     </div>`;
@@ -2129,10 +2126,12 @@ function bEdit(id){
   document.getElementById('fNotes').value=(b.notes||'').replace(/​/g,'');
   // трансфер: без этого он обнулялся при каждом открытии на редактирование
   const _etr=document.getElementById('fTransfer'); if(_etr) _etr.value=b.transfer||'';
-  // Трансфер: возвращаем вписанные руками цену и комиссию
-  if(b.route!=='ДРУГОЕ'&&ручнойМаршрут(b.route)){
-    document.getElementById('fOtherPriceInput').value=b.customPriceAdult||'';
-    document.getElementById('fOtherCommInput').value=b.commission||'';
+  // Трансфер: маршрут хранится в названии после «ТРАНСФЕР: »
+  if((b.route||'').startsWith('ТРАНСФЕР')){
+    document.getElementById('fRoute').value='ТРАНСФЕР';
+    document.getElementById('fTrRoute').value=(b.route.split(': ')[1]||'');
+    document.getElementById('fTrPrice').value=b.customPriceAdult||'';
+    document.getElementById('fTrComm').value=b.commission||'';
   }
   bUpdatePreview();
   // Восстановить галочку Индивидуально
@@ -2428,7 +2427,7 @@ function bClearForm(){
   Object.keys(fExtraAdults).forEach(k=>delete fExtraAdults[k]);
   Object.keys(pfExtraAdults).forEach(k=>delete pfExtraAdults[k]);
   fCalcRoute=''; pfCalcRoute=''; fDrawnRoute=''; fCurrentPlatRate=0; pfCurrentPlatRate=0; fPlatformName=''; pfPlatformName='';
-  ['fOtherName','pfOtherName','fOtherPriceInput','pfOtherPriceInput','fOtherCommInput','pfOtherCommInput','fTransfer','pfTransfer'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fOtherName','pfOtherName','fOtherPriceInput','pfOtherPriceInput','fTrRoute','pfTrRoute','fTrPrice','pfTrPrice','fTrComm','pfTrComm','fTransfer','pfTransfer'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   // Итог прошлой брони жил в dataset и подставлялся в новую пустую карточку:
   // вводишь предоплату — «на месте» считается от чужой суммы. Чистим.
   ['fCalcResult','pfCalcResult'].forEach(id=>{
@@ -2646,11 +2645,7 @@ function fExtraChange(i,d){
 
 function fOtherRecalc(){
   const sum=parseFloat(document.getElementById('fOtherPriceInput').value)||0;
-  // Трансфер: комиссию вписывают руками. «Другое» — свободная цена, ставка обычная.
-  const _r=document.getElementById('fRoute').value;
-  const comm=_r!=='ДРУГОЕ'&&ручнойМаршрут(_r)
-    ? (parseFloat(document.getElementById('fOtherCommInput').value)||0)
-    : комиссияТура(null, 0, 0, sum);
+  const comm=комиссияТура(null, 0, 0, sum);   // «Другое» — свободная цена, ставка обычная
   const cEl=document.getElementById('previewComm');if(cEl)cEl.textContent='$'+comm;
   const transferUSD=parseFloat(document.getElementById('fTransfer')?.value)||0;
   if((sum>0||transferUSD)&&currentRates){
@@ -2671,11 +2666,7 @@ function fOtherRecalc(){
 }
 function pfOtherRecalc(){
   const sum=parseFloat(document.getElementById('pfOtherPriceInput').value)||0;
-  // Трансфер: комиссию вписывают руками. «Другое» — свободная цена, ставка обычная.
-  const _r=document.getElementById('pfRoute').value;
-  const comm=_r!=='ДРУГОЕ'&&ручнойМаршрут(_r)
-    ? (parseFloat(document.getElementById('pfOtherCommInput').value)||0)
-    : комиссияТура(null, 0, 0, sum);
+  const comm=комиссияТура(null, 0, 0, sum);   // «Другое» — свободная цена, ставка обычная
   const cEl=document.getElementById('previewComm2');if(cEl)cEl.textContent='$'+comm;
   const transferUSD=parseFloat(document.getElementById('pfTransfer')?.value)||0;
   if((sum>0||transferUSD)&&currentRates){
@@ -2694,17 +2685,37 @@ function pfOtherRecalc(){
     document.getElementById('pfCalcResult').style.display='none';
   }
 }
+// ── Трансфер ──
+// Маршрут, стоимость и комиссию вписывают руками; калькулятор тура не нужен.
+function трансферПересчёт(p){
+  const price=parseFloat(document.getElementById(p+'TrPrice').value)||0;
+  const comm=parseFloat(document.getElementById(p+'TrComm').value)||0;
+  const cEl=document.getElementById(p==='f'?'previewComm':'previewComm2'); if(cEl) cEl.textContent='$'+comm;
+  if(price>0&&currentRates){
+    const currency=document.getElementById(p+'Currency').value;
+    const total=calcFromUSD(price,currentRates);
+    const val=currency==='USD'?fmtUSD(total.usd):currency==='RUB'?fmtRUB(total.rub):currency==='USDT'?fmtUSDT(total.usdt):fmtVND(total.vnd);
+    autoAmount(p,val);
+    prepayAutoFill(p);
+  }
+}
+function трансферПоказ(p, route){
+  const on=route==='ТРАНСФЕР';
+  const tb=document.getElementById(p+'TrBlock'); if(tb) tb.style.display=on?'':'none';
+  if(on){ document.getElementById(p+'CalcBlock').style.display='none'; трансферПересчёт(p); }
+  return on;
+}
 function fUpdateCalc(){
   const route=document.getElementById('fRoute').value;
+  if(трансферПоказ('f', route)) return;
   const adults=parseInt(document.getElementById('fAdults').value)||0;
   const children=parseInt(document.getElementById('fChildren').value)||0;
   const block=document.getElementById('fCalcBlock');
   const otherBlock=document.getElementById('fOtherBlock');
   if(otherBlock) otherBlock.style.display=route==='ДРУГОЕ'?'':'none';
-  if(ручнойМаршрут(route)){
+  if(route==='ДРУГОЕ'){
     block.style.display='block';
     document.getElementById('fOtherPriceSection').style.display='';
-    document.getElementById('fOtherCommRow').style.display=route==='ДРУГОЕ'?'none':'flex';
     document.getElementById('fCalcRows').innerHTML='';
     document.getElementById('fTicketSection').style.display='none';
     document.getElementById('fCalcResult').style.display='none';
@@ -2838,7 +2849,7 @@ function fInsertAmount(){
   document.getElementById('fAmount').value=val;
   const _h=document.getElementById('fAmountHint'); if(_h) _h.textContent='';
   const route=document.getElementById('fRoute').value;
-  if(ручнойМаршрут(route)) fOtherRecalc(); else fRecalc();
+  if(route==='ДРУГОЕ') fOtherRecalc(); else fRecalc();
   toast('✓ Сумма вставлена');
 }
 
@@ -2850,15 +2861,15 @@ let pfPlatformName='';
 
 function pfUpdateCalc(){
   const route=document.getElementById('pfRoute').value;
+  if(трансферПоказ('pf', route)) return;
   const adults=parseInt(document.getElementById('pfAdults').value)||0;
   const children=parseInt(document.getElementById('pfChildren').value)||0;
   const block=document.getElementById('pfCalcBlock');
   const otherBlock=document.getElementById('pfOtherBlock');
   if(otherBlock) otherBlock.style.display=route==='ДРУГОЕ'?'':'none';
-  if(ручнойМаршрут(route)){
+  if(route==='ДРУГОЕ'){
     block.style.display='block';
     document.getElementById('pfOtherPriceSection').style.display='';
-    document.getElementById('pfOtherCommRow').style.display=route==='ДРУГОЕ'?'none':'flex';
     document.getElementById('pfCalcRows').innerHTML='';
     document.getElementById('pfTicketSection').style.display='none';
     document.getElementById('pfCalcResult').style.display='none';
@@ -3070,7 +3081,7 @@ function pfInsertAmount(){
   document.getElementById('pfAmount').value=val;
   const _h=document.getElementById('pfAmountHint'); if(_h) _h.textContent='';
   const route=document.getElementById('pfRoute').value;
-  if(ручнойМаршрут(route)) pfOtherRecalc(); else pfRecalc();
+  if(route==='ДРУГОЕ') pfOtherRecalc(); else pfRecalc();
   toast('✓ Сумма вставлена');
 }
 function bGetFormData(){
@@ -3085,10 +3096,11 @@ function bGetFormData(){
     if(on) routeName=on.toUpperCase();
     const sum=parseFloat(document.getElementById(p+'OtherPriceInput')?.value)||0;
     comm=комиссияТура(null, 0, 0, sum);   // «Другое» — тура нет, ставка обычная
-  } else if(ручнойМаршрут(route)){
-    // Трансфер: цена и комиссия — что вписали руками.
-    adultUSD=parseFloat(document.getElementById(p+'OtherPriceInput')?.value)||0;
-    comm=parseFloat(document.getElementById(p+'OtherCommInput')?.value)||0;
+  } else if(route==='ТРАНСФЕР'){
+    const tr=(document.getElementById(p+'TrRoute')?.value||'').trim();
+    if(tr) routeName='ТРАНСФЕР: '+tr.toUpperCase();
+    adultUSD=parseFloat(document.getElementById(p+'TrPrice')?.value)||0;
+    comm=parseFloat(document.getElementById(p+'TrComm')?.value)||0;
     isIndividual=true;
   } else {
     adultUSD=parseFloat(document.getElementById(p+'PriceRow0')?.value)||(tour?tour.rows[0].usd:0);
