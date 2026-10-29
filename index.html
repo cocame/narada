@@ -154,6 +154,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .b-card-main{display:grid;grid-template-columns:1.1fr 0.45fr 1fr 20px 20px 20px 20px 50px 45px;gap:3px;padding:10px 12px;align-items:center;cursor:pointer}
 .b-card-amount{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-align:right;white-space:nowrap}
 .b-card-route{font-weight:600;font-size:15px}
+.b-city{display:inline-block;margin-right:6px;padding:1px 5px;border-radius:4px;border:1px solid var(--accent);color:var(--accent);font:600 10px 'DM Mono',monospace;letter-spacing:.04em;vertical-align:2px}
 .b-card-pax{font-size:12px;color:var(--muted)}
 .b-card-contact{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .b-card-comm{font-size:15px;color:var(--accent);font-weight:700;text-align:right;font-family:'DM Mono',monospace}
@@ -848,7 +849,15 @@ function выбратьРегионМаршрута(id, регион, запом
   if([...sel.options].some(o => o.value === было)) sel.value = было;
   const чипы = document.getElementById(id+'Regs');
   if(чипы) чипы.innerHTML = ГОРОДА_БРОНИ.map(r =>
-    `<button type="button" class="reg-chip${r===регион?' on':''}" onclick="выбратьРегионМаршрута('${id}','${r}',true);bUpdatePreview()">${r}</button>`).join('');
+    `<button type="button" class="reg-chip${r===регион?' on':''}" title="${r}" onclick="выбратьРегионМаршрута('${id}','${r}',true);bUpdatePreview()">${СОКР_ГОРОДА[r]||r}</button>`).join('');
+}
+// Метка города на карточке брони — видно и в свёрнутом виде.
+// Своё «Другое» и трансфер без города, метки у них нет.
+const СОКР_ГОРОДА = {'Дананг':'ДАН','Фукуок':'ФУК','Нячанг':'НЯЧ','Хошимин':'ХОШ','Ханой':'ХАН'};
+function меткаГорода(маршрут){
+  const тур = TOURS.find(t => t.key === маршрут);
+  const сокр = тур && СОКР_ГОРОДА[регионТура(тур)];
+  return сокр ? `<span class="b-city">${сокр}</span>` : '';
 }
 // Бронь открывают на правку или текст распознан — сначала город этого тура,
 // иначе нужного пункта в списке нет и маршрут молча сбрасывается.
@@ -1570,7 +1579,7 @@ function bCardHTML(b){
 
   return `<div class="booking-card${sc}${scInd}" id="bcard-${b.id}">
     <div class="b-card-main" onclick="bToggle('${b.id}')">
-      <div class="b-card-route">${b.route}${(()=>{const _p=bDetectPlatform(b);const _z=значокПлощадки(_p,13);return _z?`<span style="margin-left:5px">${_z}</span>`:(_p?`<span style="font-size:9px;color:var(--accent);margin-left:4px;font-family:'DM Mono',monospace;opacity:.8">${_p}</span>`:'');})()} </div>
+      <div class="b-card-route">${меткаГорода(b.route)}${b.route}${(()=>{const _p=bDetectPlatform(b);const _z=значокПлощадки(_p,13);return _z?`<span style="margin-left:5px">${_z}</span>`:(_p?`<span style="font-size:9px;color:var(--accent);margin-left:4px;font-family:'DM Mono',monospace;opacity:.8">${_p}</span>`:'');})()} </div>
       <div class="b-card-pax">${paxParts.join('+')||'—'}</div>
       <div class="b-card-contact">${b.contact||'—'}</div>
       <span onclick="event.stopPropagation();bCyclePay('${b.id}')" style="cursor:pointer;font-size:15px;line-height:1">${payIcon}</span>
