@@ -812,8 +812,7 @@ function опцииМаршрутов(){
     const свои = TOURS.filter(t => регионТура(t) === регион);
     if(!свои.length) return '';
     const opts = свои.map(t => {
-      let подпись = регион === 'Дананг' ? t.key : t.name.replace(/^[^—]+ — /, '');
-      подпись = подпись.charAt(0).toUpperCase() + подпись.slice(1);
+      const подпись = названиеТура(t);
       return `<option value="${t.key}">${t.icon} ${подпись}</option>`;
     }).join('');
     // Трансфер — один пункт, группа над ним не нужна
@@ -833,8 +832,7 @@ function регионПоУмолчанию(){
 // Трансфер нужен в любом городе, поэтому он внизу каждого списка, а не отдельной кнопкой.
 function опцииРегиона(регион){
   const свои = TOURS.filter(t => регионТура(t) === регион).map(t => {
-    let подпись = регион === 'Дананг' ? t.key : t.name.replace(/^[^—]+ — /, '');
-    подпись = подпись.charAt(0).toUpperCase() + подпись.slice(1);
+    const подпись = названиеТура(t);
     return `<option value="${t.key}">${t.icon} ${подпись}</option>`;
   }).join('');
   const трансфер = TOURS.filter(t => регионТура(t) === 'Трансфер').map(t => `<option value="${t.key}">${t.icon} ${t.name}</option>`).join('');
@@ -850,6 +848,18 @@ function выбратьРегионМаршрута(id, регион, запом
   const чипы = document.getElementById(id+'Regs');
   if(чипы) чипы.innerHTML = ГОРОДА_БРОНИ.map(r =>
     `<button type="button" class="reg-chip${r===регион?' on':''}" title="${r}" onclick="выбратьРегионМаршрута('${id}','${r}',true);bUpdatePreview()">${СОКР_ГОРОДА[r]||r}</button>`).join('');
+}
+// Название тура везде одинаково — обычными буквами, без города в начале:
+// город и так написан кнопкой или меткой. Ключ заглавными — только для базы.
+function названиеТура(t){
+  const н = t.name.replace(/^[^—]+ — /, '');
+  return н.charAt(0).toUpperCase() + н.slice(1);
+}
+function подписьМаршрута(маршрут){
+  const тур = TOURS.find(t => t.key === маршрут);
+  if(тур) return названиеТура(тур);
+  if((маршрут||'').startsWith('ТРАНСФЕР')) return 'Трансфер' + маршрут.slice(8);
+  return маршрут;
 }
 // Метка города на карточке брони — видно и в свёрнутом виде.
 // Своё «Другое» и трансфер без города, метки у них нет.
@@ -1579,7 +1589,7 @@ function bCardHTML(b){
 
   return `<div class="booking-card${sc}${scInd}" id="bcard-${b.id}">
     <div class="b-card-main" onclick="bToggle('${b.id}')">
-      <div class="b-card-route">${меткаГорода(b.route)}${b.route}${(()=>{const _p=bDetectPlatform(b);const _z=значокПлощадки(_p,13);return _z?`<span style="margin-left:5px">${_z}</span>`:(_p?`<span style="font-size:9px;color:var(--accent);margin-left:4px;font-family:'DM Mono',monospace;opacity:.8">${_p}</span>`:'');})()} </div>
+      <div class="b-card-route">${меткаГорода(b.route)}${подписьМаршрута(b.route)}${(()=>{const _p=bDetectPlatform(b);const _z=значокПлощадки(_p,13);return _z?`<span style="margin-left:5px">${_z}</span>`:(_p?`<span style="font-size:9px;color:var(--accent);margin-left:4px;font-family:'DM Mono',monospace;opacity:.8">${_p}</span>`:'');})()} </div>
       <div class="b-card-pax">${paxParts.join('+')||'—'}</div>
       <div class="b-card-contact">${b.contact||'—'}</div>
       <span onclick="event.stopPropagation();bCyclePay('${b.id}')" style="cursor:pointer;font-size:15px;line-height:1">${payIcon}</span>
@@ -1762,7 +1772,7 @@ function bcCopy(bid){
   const tickets=JSON.parse(resEl.dataset.tickets||'[]');
   const total={usd:+resEl.dataset.tusd,rub:+resEl.dataset.trub,vnd:+resEl.dataset.tvnd,usdt:+resEl.dataset.tusdt};
   const bcPlat=bDetectPlatform(b);
-  let text=(tour?tour.icon+' ':'')+b.route+(bcPlat?' · '+bcPlat:'')+'\n\n';
+  let text=(tour?tour.icon+' ':'')+подписьМаршрута(b.route)+(bcPlat?' · '+bcPlat:'')+'\n\n';
   rows.forEach(r=>text+=r.label+' × '+r.n+' — '+formatPrice(r,cF)+'\n');
   if(tickets.length){text+='\nВходные билеты:\n'; tickets.forEach(r=>text+=r.label+' × '+r.n+' — '+formatPrice(r,cF)+'\n');}
   text+='\nИтого: '+formatPrice(total,cF);
@@ -2012,7 +2022,7 @@ function bCopyCard(id){
   // Индивидуальную помечаем только здесь — в карточке гиду этого не пишем
   const _tour=TOURS.find(t=>t.key===b.route);
   const _isInd=!!(b.isIndividual||(b.notes||'').endsWith('​')||(_tour&&_tour.rows[0]&&_tour.rows[0].flat));
-  const routeLine=[b.route||'—',plat,_isInd?'Индивидуально':''].filter(Boolean).join(' · ');
+  const routeLine=[подписьМаршрута(b.route)||'—',plat,_isInd?'Индивидуально':''].filter(Boolean).join(' · ');
 
   // Пустые поля и способ оплаты не пишем — суммы ниже говорят сами за себя
   const head=[
