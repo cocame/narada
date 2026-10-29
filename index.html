@@ -55,6 +55,8 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .reg-chip{padding:6px 13px;border-radius:999px;border:1px solid var(--border);
   background:var(--surface);color:var(--muted);font-size:12px;font-weight:600;
   font-family:inherit;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+.route-regs{display:flex;gap:5px;flex-wrap:wrap;margin:0 0 6px}
+.route-regs .reg-chip{padding:5px 11px;font-size:12px}
 .reg-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .col-headers{display:grid;grid-template-columns:1.6fr 0.8fr 1fr 1.4fr 1fr;padding:0 16px 6px;gap:4px}
 .col-headers div{font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-family:'DM Mono',monospace;text-align:right;color:var(--muted)}
@@ -387,6 +389,7 @@ body.ro .ro-badge{display:inline-block}
         <div class="form-grid">
           <div class="form-group"><label>Дата поездки</label><input type="date" id="fDate"></div>
           <div class="form-group"><label>Маршрут</label>
+            <div class="route-regs" id="fRouteRegs"></div>
             <select id="fRoute" onchange="bUpdatePreview()">
               <option value="">— выбрать —</option>
               <option value="ДРУГОЕ">Другое...</option>
@@ -489,6 +492,7 @@ body.ro .ro-badge{display:inline-block}
           <div class="form-grid">
             <div class="form-group"><label>Дата поездки</label><input type="date" id="pfDate"></div>
             <div class="form-group"><label>Маршрут</label>
+              <div class="route-regs" id="pfRouteRegs"></div>
               <select id="pfRoute" onchange="bUpdatePreview()">
                 <option value="">— выбрать —</option>
                 <option value="ДРУГОЕ">Другое...</option>
@@ -816,15 +820,48 @@ function опцииМаршрутов(){
     return `<optgroup label="${регион}">${opts}</optgroup>`;
   }).join('');
 }
+// В формах брони сначала нажимают город — в списке остаются только его туры.
+// Городов уже пять, один общий список на полсотни строк листать неудобно.
+// Фильтр броней «Маршрут» по-прежнему показывает всё.
+const ГОРОДА_БРОНИ = РЕГИОНЫ.filter(r => r !== 'Трансфер');
+let маршрутРегион = {};
+function регионПоУмолчанию(){
+  try { const r=localStorage.getItem('narada_route_reg'); if(ГОРОДА_БРОНИ.includes(r)) return r; } catch(e){}
+  return 'Дананг';
+}
+// Трансфер нужен в любом городе, поэтому он внизу каждого списка, а не отдельной кнопкой.
+function опцииРегиона(регион){
+  const свои = TOURS.filter(t => регионТура(t) === регион).map(t => {
+    let подпись = регион === 'Дананг' ? t.key : t.name.replace(/^[^—]+ — /, '');
+    подпись = подпись.charAt(0).toUpperCase() + подпись.slice(1);
+    return `<option value="${t.key}">${t.icon} ${подпись}</option>`;
+  }).join('');
+  const трансфер = TOURS.filter(t => регионТура(t) === 'Трансфер').map(t => `<option value="${t.key}">${t.icon} ${t.name}</option>`).join('');
+  return свои + трансфер;
+}
+function выбратьРегионМаршрута(id, регион, запомнить){
+  маршрутРегион[id] = регион;
+  if(запомнить){ try { localStorage.setItem('narada_route_reg', регион); } catch(e){} }
+  const sel = document.getElementById(id); if(!sel) return;
+  const было = sel.value;
+  sel.innerHTML = '<option value="">— выбрать —</option>' + опцииРегиона(регион) + '<option value="ДРУГОЕ">Другое...</option>';
+  if([...sel.options].some(o => o.value === было)) sel.value = было;
+  const чипы = document.getElementById(id+'Regs');
+  if(чипы) чипы.innerHTML = ГОРОДА_БРОНИ.map(r =>
+    `<button type="button" class="reg-chip${r===регион?' on':''}" onclick="выбратьРегионМаршрута('${id}','${r}',true);bUpdatePreview()">${r}</button>`).join('');
+}
+// Бронь открывают на правку или текст распознан — сначала город этого тура,
+// иначе нужного пункта в списке нет и маршрут молча сбрасывается.
+function поставитьМаршрут(id, ключ){
+  const тур = TOURS.find(t => t.key === ключ);
+  if(тур && регионТура(тур) !== 'Трансфер') выбратьРегионМаршрута(id, регионТура(тур));
+  document.getElementById(id).value = ключ;
+}
 function заполнитьМаршруты(){
   const список = опцииМаршрутов();
-  [['fRoute', '<option value="">— выбрать —</option>', '<option value="ДРУГОЕ">Другое...</option>'],
-   ['pfRoute','<option value="">— выбрать —</option>', '<option value="ДРУГОЕ">Другое...</option>'],
-   ['bFilterRoute','<option value="">Маршрут</option>', '']
-  ].forEach(([id, начало, конец]) => {
-    const el = document.getElementById(id);
-    if(el) el.innerHTML = начало + список + конец;
-  });
+  const фильтр = document.getElementById('bFilterRoute');
+  if(фильтр) фильтр.innerHTML = '<option value="">Маршрут</option>' + список;
+  ['fRoute','pfRoute'].forEach(id => выбратьРегионМаршрута(id, регионПоУмолчанию()));
 }
 
 // ── Комиссия ──
@@ -2104,7 +2141,7 @@ function bEdit(id){
   document.getElementById('modalTitle').textContent='Редактировать';
   mSwitchTab('manual');
   document.getElementById('fDate').value=b.date||'';
-  document.getElementById('fRoute').value=b.route||'';
+  поставитьМаршрут('fRoute', b.route||'');
   document.getElementById('fAdults').value=b.adults||0;
   document.getElementById('fChildren').value=b.children||0;
   document.getElementById('fInfants').value=b.infants||0;
@@ -2133,7 +2170,7 @@ function bEdit(id){
   const _etr=document.getElementById('fTransfer'); if(_etr) _etr.value=b.transfer||'';
   // Трансфер: маршрут хранится в названии после «ТРАНСФЕР: »
   if((b.route||'').startsWith('ТРАНСФЕР')){
-    document.getElementById('fRoute').value='ТРАНСФЕР';
+    поставитьМаршрут('fRoute','ТРАНСФЕР');
     document.getElementById('fTrRoute').value=(b.route.split(': ')[1]||'');
     document.getElementById('fTrPrice').value=b.customPriceAdult||'';
     document.getElementById('fTrComm').value=b.commission||'';
@@ -3383,7 +3420,7 @@ function bParseText(){
   pr.innerHTML='<strong style="color:var(--accent)">Распознано:</strong><br>'+Object.entries(result).filter(([,v])=>v).map(([k,v])=>k+': '+v).join('<br>');
   document.getElementById('parsedForm').style.display='';
   if(result.date) document.getElementById('pfDate').value=result.date;
-  if(result.route) document.getElementById('pfRoute').value=result.route;
+  if(result.route) поставитьМаршрут('pfRoute', result.route);
   if(result.adults) document.getElementById('pfAdults').value=result.adults;
   if(result.children) document.getElementById('pfChildren').value=result.children;
   if(result.contact) document.getElementById('pfContact').value=result.contact;
