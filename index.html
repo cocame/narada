@@ -931,6 +931,12 @@ function названиеТура(t){
   const н = t.name.replace(/^[^—]+ — /, '');
   return н.charAt(0).toUpperCase() + н.slice(1);
 }
+// Для клиента в копии прайса: название, потом город — «Хойан Дананг»,
+// «Жемчужина севера Фукуок». Город уже есть в названии — второй раз не пишем.
+function названиеСГородом(t){
+  const н=названиеТура(t), г=регионТура(t);
+  return (!г || г==='Трансфер' || н.toLowerCase().includes(г.toLowerCase())) ? н : н+' '+г;
+}
 function подписьМаршрута(маршрут){
   const тур = TOURS.find(t => t.key === маршрут);
   if(тур) return названиеТура(тур);
@@ -1526,7 +1532,7 @@ function карточкаПрайса(t,idx,rates,skeleton){
 
 function copyPriceCard(idx){
   const t=TOURS[idx]; if(!currentRates){toast('⏳ Загрузка курсов…');return;}
-  let text=t.icon+' '+t.name+'\n──────────────\n';
+  let text=t.icon+' '+названиеСГородом(t)+'\n──────────────\n';
   t.rows.filter(r=>!r.free).forEach(r=>{const p=calcFromUSD(r.usd,currentRates); text+=r.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});
   if(t.tickets){text+='\nВходные билеты:\n'; t.tickets.forEach(tk=>{const p=calcFromVND(tk.vnd_fixed,currentRates); text+=tk.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVNDticket(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});}
   copyText(text.trim());
@@ -1642,7 +1648,7 @@ function pCalcCopy(idx){
   const tickets=JSON.parse(totalEl.dataset.tickets||'[]');
   const transferUSD=parseFloat(totalEl.dataset.transfer)||0;
   const total={usd:+totalEl.dataset.tusd,rub:+totalEl.dataset.trub,vnd:+totalEl.dataset.tvnd,usdt:+totalEl.dataset.tusdt};
-  let text=t.icon+' '+t.name+'\n\n';
+  let text=t.icon+' '+названиеСГородом(t)+'\n\n';
   rows.forEach(r=>text+=r.label+' × '+r.n+' — '+formatPrice(r,cursF)+'\n');
   if(tickets.length){text+='\nВходные билеты:\n'; tickets.forEach(r=>text+=r.label+' × '+r.n+' — '+formatTicket(r)+'\n');}
   if(transferUSD) text+='\nТрансфер — '+formatPrice(calcFromUSD(transferUSD,currentRates),cursF)+'\n';
