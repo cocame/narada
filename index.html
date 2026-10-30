@@ -172,7 +172,10 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .hotel-map:hover{text-decoration:underline}
 .hotel-copy{margin-left:6px;padding:2px 8px;font:600 11px 'DM Sans',sans-serif;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--muted);cursor:pointer}
 .hotel-copy:hover{border-color:var(--accent2);color:var(--accent2)}
-#fHotelMap,#pfHotelMap{display:inline-block;margin-top:6px;font-size:12px}
+.hotel-map-row{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px}
+.hotel-map-row[hidden]{display:none}
+.hotel-hint{margin-top:4px;font-size:11px;color:var(--muted)}
+.b-card-hotel{font-size:12px;margin-top:2px}
 .b-city{display:inline-block;margin-right:6px;padding:2px 6px;border-radius:4px;color:#fff;font:700 10px 'DM Mono',monospace;letter-spacing:.04em;vertical-align:2px}
 .b-card-pax{font-size:12px;color:var(--muted)}
 .b-card-contact{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -416,7 +419,7 @@ body.ro .ro-badge{display:inline-block}
             </div>
           </div>
           <div class="form-group full"><label>Контакт</label><input type="text" id="fContact" placeholder="Иван, +79001234567"></div>
-          <div class="form-group full"><label>Отель</label><input type="text" id="fHotel" placeholder="Tourane Hotel, к. 204" oninput="картаВФорме('f')"><a id="fHotelMap" class="hotel-map" target="_blank" rel="noopener" hidden>📍 Открыть на карте</a></div>
+          <div class="form-group full"><label>Отель</label><input type="text" id="fHotel" placeholder="Tourane Hotel, к. 204" oninput="картаВФорме('f')"><span id="fHotelMapRow" class="hotel-map-row" hidden><a id="fHotelMap" class="hotel-map" target="_blank" rel="noopener">📍 Открыть на карте</a><button type="button" class="hotel-copy" onclick="copyText(document.getElementById('fHotelMap').href)">Копировать ссылку</button></span><div class="hotel-hint">Если отелей с таким названием несколько — найди нужный на карте, «Поделиться» → скопируй ссылку и вставь сюда после названия.</div></div>
           <div class="form-group"><label>Валюта</label>
             <select id="fCurrency" onchange="fCurrencyChanged('f')"><option>USD</option><option>VND</option><option>RUB</option><option>USDT</option></select>
           </div>
@@ -519,7 +522,7 @@ body.ro .ro-badge{display:inline-block}
               </div>
             </div>
             <div class="form-group full"><label>Контакт</label><input type="text" id="pfContact"></div>
-            <div class="form-group full"><label>Отель</label><input type="text" id="pfHotel" oninput="картаВФорме('pf')"><a id="pfHotelMap" class="hotel-map" target="_blank" rel="noopener" hidden>📍 Открыть на карте</a></div>
+            <div class="form-group full"><label>Отель</label><input type="text" id="pfHotel" oninput="картаВФорме('pf')"><span id="pfHotelMapRow" class="hotel-map-row" hidden><a id="pfHotelMap" class="hotel-map" target="_blank" rel="noopener">📍 Открыть на карте</a><button type="button" class="hotel-copy" onclick="copyText(document.getElementById('pfHotelMap').href)">Копировать ссылку</button></span><div class="hotel-hint">Если отелей с таким названием несколько — найди нужный на карте, «Поделиться» → скопируй ссылку и вставь сюда после названия.</div></div>
             <div class="form-group"><label>Валюта</label>
               <select id="pfCurrency" onchange="fCurrencyChanged('pf')"><option>USD</option><option>VND</option><option>RUB</option><option>USDT</option></select>
             </div>
@@ -882,7 +885,13 @@ function подписьМаршрута(маршрут){
 // Отель → ссылка на Google Карты, чтобы сразу видеть, где он и нужна ли
 // доплата за трансфер. Город берём по туру; номер комнаты из запроса убираем.
 const ГОРОД_ДЛЯ_КАРТЫ = {'Дананг':'Da Nang','Фукуок':'Phu Quoc','Нячанг':'Nha Trang','Хошимин':'Ho Chi Minh City','Ханой':'Hanoi','Муйне':'Mui Ne'};
+// Если в поле отеля вставлена ссылка на карту (нужный «Марриотт» из нескольких),
+// берём её как есть; название показываем без неё.
+const РЕ_ССЫЛКА = /https?:\/\/\S+/;
+function названиеОтеля(отель){ return String(отель||'').replace(РЕ_ССЫЛКА,'').replace(/\s{2,}/g,' ').trim(); }
 function ссылкаНаОтель(отель, маршрут){
+  const своя = String(отель||'').match(РЕ_ССЫЛКА);
+  if(своя) return своя[0];
   const чисто = String(отель||'').replace(/[,;]?\s*(к\.|комн\w*|номер|room|rm\.?|#)\s*\d+\w*/gi,'').trim();
   if(!чисто) return '';
   const тур = TOURS.find(t => t.key === маршрут);
@@ -890,14 +899,14 @@ function ссылкаНаОтель(отель, маршрут){
   return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(чисто + ', ' + город);
 }
 function картаВФорме(p){
-  const a=document.getElementById(p+'HotelMap'); if(!a) return;
+  const a=document.getElementById(p+'HotelMap'), row=document.getElementById(p+'HotelMapRow'); if(!a) return;
   const u=ссылкаНаОтель(document.getElementById(p+'Hotel').value, (document.getElementById(p+'Route')||{}).value);
-  a.hidden=!u; if(u) a.href=u;
+  row.hidden=!u; if(u) a.href=u;
 }
 function отельСКартой(отель, маршрут){
   if(!отель) return '—';
   const u = ссылкаНаОтель(отель, маршрут);
-  return u ? `<a href="${u}" target="_blank" rel="noopener" class="hotel-map" onclick="event.stopPropagation()">📍 ${экран(отель)}</a> <button type="button" class="hotel-copy" title="Скопировать ссылку на карту — отправить водителю" onclick="event.stopPropagation();copyText('${u}')">Копировать ссылку</button>` : экран(отель);
+  return u ? `<a href="${u}" target="_blank" rel="noopener" class="hotel-map" onclick="event.stopPropagation()">📍 ${экран(названиеОтеля(отель))}</a> <button type="button" class="hotel-copy" title="Скопировать ссылку на карту — отправить водителю" onclick="event.stopPropagation();copyText('${u}')">Копировать ссылку</button>` : экран(отель);
 }
 // Метка города на карточке брони — видно и в свёрнутом виде.
 // Своё «Другое» и трансфер без города, метки у них нет.
@@ -1708,6 +1717,7 @@ function bCardHTML(b){
       <div class="b-card-route">${меткаГорода(b.route)}${подписьМаршрута(b.route)}${(()=>{const _p=bDetectPlatform(b);const _z=значокПлощадки(_p,13);return _z?`<span style="margin-left:5px">${_z}</span>`:(_p?`<span style="font-size:9px;color:var(--accent);margin-left:4px;font-family:'DM Mono',monospace;opacity:.8">${_p}</span>`:'');})()} </div>
       <div class="b-card-pax">${paxParts.join('+')||'—'}</div>
       <div class="b-card-contact">${b.contact||'—'}</div>
+      ${b.hotel?`<div class="b-card-hotel">${отельСКартой(b.hotel, b.route)}</div>`:''}
       <span onclick="event.stopPropagation();bCyclePay('${b.id}')" style="cursor:pointer;font-size:15px;line-height:1">${payIcon}</span>
       <button class="b-action-btn" onclick="event.stopPropagation();bRepeat('${b.id}')" title="Повторить бронь">♻️</button>
       <button class="b-action-btn" onclick="event.stopPropagation();bEdit('${b.id}')">✏️</button>
@@ -2117,7 +2127,7 @@ async function bWarmGuide(){
 function bCopyGuide(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   const pax=(parseInt(b.adults)||0)+(parseInt(b.children)||0)+(parseInt(b.infants)||0);
-  const hotel=b.hotel||'—';
+  const hotel=названиеОтеля(b.hotel)||'—';
   const ru=[guideDate(b.date), ROUTE_RU[b.route]||b.route||'—', hotel, pax?guidePeople(pax)+' + гид':'—'];
   // переведённый отель, если перевод уже доехал; иначе словарь как запасной
   const vi=[guideDateVi(b.date), ROUTE_VI[b.route]||b.route||'—', b.hotelVi||hotelVi(hotel), pax?pax+' người + hướng dẫn viên':'—'];
