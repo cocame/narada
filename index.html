@@ -777,6 +777,10 @@ const TOURS = [
     rows:[{label:'Взрослый',usd:75,comm:3.75},{label:'Детский',usd:65,comm:3.25}] },
   { icon:'🏝', name:'Фукуок — сокровища юга', key:'ФК ЮГ', noPlat:true,
     rows:[{label:'Взрослый',usd:30,comm:1.5},{label:'Дети 5–10 лет',usd:20,comm:1.0}] },
+  // Обзорной в программе нет, а спрашивают. Цена каждый раз своя — её
+  // вписывают в брони руками (free), моя доля — те же 5 % от неё. В прайсе не показываем.
+  { icon:'🗺', name:'Фукуок — обзорная', key:'ФК ОБЗОРНАЯ', noPlat:true, free:true, commRate:0.05,
+    rows:[{label:'Цена за группу',usd:0,flat:true}] },
   { icon:'🎣', name:'Фукуок — морская рыбалка', key:'ФК РЫБАЛКА', noPlat:true,
     rows:[{label:'За человека, группа от 5',usd:85,comm:4.25}] },
 
@@ -1387,7 +1391,7 @@ function renderPriceCards(rates, skeleton) {
   const cards=TOURS.map((t,idx)=>{
     // Номер тура считаем по полному списку: на него завязаны калькулятор
     // и кнопка «Скопировать прайс». Отфильтрованные просто не рисуем.
-    if(регионТура(t)==='Трансфер') return '';
+    if(регионТура(t)==='Трансфер' || t.free) return '';
     if(прайсРегион && регионТура(t)!==прайсРегион) return '';
     return карточкаПрайса(t,idx,rates,skeleton);
   });
@@ -2809,7 +2813,7 @@ function bUpdatePreview(){
   if(tour){
     const flatRow0=tour.rows[0]&&tour.rows[0].flat;
     if(flatRow0){
-      commRaw=tour.rows[0].usd+(tour.group?tour.childAdd*children:0);
+      commRaw=(tour.free?(parseFloat(document.getElementById(p+'PriceRow0')?.value)||0):tour.rows[0].usd)+(tour.group?tour.childAdd*children:0);
     } else {
       commRaw+=tour.rows[0].usd*adults;
       if(tour.rows[1]&&!tour.rows[1].flat) commRaw+=tour.rows[1].usd*children;
@@ -3114,7 +3118,7 @@ function fRecalc(){
     if(rowOff(row,fCurrentPlatRate,tour)) count=0;
     const sub=price*count;
     tourUSD+=sub;
-    baseUSD+=row.usd*count;
+    baseUSD+=(tour.free?price:row.usd)*count;
     const tot=document.getElementById(`fTotRow${i}`); if(tot) tot.textContent=fmtVal(sub);
   });
   // Доп. взрослые (5-й+ чел.) в индивидуальном режиме
@@ -3369,7 +3373,7 @@ function pfRecalc(){
     if(rowOff(row,pfCurrentPlatRate,tour)) count=0;
     const sub=price*count;
     tourUSD+=sub;
-    baseUSD+=row.usd*count;
+    baseUSD+=(tour.free?price:row.usd)*count;
     const tot=document.getElementById(`pfTotRow${i}`); if(tot) tot.textContent=fmtVal(sub);
   });
   // Доп. взрослые (5-й+ чел.) в индивидуальном режиме
@@ -3465,7 +3469,7 @@ function bGetFormData(){
       if(flatActive){tourUSD=flatSum; isIndividual=true;}
       else if(flatRow0) isIndividual=true;
     }
-    if(tour){let baseComm=tour.group?tour.rows[0].usd+tour.childAdd*children:isIndividual?(flatRow0?tour.rows[0].usd:tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(p+'FlatCheck'+i)?.checked?r.usd:0),0)):(flatRow0?tour.rows[0].usd:adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0));comm=комиссияТура(tour, adults, children, baseComm);}
+    if(tour){let baseComm=tour.free?adultUSD:tour.group?tour.rows[0].usd+tour.childAdd*children:isIndividual?(flatRow0?tour.rows[0].usd:tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(p+'FlatCheck'+i)?.checked?r.usd:0),0)):(flatRow0?tour.rows[0].usd:adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0));comm=комиссияТура(tour, adults, children, baseComm);}
   }
   return {
     id:editingId,
