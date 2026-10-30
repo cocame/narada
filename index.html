@@ -1316,7 +1316,11 @@ function skelRowHTML(isTicket){
 }
 
 function buildPriceCalc(t, idx) {
-  const rows = t.rows.map((r,i)=>r.free?'':`
+  const rows = t.rows.map((r,i)=>r.free?`
+    <div class="calc-row-p" id="pc-${idx}-row${i}">
+      <div class="calc-label-p">${r.label}</div>
+      <div class="calc-counter"><input type="number" id="pc-${idx}-free${i}" min="0" placeholder="0" oninput="pCalcUpdate(${idx})" style="width:64px;padding:3px 8px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)"> $</div>
+    </div>`:`
     <div class="calc-row-p" id="pc-${idx}-row${i}">
       <div class="calc-label-p" id="pc-${idx}-label${i}">${r.label}</div>
       <div class="calc-counter">
@@ -1325,7 +1329,7 @@ function buildPriceCalc(t, idx) {
         <button class="calc-btn" onclick="pCalcChange(${idx},'r${i}',1)">+</button>
       </div>
     </div>`).join('');
-  const pExtraUSD=(t.rows.find(r=>r.flat)&&!t.group)?(t.rows.find(r=>!r.flat)?.usd||t.extraPerPerson||0):0;
+  const pExtraUSD=(t.rows.find(r=>r.flat&&!r.free)&&!t.group)?(t.rows.find(r=>!r.flat)?.usd||t.extraPerPerson||0):0;
   const extraRow=pExtraUSD?`
     <div class="calc-row-p" id="pc-${idx}-extraRow" style="display:none">
       <div class="calc-label-p" style="color:var(--accent)" id="pc-${idx}-extraLabel">+ Доп. взр. ${pExtraUSD}$/чел.</div>
@@ -1378,14 +1382,17 @@ function platformPricesHTML(t, rates, skeleton) {
   // туров оно насчитывало на Sputnik8 99 $ при цене 75 $ на сайте. Это не
   // согласованная цена, а выдумка расчёта: принять её за настоящую — значит
   // выставить на площадке дороже, чем на сайте, чего площадки не допускают.
-  if (t.noPlat) return '';
+  // Партнёрские туры Фукуока и Нячанга: блоки площадок есть, но без цифр —
+  // цены впишем, когда их согласуют. Считать от базовой здесь нельзя (см. выше).
+  if (t.noPlat && !/^(ФК|НТ) /.test(t.key)) return '';
   const lbl = s => s.replace('Взрослый / >140 см','Взрослый').replace('Ребёнок до 10','Дети').replace('Ребёнок 100–140 см','Дети').replace('Индивидуально (до 4 чел)','Инд.').replace('Индивидуально','Инд.').replace('Групповой (за чел.)','Групп.').replace('Групповой (до 3 человек)','Групп.');
   const mainRows = t.rows.slice(0, 4);
   let html = '';
   PLATFORMS.forEach(pl => {
     if (t.noSp8 && pl.rate===0.24) return;
     html += `<div class="ticket-section-label">${pl.name}</div><div class="price-rows" style="padding-top:0">`;
-    mainRows.forEach(r => {
+    mainRows.filter(r => !r.free).forEach(r => {
+      if (t.noPlat) { html += skeleton ? skelRowHTML(true) : priceRowHTML(lbl(r.label), null, true); return; }
       const platUSD = platPrice(r, pl.rate, t);
       const p = rates ? calcFromUSD(platUSD, rates) : null;
       html += skeleton ? skelRowHTML(true) : priceRowHTML(lbl(r.label), p, true);
@@ -1437,6 +1444,7 @@ function renderPriceCards(rates, skeleton) {
           <div class="custom-price-label">$</div>
         </div>
         <div class="custom-price-result"></div>
+        <button class="copy-price-btn" onclick="копироватьСвоюЦену(this)">Скопировать</button>
       </div>`;
     return `<section class="price-block">${шапка}${свои}${конв}</section>`;
   }).join('');
@@ -1555,12 +1563,14 @@ function pCalcUpdate(idx){
     const rowEl=document.getElementById(`pc-${idx}-row${i}`);
     if(rowEl) rowEl.style.display=скрыта?'none':'';
     if(скрыта){ cc['r'+i]=0; const numEl=document.getElementById(`pc-${idx}-r${i}`); if(numEl) numEl.textContent='0'; return; }
+    // «Индивидуально» без цены — сумму вписывают прямо в калькуляторе
+    if(r.free){ const v=parseFloat(document.getElementById(`pc-${idx}-free${i}`)?.value)||0; if(v){ hasAny=true; const p=calcFromUSD(v,R); total=addP(total,p); rows.push({label:r.label,n:1,p}); } return; }
     const n=cc['r'+i]||0; if(!n) return; hasAny=true;
     const p=mulP(calcFromUSD(pPlatPrice(r),R),n); total=addP(total,p);
     rows.push({label:r.label,n,p});
   });
   // Extra adults row (appears when individual/flat row is used)
-  const pFlatRow=t.rows.find(r=>r.flat);
+  const pFlatRow=t.rows.find(r=>r.flat&&!r.free);
   let pFlatN=0;
   if(pFlatRow){
     const pFlatIdx=t.rows.indexOf(pFlatRow);
@@ -1614,7 +1624,8 @@ function pCalcUpdate(idx){
       if(transferUSD) platTotalUSD+=transferUSD;
       const key=pl.name==='Tripster'?'trip':'sp8';
       const el=document.getElementById(`cplat-${key}-${idx}`);
-      if(el) el.textContent=(нетЦены||!platTotalUSD)?'—':formatPrice(calcFromUSD(platTotalUSD,R),cursF);
+      // у партнёрских туров цен площадок пока нет — не выдумываем
+      if(el) el.textContent=(t.noPlat||нетЦены||!platTotalUSD)?'—':formatPrice(calcFromUSD(platTotalUSD,R),cursF);
     });
   }
   // store for copy
@@ -1640,6 +1651,13 @@ function pCalcCopy(idx){
 }
 
 // CUSTOM PRICE
+function копироватьСвоюЦену(btn){
+  const usd=parseFloat(btn.closest('.custom-price-card').querySelector('.custom-price-input').value)||0;
+  if(!usd){toast('Впиши сумму в $');return;}
+  if(!currentRates){toast('⏳ Загрузка курсов…');return;}
+  const p=calcFromUSD(usd,currentRates);
+  copyText(fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt));
+}
 function calcCustom(inp){
   const usd=parseFloat(inp.value)||0;
   const el=inp.closest('.custom-price-card').querySelector('.custom-price-result');
