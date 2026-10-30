@@ -56,14 +56,15 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .reg-chip{padding:6px 13px;border-radius:999px;border:1px solid var(--border);
   background:var(--surface);color:var(--muted);font-size:12px;font-weight:600;
   font-family:inherit;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
-.route-regs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 6px}
-.route-regs .reg-chip{padding:5px 6px;font-size:11.5px;border-radius:7px}
+.route-regs{display:flex;gap:4px;flex-wrap:wrap;margin:0 0 6px}
+.route-regs .reg-chip{padding:5px 5px;font-size:11px;border-radius:7px}
+.route-regs .reg-chip svg{width:18px;height:12px}
 /* Все города закрашены своим цветом; выбранный — белый, с рамкой и буквами своего цвета. */
 #price-regions .reg-chip{border-radius:7px}
 #price-regions .city-chip{background:var(--c);border-color:var(--c);color:#fff;font-weight:700}
 #price-regions .city-chip.on{background:#fff;border:2px solid var(--c);color:var(--c)}
 .route-regs .city-chip{background:var(--c);border-color:var(--c);color:#fff;font-weight:700}
-.route-regs .city-chip.on{background:#fff;border:2px solid var(--c);color:var(--c);padding:4px 5px}
+.route-regs .city-chip.on{background:#fff;border:2px solid var(--c);color:var(--c);padding:4px 4px}
 .reg-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .col-headers{display:grid;grid-template-columns:1.6fr 0.8fr 1fr 1.4fr 1fr;padding:0 16px 6px;gap:4px}
 .col-headers div{font-size:9px;letter-spacing:.12em;text-transform:uppercase;font-family:'DM Mono',monospace;text-align:right;color:var(--muted)}
@@ -175,6 +176,12 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .hotel-copy:hover{border-color:var(--accent2);color:var(--accent2)}
 .hotel-map-row{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px}
 .hotel-map-row[hidden]{display:none}
+.tr-route{display:grid;gap:8px;margin-bottom:8px}
+.tr-route label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.tr-route select,.tr-route input{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;box-sizing:border-box}
+.tr-route input[hidden]{display:none}
+.tr-route .hotel-map-row{text-transform:none;letter-spacing:0;font-size:12px}
+.tr-route .hotel-map-row[hidden]{display:none}
 .hotel-hint{margin-top:4px;font-size:11px;color:var(--muted)}
 .b-card-hotel{font-size:12px;margin-top:2px}
 .b-city{display:inline-block;margin-right:6px;padding:2px 6px;border-radius:4px;color:#fff;font:700 10px 'DM Mono',monospace;letter-spacing:.04em;vertical-align:2px}
@@ -410,7 +417,7 @@ body.ro .ro-badge{display:inline-block}
               <option value="ДРУГОЕ">Другое...</option>
             </select>
             <div id="fOtherBlock" style="display:none"><label>Название</label><input type="text" id="fOtherName"></div>
-            <div id="fTrBlock" style="display:none;margin-top:6px"><label>Маршрут трансфера</label><input type="text" id="fTrRoute" placeholder="Аэропорт — отель" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;margin-bottom:6px"><label>Стоимость трансфера $</label><input type="number" id="fTrPrice" min="0" placeholder="0" oninput="трансферПересчёт('f')" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;margin-bottom:6px"><label>Комиссия $</label><input type="number" id="fTrComm" min="0" placeholder="0" oninput="трансферПересчёт('f')" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;margin-bottom:6px"></div>
+            <div id="fTrBlock" style="display:none;margin-top:6px"><div class="tr-route" id="fTrPoints"></div><input type="hidden" id="fTrRoute"><label>Стоимость трансфера $</label><input type="number" id="fTrPrice" min="0" placeholder="0" oninput="трансферПересчёт('f')" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;margin-bottom:6px"><label>Комиссия $</label><input type="number" id="fTrComm" min="0" placeholder="0" oninput="трансферПересчёт('f')" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;margin-bottom:6px"></div>
           </div>
           <div class="form-group full"><label>Количество человек</label>
             <div class="pax-grid">
@@ -513,7 +520,7 @@ body.ro .ro-badge{display:inline-block}
                 <option value="ДРУГОЕ">Другое...</option>
               </select>
               <div id="pfOtherBlock" style="display:none"><label>Название</label><input type="text" id="pfOtherName"></div>
-            <div id="pfTrBlock" style="display:none;margin-top:6px"><label>Маршрут трансфера</label><input type="text" id="pfTrRoute" placeholder="Аэропорт — отель" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;margin-bottom:6px"><label>Стоимость трансфера $</label><input type="number" id="pfTrPrice" min="0" placeholder="0" oninput="трансферПересчёт('pf')" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;margin-bottom:6px"><label>Комиссия $</label><input type="number" id="pfTrComm" min="0" placeholder="0" oninput="трансферПересчёт('pf')" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;margin-bottom:6px"></div>
+            <div id="pfTrBlock" style="display:none;margin-top:6px"><div class="tr-route" id="pfTrPoints"></div><input type="hidden" id="pfTrRoute"><label>Стоимость трансфера $</label><input type="number" id="pfTrPrice" min="0" placeholder="0" oninput="трансферПересчёт('pf')" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;margin-bottom:6px"><label>Комиссия $</label><input type="number" id="pfTrComm" min="0" placeholder="0" oninput="трансферПересчёт('pf')" style="width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;margin-bottom:6px"></div>
             </div>
             <div class="form-group full"><label>Количество человек</label>
               <div class="pax-grid">
@@ -860,6 +867,22 @@ function опцииРегиона(регион){
   const трансфер = TOURS.filter(t => регионТура(t) === 'Трансфер').map(t => `<option value="${t.key}">${t.icon} ${t.name}</option>`).join('');
   return свои + трансфер;
 }
+const SVG_МАШИНА='<svg width="22" height="14" viewBox="0 0 24 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" style="display:block"><path d="M2 11V8l2.5-5h11l4.5 5H22v3"/><path d="M2 11h2.5M9 11h6M20 11h2"/><circle cx="6.5" cy="11.5" r="2.2"/><circle cx="17.5" cy="11.5" r="2.2"/></svg>';
+// Машинка в ряду городов: сразу выбирает трансфер; город остаётся прежним —
+// по нему подставляются аэропорт и вокзал.
+function машинкаЧип(id){
+  const on=(document.getElementById(id)||{}).value==='ТРАНСФЕР';
+  return `<button type="button" class="reg-chip city-chip${on?' on':''}" style="--c:#475569" title="Трансфер" onclick="выбратьТрансфер('${id}')">${SVG_МАШИНА}</button>`;
+}
+function выбратьТрансфер(id){
+  const sel=document.getElementById(id); if(!sel) return;
+  sel.value='ТРАНСФЕР'; bUpdatePreview();
+}
+function обновитьЧипыМаршрута(){
+  ['fRoute','pfRoute'].forEach(id=>{ const ч=document.getElementById(id+'Regs'); if(!ч) return;
+    const on=(document.getElementById(id)||{}).value==='ТРАНСФЕР';
+    const btn=ч.querySelector('button[title="Трансфер"]'); if(btn) btn.classList.toggle('on',on); });
+}
 function выбратьРегионМаршрута(id, регион, запомнить){
   маршрутРегион[id] = регион;
   if(запомнить){ try { localStorage.setItem('narada_route_reg', регион); } catch(e){} }
@@ -867,9 +890,11 @@ function выбратьРегионМаршрута(id, регион, запом
   const было = sel.value;
   sel.innerHTML = '<option value="">— выбрать —</option>' + опцииРегиона(регион) + '<option value="ДРУГОЕ">Другое...</option>';
   if([...sel.options].some(o => o.value === было)) sel.value = было;
+  const pre=id==='fRoute'?'f':'pf';
+  if(document.getElementById(pre+'TrBlock')?.style.display!=='none') точкиВФорме(pre);
   const чипы = document.getElementById(id+'Regs');
   if(чипы) чипы.innerHTML = ГОРОДА_БРОНИ.map(r =>
-    `<button type="button" class="reg-chip city-chip${r===регион?' on':''}" style="--c:${ЦВЕТ_ГОРОДА[СОКР_ГОРОДА[r]]}" title="${r}" onclick="выбратьРегионМаршрута('${id}','${r}',true);bUpdatePreview()">${СОКР_ГОРОДА[r]||r}</button>`).join('');
+    `<button type="button" class="reg-chip city-chip${r===регион?' on':''}" style="--c:${ЦВЕТ_ГОРОДА[СОКР_ГОРОДА[r]]}" title="${r}" onclick="выбратьРегионМаршрута('${id}','${r}',true);bUpdatePreview()">${СОКР_ГОРОДА[r]||r}</button>`).join('')+машинкаЧип(id);
 }
 // Название тура везде одинаково — обычными буквами, без города в начале:
 // город и так написан кнопкой или меткой. Ключ заглавными — только для базы.
@@ -891,12 +916,16 @@ const ГОРОД_ДЛЯ_КАРТЫ = {'Дананг':'Da Nang','Фукуок':'P
 const РЕ_ССЫЛКА = /https?:\/\/\S+/;
 function названиеОтеля(отель){ return String(отель||'').replace(РЕ_ССЫЛКА,'').replace(/\s{2,}/g,' ').trim(); }
 function ссылкаНаОтель(отель, маршрут){
+  const тур0 = TOURS.find(t => t.key === маршрут);
+  if(!тур0 && (маршрут||'').startsWith('ТРАНСФЕР')){ const г=городТрансфера(маршрут); if(г) return ссылкаНаОтельВГороде(отель,г); }
+  return ссылкаНаОтельВГороде(отель, тур0 ? регионТура(тур0) : '');
+}
+function ссылкаНаОтельВГороде(отель, регион){
   const своя = String(отель||'').match(РЕ_ССЫЛКА);
   if(своя) return своя[0];
   const чисто = String(отель||'').replace(/[,;]?\s*(к\.|комн\w*|номер|room|rm\.?|#)\s*\d+\w*/gi,'').trim();
   if(!чисто) return '';
-  const тур = TOURS.find(t => t.key === маршрут);
-  const город = тур ? (ГОРОД_ДЛЯ_КАРТЫ[регионТура(тур)] || 'Vietnam') : 'Vietnam';
+  const город = ГОРОД_ДЛЯ_КАРТЫ[регион] || 'Vietnam';
   // Ищем только жильё: «Манго» без уточнения Google находит магазины.
   const жильё = /hotel|resort|hostel|homestay|villa|apartment|motel|inn|отель|гостиниц|резорт|хостел|вилл|апарт|khách sạn|nhà nghỉ/i.test(чисто) ? '' : ' hotel';
   // Короткий читаемый вид: …/maps/search/Mango+hotel+Da+Nang, без %2C и прочей каши.
@@ -930,6 +959,46 @@ function меткаГорода(маршрут){
   const сокр = тур && СОКР_ГОРОДА[регионТура(тур)];
   return сокр ? `<span class="b-city" style="background:${ЦВЕТ_ГОРОДА[сокр]}">${сокр}</span>` : '';
 }
+// ── Трансфер в форме брони: откуда и куда ──
+// Список — аэропорт и вокзал выбранного города или «Свой адрес»: тогда поле
+// для отеля/адреса и под ним карта с кнопкой «Копировать ссылку».
+function точкиВФорме(p, изСохранённого){
+  const box=document.getElementById(p+'TrPoints'); if(!box) return;
+  const город=маршрутРегион[p+'Route']||регионПоУмолчанию();
+  const точки=ТОЧКИ_ТРАНСФЕРА[город]||[];
+  const [a,b]=(document.getElementById(p+'TrRoute').value||'').split(' — ');
+  const нач=(v,def)=>изСохранённого&&v!=null?v:def;
+  const поле=(кл,подпись,знач)=>{
+    const своя=знач&&!точки.includes(знач);
+    const opts=точки.map(t=>`<option${t===знач?' selected':''}>${t}</option>`).join('')+`<option value="__addr"${(своя||!знач)?' selected':''}>Свой адрес…</option>`;
+    return `<label>${подпись}<select class="${кл}-sel" onchange="this.nextElementSibling.hidden=this.value!=='__addr';собратьТрансфер('${p}')">${opts}</select>
+      <input type="text" class="${кл}" placeholder="Отель или адрес" value="${своя?экран(знач):''}"${(своя||!знач)?'':' hidden'} oninput="собратьТрансфер('${p}')">
+      <span class="hotel-map-row ${кл}-map" hidden><a class="hotel-map" target="_blank" rel="noopener">📍 Открыть на карте</a><button type="button" class="hotel-copy">Копировать ссылку</button></span></label>`;
+  };
+  box.innerHTML=поле('trf','Откуда',нач(a,точки[0]))+поле('trt','Куда',нач(b,''));
+  собратьТрансфер(p);
+}
+function собратьТрансфер(p){
+  const box=document.getElementById(p+'TrPoints'); if(!box) return;
+  const город=маршрутРегион[p+'Route']||регионПоУмолчанию();
+  const val=кл=>{const sel=box.querySelector('.'+кл+'-sel'); return sel.value==='__addr'?box.querySelector('.'+кл).value.trim():sel.value;};
+  ['trf','trt'].forEach(кл=>{
+    const sel=box.querySelector('.'+кл+'-sel'), row=box.querySelector('.'+кл+'-map');
+    const адрес=sel.value==='__addr'?box.querySelector('.'+кл).value.trim():'';
+    const u=адрес?ссылкаНаОтельВГороде(адрес,город):'';
+    row.hidden=!u;
+    if(u){ row.querySelector('a').href=u; row.querySelector('button').onclick=()=>copyText(адрес+'\n'+u); }
+  });
+  const a=val('trf'), b=val('trt');
+  document.getElementById(p+'TrRoute').value=(a||b)?(a+' — '+b):'';
+}
+// Город трансфера по сохранённой брони: ищем в маршруте аэропорт или вокзал.
+function городТрансфера(маршрут){
+  for(const [г,точки] of Object.entries(ТОЧКИ_ТРАНСФЕРА)) if(точки.some(t=>(маршрут||'').toLowerCase().includes(t.toLowerCase()))) return г;
+  return '';
+}
+const ТОЧКИ_VI={'Аэропорт Дананга':'Sân bay Đà Nẵng','ЖД вокзал Дананга':'Ga Đà Nẵng','Аэропорт Фукуока':'Sân bay Phú Quốc','Порт Бай Вонг (паром)':'Cảng Bãi Vòng','Аэропорт Камрань':'Sân bay Cam Ranh','ЖД вокзал Нячанга':'Ga Nha Trang','Аэропорт Таншоннят':'Sân bay Tân Sơn Nhất','ЖД вокзал Сайгона':'Ga Sài Gòn','Аэропорт Ноибай':'Sân bay Nội Bài','ЖД вокзал Ханоя':'Ga Hà Nội','Аэропорт Фантьет':'Sân bay Phan Thiết','ЖД вокзал Фантьета':'Ga Phan Thiết'};
+
 // Бронь открывают на правку или текст распознан — сначала город этого тура,
 // иначе нужного пункта в списке нет и маршрут молча сбрасывается.
 function поставитьМаршрут(id, ключ){
@@ -2142,9 +2211,23 @@ function bCopyGuide(id){
   const ru=[guideDate(b.date), ROUTE_RU[b.route]||b.route||'—', hotel, pax?guidePeople(pax)+' + гид':'—'];
   // переведённый отель, если перевод уже доехал; иначе словарь как запасной
   const vi=[guideDateVi(b.date), ROUTE_VI[b.route]||b.route||'—', b.hotelVi||hotelVi(hotel), pax?pax+' người + hướng dẫn viên':'—'];
+  // Трансфер: полный маршрут «откуда — куда» и карта для каждого адреса/отеля
+  if((b.route||'').startsWith('ТРАНСФЕР')){
+    const путь=(b.route.split(': ')[1]||'').split(' — ').map(x=>x.trim()).filter(Boolean);
+    const город=городТрансфера(b.route);
+    ru[1]='Трансфер: '+путь.join(' — ');
+    vi[1]='Đưa đón: '+путь.map(x=>ТОЧКИ_VI[x]||x).join(' — ');
+    // на трансфере гида нет, а отель уже в маршруте — лишние строки убираем
+    ru[3]=pax?guidePeople(pax):'—'; vi[3]=pax?pax+' người':'—';
+    if(!b.hotel){ ru.splice(2,1); vi.splice(2,1); }
+    const карты=путь.filter(x=>!ТОЧКИ_VI[x]).map(x=>'📍 '+названиеОтеля(x)+'\n'+ссылкаНаОтельВГороде(x,город));
+    const отельКарта=b.hotel&&!путь.includes(b.hotel)?['📍 '+названиеОтеля(b.hotel)+'\n'+ссылкаНаОтель(b.hotel,b.route)]:[];
+    copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n')+(карты.concat(отельКарта).length?'\n'+карты.concat(отельКарта).join('\n'):''));
+    return;
+  }
   // Ссылка на отель в Google Картах — водителю и гиду, чтобы не искать вручную
   const карта=ссылкаНаОтель(b.hotel,b.route);
-  copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n')+(карта?'\n📍 '+карта:''));
+  copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n')+(карта?'\n📍 '+названиеОтеля(b.hotel)+'\n'+карта:''));
 }
 
 function bCopyCard(id){
@@ -2330,6 +2413,7 @@ function bEdit(id){
   if((b.route||'').startsWith('ТРАНСФЕР')){
     поставитьМаршрут('fRoute','ТРАНСФЕР');
     document.getElementById('fTrRoute').value=(b.route.split(': ')[1]||'');
+    точкиВФорме('f', true);
     document.getElementById('fTrPrice').value=b.customPriceAdult||'';
     document.getElementById('fTrComm').value=b.commission||'';
   }
@@ -2654,7 +2738,7 @@ function mSwitchTab(tab){
   document.getElementById('mPanelPaste').style.display=tab==='paste'?'':'none';
 }
 function bUpdatePreview(){
-  картаВФорме('f'); картаВФорме('pf');
+  картаВФорме('f'); картаВФорме('pf'); обновитьЧипыМаршрута();
   const p=mTab==='manual'?'f':'pf';
   const route=document.getElementById(p+'Route').value;
   const adults=parseInt(document.getElementById(p+'Adults').value)||0;
@@ -2896,7 +2980,7 @@ function трансферПересчёт(p){
 function трансферПоказ(p, route){
   const on=route==='ТРАНСФЕР';
   const tb=document.getElementById(p+'TrBlock'); if(tb) tb.style.display=on?'':'none';
-  if(on){ document.getElementById(p+'CalcBlock').style.display='none'; трансферПересчёт(p); }
+  if(on){ document.getElementById(p+'CalcBlock').style.display='none'; трансферПересчёт(p); точкиВФорме(p); }
   return on;
 }
 function fUpdateCalc(){
@@ -3296,7 +3380,7 @@ function bGetFormData(){
     comm=комиссияТура(null, 0, 0, sum);   // «Другое» — тура нет, ставка обычная
   } else if(route==='ТРАНСФЕР'){
     const tr=(document.getElementById(p+'TrRoute')?.value||'').trim();
-    if(tr) routeName='ТРАНСФЕР: '+tr.toUpperCase();
+    if(tr) routeName='ТРАНСФЕР: '+tr;
     adultUSD=parseFloat(document.getElementById(p+'TrPrice')?.value)||0;
     comm=parseFloat(document.getElementById(p+'TrComm')?.value)||0;
     isIndividual=true;
