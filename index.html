@@ -58,6 +58,9 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .route-regs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 6px}
 .route-regs .reg-chip{padding:5px 6px;font-size:11.5px;border-radius:7px}
 /* Все города закрашены своим цветом; выбранный — белый, с рамкой и буквами своего цвета. */
+#price-regions .reg-chip{border-radius:7px}
+#price-regions .city-chip{background:var(--c);border-color:var(--c);color:#fff;font-weight:700}
+#price-regions .city-chip.on{background:#fff;border:2px solid var(--c);color:var(--c)}
 .route-regs .city-chip{background:var(--c);border-color:var(--c);color:#fff;font-weight:700}
 .route-regs .city-chip.on{background:#fff;border:2px solid var(--c);color:var(--c);padding:4px 5px}
 .reg-chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -1188,10 +1191,12 @@ function platformPricesHTML(t, rates, skeleton) {
 let прайсРегион = '';
 function отрисоватьЧипыРегионов(){
   const el=document.getElementById('price-regions'); if(!el) return;
-  const кнопки=[['','Все']].concat(РЕГИОНЫ.filter(естьТуры).map(r=>[r,r]));
-  el.innerHTML=кнопки.map(([знач,подпись])=>
-    `<button class="reg-chip${прайсРегион===знач?' on':''}" onclick="выбратьРегионПрайса('${знач}')">${подпись}</button>`
-  ).join('');
+  // Города — цветными плашками с сокращением, как в форме брони.
+  const кнопки=[['','Все']].concat(РЕГИОНЫ.filter(естьТуры).map(r=>[r,СОКР_ГОРОДА[r]||r]));
+  el.innerHTML=кнопки.map(([знач,подпись])=>{
+    const цвет=ЦВЕТ_ГОРОДА[СОКР_ГОРОДА[знач]];
+    return `<button class="reg-chip${цвет?' city-chip':''}${прайсРегион===знач?' on':''}"${цвет?` style="--c:${цвет}"`:''} title="${знач||'Все города'}" onclick="выбратьРегионПрайса('${знач}')">${подпись}</button>`;
+  }).join('');
 }
 function выбратьРегионПрайса(регион){
   прайсРегион=регион;
