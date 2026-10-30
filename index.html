@@ -296,6 +296,12 @@ body.ro .b-action-btn,
 body.ro .b-status-row{display:none!important}
 body.ro .b-notes-row textarea{pointer-events:none;opacity:.8}
 body.ro .b-comm-val{pointer-events:none;border-bottom:none}
+/* Просмотр по ссылке без ключа — для Ленара: только брони «Скоро» и кнопка
+   «Гиду». Прайс, заработок, комиссия, фильтры и копия карточки скрыты. */
+body.ro #tnPrice,body.ro #tabPrice,body.ro .b-earn,body.ro #walletPanel,body.ro #earnHistoryPanel,
+body.ro .b-card-comm,body.ro .b-exp-comm,body.ro #bFilterStatus,body.ro .b-pay-icon,
+body.ro .b-copy-card-btn:not(.b-copy-guide-btn){display:none!important}
+body.ro .tab-nav .tab-btn{flex:1}
 .ro-badge{display:none;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:2px 8px;font-family:'DM Mono',monospace;margin-left:auto}
 body.ro .ro-badge{display:inline-block}
 </style>
@@ -341,7 +347,7 @@ body.ro .ro-badge{display:inline-block}
       <div class="b-stats">
         <div><div class="b-stat-val" id="bStatToday">0</div><div class="b-stat-label">Сегодня</div></div>
         <div><div class="b-stat-val" id="bStatTomorrow">0</div><div class="b-stat-label">Завтра</div></div>
-        <div style="display:flex;align-items:flex-start;gap:6px">
+        <div class="b-earn" style="display:flex;align-items:flex-start;gap:6px">
           <div>
             <div class="b-stat-val" id="bStatEarn">$0</div>
             <div class="b-stat-label">Итого / мес</div>
@@ -1095,6 +1101,7 @@ const pCalcPlatforms = {};
 // TABS
 // ══════════════════════════════════════
 function switchTab(name) {
+  if(name==='price' && !canEdit()) name='booking';   // без ключа прайса нет
   ['price','booking'].forEach(t => {
     document.getElementById('tab'+cap(t)).classList.toggle('active', t===name);
     document.getElementById('tn'+cap(t)).classList.toggle('active', t===name);
@@ -1104,7 +1111,7 @@ function switchTab(name) {
     bFilter='upcoming_waiting';
     const sel=document.getElementById('bFilterStatus'); if(sel) sel.value='upcoming_waiting';
     bRender();
-    loadWallet();
+    if(canEdit()) loadWallet();
   }
 }
 function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
@@ -1752,6 +1759,7 @@ async function gasDelete(id){
 // BOOKING RENDER
 // ══════════════════════════════════════
 function bSetFilter(f){
+  if(!canEdit()) f='upcoming_waiting';   // без ключа — только «Скоро»
   bFilter=f;
   bRender();
 }
@@ -1826,7 +1834,7 @@ function bCardHTML(b){
       <div class="b-card-route">${меткаГорода(b.route)}${подписьМаршрута(b.route)}${(()=>{const _p=bDetectPlatform(b);const _z=значокПлощадки(_p,13);return _z?`<span style="margin-left:5px">${_z}</span>`:(_p?`<span style="font-size:9px;color:var(--accent);margin-left:4px;font-family:'DM Mono',monospace;opacity:.8">${_p}</span>`:'');})()} </div>
       <div class="b-card-pax">${paxParts.join('+')||'—'}</div>
       <div class="b-card-contact">${b.contact||'—'}</div>
-      <span onclick="event.stopPropagation();bCyclePay('${b.id}')" style="cursor:pointer;font-size:15px;line-height:1">${payIcon}</span>
+      <span class="b-pay-icon" onclick="event.stopPropagation();bCyclePay('${b.id}')" style="cursor:pointer;font-size:15px;line-height:1">${payIcon}</span>
       <button class="b-action-btn" onclick="event.stopPropagation();bRepeat('${b.id}')" title="Повторить бронь">♻️</button>
       <button class="b-action-btn" onclick="event.stopPropagation();bEdit('${b.id}')">✏️</button>
       <button class="b-action-btn" onclick="event.stopPropagation();bDelete('${b.id}')" style="color:var(--red)">✕</button>
@@ -1845,7 +1853,7 @@ function bCardHTML(b){
         <div class="b-exp-item"><label>Площадка</label><span>${b.plat?(b.plat+' '+(b.platCur||'')+(b.platDate?' · '+shortDate(b.platDate):'')):'—'}${b.plat&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.plat),b.platCur||'USD',currentRates,b.platFx)}</div>`:''}</span></div>
         <div class="b-exp-item"><label>На месте</label><span>${b.onsite?(b.onsite+' '+(b.onsiteCur||'')):'—'}${(parseFloat(b.onsite)>0&&currentRates)?`<div class="pay-hint">${payLine(parseFloat(b.onsite),b.onsiteCur||'USD',currentRates)}</div>`:''}</span></div>
         ${(()=>{const c=сдачаПоБрони(b);return c?`<div class="b-exp-item"><label>Сдача</label><span>${c.сдача} $<div class="pay-hint">с ${c.дают} $ · ${c.донги.toLocaleString('ru-RU')} ₫</div></span></div>`:'';})()}
-        <div class="b-exp-item"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
+        <div class="b-exp-item b-exp-comm"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
         ${(()=>{const _p=bDetectPlatform(b);const _z=значокПлощадки(_p,15);return _p?`<div class="b-exp-item"><label>Платформа</label><span style="color:var(--accent);font-weight:600">${_z||_p}</span></div>`:'';})()}
         ${(()=>{const m=(b.notes||'').match(МЕТКА_ИСТОЧНИКА);const s=m?SOURCES[+m[1]]:'';return s?`<div class="b-exp-item"><label>Откуда</label><span>${экран(s)}</span></div>`:'';})()}
       </div>
@@ -3806,16 +3814,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // разом, а не по очереди: список не ждёт проверку доступа.
   // права ставим сразу по ключу, не дожидаясь ответа Google
   document.body.classList.toggle('ro', !canEdit());
+  if(!canEdit()) switchTab('booking');
   if(editKey()) bLoad();
   loadAccess().then(()=>{
     document.body.classList.toggle('ro', !canEdit());
+    if(!canEdit()){ switchTab('booking'); bSetFilter('upcoming_waiting'); }
     if(!canRead()){
       const el=document.getElementById('bList');
       if(el) el.innerHTML='<div class="b-loading">Нет доступа к бронированиям.<br><span style="font-size:11px">Откройте страницу по ссылке с ключом.</span></div>';
       return;
     }
     if(!editKey()) bLoad();
-    loadWallet();
+    if(canEdit()) loadWallet();
   });
 });
 </script>
