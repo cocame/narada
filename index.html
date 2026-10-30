@@ -767,23 +767,19 @@ const TOURS = [
   // Ставка стоит у каждого тура отдельно, а не у региона: свои программы
   // на Фукуоке, когда появятся, будут считаться по обычным 10 %.
   { icon:'🎆', name:'Фукуок — Сансет Таун', key:'ФК САНСЕТ', noPlat:true,
-    rows:[{label:'За человека',usd:124,comm:6.2}] },
+    rows:[{label:'За человека',usd:124,comm:6.2},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🚡', name:'Фукуок — канатка и острова', key:'ФК КАНАТКА', noPlat:true,
-    rows:[{label:'Взрослый',usd:75,comm:3.75},{label:'Ребёнок до 140 см',usd:65,comm:3.25}] },
+    rows:[{label:'Взрослый',usd:75,comm:3.75},{label:'Ребёнок до 140 см',usd:65,comm:3.25},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🦒', name:'Фукуок — сафари и Старфиш', key:'ФК САФАРИ', noPlat:true,
-    rows:[{label:'Взрослый',usd:75,comm:3.75},{label:'Ребёнок 100–140 см',usd:65,comm:3.25}] },
+    rows:[{label:'Взрослый',usd:75,comm:3.75},{label:'Ребёнок 100–140 см',usd:65,comm:3.25},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🤿', name:'Фукуок — южные острова', key:'ФК ОСТРОВА', noPlat:true,
-    rows:[{label:'Взрослый / >140 см',usd:54,comm:2.7},{label:'Ребёнок до 140 см',usd:44,comm:2.2}] },
+    rows:[{label:'Взрослый / >140 см',usd:54,comm:2.7},{label:'Ребёнок до 140 см',usd:44,comm:2.2},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🦪', name:'Фукуок — жемчужина севера', key:'ФК СЕВЕР', noPlat:true,
-    rows:[{label:'Взрослый',usd:75,comm:3.75},{label:'Детский',usd:65,comm:3.25}] },
+    rows:[{label:'Взрослый',usd:75,comm:3.75},{label:'Детский',usd:65,comm:3.25},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🏝', name:'Фукуок — сокровища юга', key:'ФК ЮГ', noPlat:true,
-    rows:[{label:'Взрослый',usd:30,comm:1.5},{label:'Дети 5–10 лет',usd:20,comm:1.0}] },
-  // Обзорной в программе нет, а спрашивают. Цена каждый раз своя — её
-  // вписывают в брони руками (free), моя доля — те же 5 % от неё. В прайсе не показываем.
-  { icon:'🗺', name:'Фукуок — обзорная', key:'ФК ОБЗОРНАЯ', noPlat:true, free:true, commRate:0.05,
-    rows:[{label:'Цена за группу',usd:0,flat:true}] },
+    rows:[{label:'Взрослый',usd:30,comm:1.5},{label:'Дети 5–10 лет',usd:20,comm:1.0},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🎣', name:'Фукуок — морская рыбалка', key:'ФК РЫБАЛКА', noPlat:true,
-    rows:[{label:'За человека, группа от 5',usd:85,comm:4.25}] },
+    rows:[{label:'За человека, группа от 5',usd:85,comm:4.25},{label:'Индивидуально',usd:0,flat:true,free:true}] },
 
   // ── НЯЧАНГ ──
   // Туры партнёра «ВьеТур»: продаём по его цене, наша доля — 5 % от суммы.
@@ -796,32 +792,32 @@ const TOURS = [
   // строка везде повторяет взрослую. Без неё дети в брони не считались бы
   // вовсе. Детские билеты бывают только в Винперл (по росту).
   { icon:'🌲', name:'Нячанг — Далат Classic', key:'НТ ДАЛАТ', noPlat:true, commRate:0.05,
-    rows:[{label:'В группе',usd:43},{label:'Ребёнок — цена та же',usd:43},{label:'VIP, за человека',usd:80}] },
+    rows:[{label:'В группе',usd:43},{label:'Ребёнок — цена та же',usd:43},{label:'VIP, за человека',usd:80},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🌉', name:'Нячанг — Далат Bridge', key:'НТ ДАЛАТ БРИДЖ', noPlat:true, commRate:0.05,
-    rows:[{label:'В группе',usd:60},{label:'Ребёнок — цена та же',usd:60},{label:'VIP, за человека',usd:95}] },
+    rows:[{label:'В группе',usd:60},{label:'Ребёнок — цена та же',usd:60},{label:'VIP, за человека',usd:95},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🎢', name:'Нячанг — Далат 2.0 Перезагрузка', key:'НТ ДАЛАТ 2.0', noPlat:true, commRate:0.05,
-    rows:[{label:'В группе',usd:70},{label:'Ребёнок — цена та же',usd:70},{label:'VIP, за человека',usd:120}] },
+    rows:[{label:'В группе',usd:70},{label:'Ребёнок — цена та же',usd:70},{label:'VIP, за человека',usd:120},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🏞', name:'Нячанг — Далат на два дня', key:'НТ ДАЛАТ 2 ДНЯ', noPlat:true, commRate:0.05,
-    rows:[{label:'В группе',usd:100},{label:'Ребёнок — цена та же',usd:100},{label:'VIP, за человека',usd:150},{label:'Доплата за одноместный номер',usd:15}] },
+    rows:[{label:'В группе',usd:100},{label:'Ребёнок — цена та же',usd:100},{label:'VIP, за человека',usd:150},{label:'Доплата за одноместный номер',usd:15},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🐒', name:'Нячанг — Северные острова', key:'НТ ОСТРОВА', noPlat:true, commRate:0.05,
-    rows:[{label:'Большая лодка',usd:33},{label:'Ребёнок — цена та же',usd:33},{label:'Быстроходный катер, группа до 15',usd:43}] },
+    rows:[{label:'Большая лодка',usd:33},{label:'Ребёнок — цена та же',usd:33},{label:'Быстроходный катер, группа до 15',usd:43},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   // Опубликован на Трипстере 28.10: 45 $ за человека, детского тарифа там нет.
   { icon:'🐊', name:'Нячанг — Янгбэй', key:'НТ ЯНГБЭЙ', noSp8:true, commRate:0.05,
-    rows:[{label:'За человека',usd:35,tr:45},{label:'Ребёнок — цена та же',usd:35}] },
+    rows:[{label:'За человека',usd:35,tr:45},{label:'Ребёнок — цена та же',usd:35},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🏝', name:'Нячанг — остров Хон Там', key:'НТ ХОН ТАМ', noPlat:true, commRate:0.05,
-    rows:[{label:'За человека',usd:45},{label:'Ребёнок — цена та же',usd:45}] },
+    rows:[{label:'За человека',usd:45},{label:'Ребёнок — цена та же',usd:45},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🤿', name:'Нячанг — дайвинг', key:'НТ ДАЙВИНГ', noPlat:true, commRate:0.05,
-    rows:[{label:'Два погружения, новичок',usd:95},{label:'Ребёнок — цена та же',usd:95},{label:'Два погружения, с сертификатом',usd:85}] },
+    rows:[{label:'Два погружения, новичок',usd:95},{label:'Ребёнок — цена та же',usd:95},{label:'Два погружения, с сертификатом',usd:85},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🏜', name:'Нячанг — Фанранг и Муйне, два дня', key:'НТ ФАНРАНГ', noPlat:true, commRate:0.05,
-    rows:[{label:'Индивидуально, за человека',usd:190},{label:'Ребёнок — цена та же',usd:190}] },
+    rows:[{label:'Индивидуально, за человека',usd:190},{label:'Ребёнок — цена та же',usd:190},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🛕', name:'Нячанг — Муйне и Сайгон, три дня', key:'НТ САЙГОН', noPlat:true, commRate:0.05,
-    rows:[{label:'За человека',usd:410},{label:'Ребёнок — цена та же',usd:410}] },
+    rows:[{label:'За человека',usd:410},{label:'Ребёнок — цена та же',usd:410},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'⛵', name:'Нячанг — яхта Marmoris', key:'НТ КАТАМАРАН', noPlat:true, commRate:0.05,
-    rows:[{label:'Нижняя палуба',usd:90},{label:'Ребёнок — цена та же',usd:90},{label:'Верхняя палуба VIP, с гидроциклом',usd:105}] },
+    rows:[{label:'Нижняя палуба',usd:90},{label:'Ребёнок — цена та же',usd:90},{label:'Верхняя палуба VIP, с гидроциклом',usd:105},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🌆', name:'Нячанг — Дананг за день из Нячанга', key:'НТ ДАНАНГ', noPlat:true, commRate:0.05,
-    rows:[{label:'За человека',usd:160},{label:'Ребёнок — цена та же',usd:160}] },
+    rows:[{label:'За человека',usd:160},{label:'Ребёнок — цена та же',usd:160},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🏮', name:'Нячанг — Дананг и Хойан из Нячанга, два дня', key:'НТ ДАНАНГ ХОЙАН', noPlat:true, commRate:0.05,
-    rows:[{label:'За человека',usd:210},{label:'Ребёнок — цена та же',usd:210}] },
+    rows:[{label:'За человека',usd:210},{label:'Ребёнок — цена та же',usd:210},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   // ── ХОШИМИН ──
   // Туры Ирины Стольной (цены от 30.10). Цена — за всю группу и зависит от
   // числа взрослых: group[n-1] — сумма за n человек. В брони тур
@@ -841,6 +837,9 @@ const TOURS = [
     group:[130,130,170,210,260,310,360,410,460,510,560,610,660],
     rows:[{label:'1 чел.',usd:130,flat:true},{label:'2 чел.',usd:130,flat:true},{label:'3 чел.',usd:170,flat:true},{label:'4 чел.',usd:210,flat:true},{label:'5 чел.',usd:260,flat:true},{label:'6 чел.',usd:310,flat:true},{label:'7 чел.',usd:360,flat:true},{label:'8 чел.',usd:410,flat:true},{label:'9 чел.',usd:460,flat:true},{label:'10 чел.',usd:510,flat:true},{label:'11 чел.',usd:560,flat:true},{label:'12 чел.',usd:610,flat:true},{label:'13 чел.',usd:660,flat:true},{label:'Ребёнок 7–9 — доплата',usd:35}] },
 ];
+
+// «Индивидуально» с free:true у партнёрских туров — цены нет, её вписывают
+// в брони руками. Моя доля — 5 % от вписанной суммы (свободнаяИнд).
 
 // Направление тура определяется по ключу: у партнёрских маршрутов он
 // начинается с «ФК» или «НТ». Отдельного поля не заводим, чтобы список
@@ -1117,6 +1116,18 @@ function турБрони(key, adults){
   return {...t, rows:[{label:'Группа '+n+' чел.',usd:t.group[n-1],flat:true},{label:t.rows[t.rows.length-1].label,usd:t.childAdd}]};
 }
 
+// Отмечена «Индивидуально» со свободной ценой — возвращает вписанную сумму.
+function свободнаяИнд(tour, p){
+  if(!tour) return null;
+  for(let i=1;i<tour.rows.length;i++){
+    const r=tour.rows[i];
+    if(r.flat&&r.free&&document.getElementById(p+'FlatCheck'+i)?.checked)
+      return parseFloat(document.getElementById(p+'PriceRow'+i)?.value)||0;
+  }
+  return null;
+}
+const комиссияСвободной = сумма => Math.round(сумма*0.05*100)/100;
+
 // Очень расширенный алиас-словарь маршрутов
 const ROUTE_ALIASES = {
   'ХЮЭ': ['хюэ','хуэ','hue','hué','хье','хьюэ','хуэй','хюэй','хьюй','hyue','хuэ','хue','huê','хюе','хyэ','hyé'],
@@ -1305,7 +1316,7 @@ function skelRowHTML(isTicket){
 }
 
 function buildPriceCalc(t, idx) {
-  const rows = t.rows.map((r,i)=>`
+  const rows = t.rows.map((r,i)=>r.free?'':`
     <div class="calc-row-p" id="pc-${idx}-row${i}">
       <div class="calc-label-p" id="pc-${idx}-label${i}">${r.label}</div>
       <div class="calc-counter">
@@ -1488,7 +1499,7 @@ function карточкаПрайса(t,idx,rates,skeleton){
       <div class="tour-header"><div class="tour-icon">${t.icon}</div><div class="tour-name">${t.name}</div></div>
       <div class="price-rows"><div style="padding:8px 0;color:var(--muted);font-size:13px">Цена по запросу — считаем под маршрут</div></div>
     </div>`;
-    const mainRows=t.rows.map(r=>skeleton?skelRowHTML(false):priceRowHTML(r.label,calcFromUSD(r.usd,rates))).join('');
+    const mainRows=t.rows.filter(r=>!r.free).map(r=>skeleton?skelRowHTML(false):priceRowHTML(r.label,calcFromUSD(r.usd,rates))).join('');
     let ticketRows='';
     if(t.tickets&&t.tickets.length){
       const trs=skeleton?t.tickets.map(()=>skelRowHTML(true)).join(''):t.tickets.map(tk=>priceRowHTML(tk.label,calcFromVND(tk.vnd_fixed,rates),true)).join('');
@@ -1508,7 +1519,7 @@ function карточкаПрайса(t,idx,rates,skeleton){
 function copyPriceCard(idx){
   const t=TOURS[idx]; if(!currentRates){toast('⏳ Загрузка курсов…');return;}
   let text=t.icon+' '+t.name+'\n──────────────\n';
-  t.rows.forEach(r=>{const p=calcFromUSD(r.usd,currentRates); text+=r.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});
+  t.rows.filter(r=>!r.free).forEach(r=>{const p=calcFromUSD(r.usd,currentRates); text+=r.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});
   if(t.tickets){text+='\nВходные билеты:\n'; t.tickets.forEach(tk=>{const p=calcFromVND(tk.vnd_fixed,currentRates); text+=tk.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVNDticket(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});}
   copyText(text.trim());
 }
@@ -1913,7 +1924,7 @@ function bCardHTML(b){
         let lines='';
         if(_isInd&&!flatRow0){
           const _fr=tour.rows.find((r,i)=>i>=1&&r.flat);
-          if(_fr){const _fPrice=_platP(_fr,_dpl);lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Индивидуально</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${_fPrice} $ = ${fmtUSD(_fPrice)}</span></div>`;}
+          if(_fr){const _fPrice=_fr.free?(parseFloat(b.customPriceAdult)||0):_platP(_fr,_dpl);lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Индивидуально</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${_fPrice} $ = ${fmtUSD(_fPrice)}</span></div>`;}
         } else {
         if(b.adults){
           if(flatRow0){
@@ -2122,7 +2133,7 @@ function bBreakdown(b){
   const out=[];
   if(_isInd&&!flatRow0){
     const _fr=tour.rows.find((r,i)=>i>=1&&r.flat);
-    if(_fr) out.push({label:'Индивидуально',val:fmtUSD(_platP(_fr,_dpl))});
+    if(_fr) out.push({label:'Индивидуально',val:fmtUSD(_fr.free?(parseFloat(b.customPriceAdult)||0):_platP(_fr,_dpl))});
   } else {
     if(b.adults){
       if(flatRow0) out.push({label:tour.group?tour.rows[0].label:'Индивидуально',val:fmtUSD(aPrice)});
@@ -2519,7 +2530,11 @@ function bEdit(id){
   // восстановить кастомные цены из сохранённых данных брони
   const _ctour=турБрони(b.route,b.adults);
   if(_ctour){
-    if(b.customPriceAdult&&b.customPriceAdult!==_ctour.rows[0].usd){
+    const _свИ=(b.isIndividual||(b.notes||'').endsWith('​'))?_ctour.rows.findIndex((r,i)=>i>=1&&r.flat&&r.free):-1;
+    if(_свИ>0){
+      const _e=document.getElementById('fPriceRow'+_свИ);
+      if(_e){_e.value=b.customPriceAdult||0;fRecalc();}
+    } else if(b.customPriceAdult&&b.customPriceAdult!==_ctour.rows[0].usd){
       const _ce0=document.getElementById('fPriceRow0');
       if(_ce0){_ce0.value=b.customPriceAdult;fRecalc();}
     }
@@ -2919,7 +2934,7 @@ function fDrawCalcRows(tour, adults, children){
           <span id="${totId}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
         </div>
       </div>`;
-      if(fExtraUSD){rowsHTML+=`<div id="fExtraRow${i}" style="display:none;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+      if(fExtraUSD&&!row.free){rowsHTML+=`<div id="fExtraRow${i}" style="display:none;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
         <div style="font-size:12px;color:var(--accent);flex-shrink:0">+ Доп. взр. (5-й+)</div>
         <div style="display:flex;align-items:center;gap:6px">
           <button onclick="fExtraChange(${i},-1)" style="${fExtraBtnStyle}">−</button>
@@ -2938,7 +2953,7 @@ function fDrawCalcRows(tour, adults, children){
           <span id="${totId}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
         </div>
       </div>`;
-      if(fExtraUSD){rowsHTML+=`<div id="fExtraRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+      if(fExtraUSD&&!row.free){rowsHTML+=`<div id="fExtraRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
         <div style="font-size:12px;color:var(--accent);flex-shrink:0">+ Доп. взр. (5-й+)</div>
         <div style="display:flex;align-items:center;gap:6px">
           <button onclick="fExtraChange(${i},-1)" style="${fExtraBtnStyle}">−</button>
@@ -3157,7 +3172,8 @@ function fRecalc(){
   // форматов там больше двух, и пара «взрослый + ребёнок» их не описывает.
   // Считаем от базы, а не от цены площадки: с Трипстера доля та же.
   const baseForComm=tour.commRate?baseUSD:(hasFlatChecked?tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(`fFlatCheck${i}`)?.checked?r.usd:0),0)+fExtraUSD:(tour.rows[0]?.flat?tour.rows[0].usd:adults*(tour.rows[0]?.usd||0)+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0))+fExtraUSD);
-  const comm=комиссияТура(tour, adults, children, baseForComm);
+  const _св=свободнаяИнд(tour,'f');
+  const comm=_св!=null?комиссияСвободной(_св):комиссияТура(tour, adults, children, baseForComm);
   const cEl=document.getElementById('previewComm'); if(cEl) cEl.textContent='$'+comm;
 }
 function fOptChange(i,d){
@@ -3264,7 +3280,7 @@ function pfUpdateCalc(){
             <span id="${totId}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
           </div>
         </div>`;
-        if(pfExtraUSD){rowsHTML+=`<div id="pfExtraRow${i}" style="display:none;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+        if(pfExtraUSD&&!row.free){rowsHTML+=`<div id="pfExtraRow${i}" style="display:none;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
           <div style="font-size:12px;color:var(--accent);flex-shrink:0">+ Доп. взр. (5-й+)</div>
           <div style="display:flex;align-items:center;gap:6px">
             <button onclick="pfExtraChange(${i},-1)" style="${pfExtraBtnStyle}">−</button>
@@ -3283,7 +3299,7 @@ function pfUpdateCalc(){
             <span id="${totId}" style="font-family:'DM Mono',monospace;font-size:12px;color:var(--green)"></span>
           </div>
         </div>`;
-        if(pfExtraUSD){rowsHTML+=`<div id="pfExtraRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
+        if(pfExtraUSD&&!row.free){rowsHTML+=`<div id="pfExtraRow${i}" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border2);gap:8px">
           <div style="font-size:12px;color:var(--accent);flex-shrink:0">+ Доп. взр. (5-й+)</div>
           <div style="display:flex;align-items:center;gap:6px">
             <button onclick="pfExtraChange(${i},-1)" style="${pfExtraBtnStyle}">−</button>
@@ -3412,7 +3428,8 @@ function pfRecalc(){
   // форматов там больше двух, и пара «взрослый + ребёнок» их не описывает.
   // Считаем от базы, а не от цены площадки: с Трипстера доля та же.
   const baseForComm=tour.commRate?baseUSD:(hasFlatChecked?tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(`pfFlatCheck${i}`)?.checked?r.usd:0),0)+pfExtraUSDTotal:(tour.rows[0]?.flat?tour.rows[0].usd:adults*(tour.rows[0]?.usd||0)+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0))+pfExtraUSDTotal);
-  const comm=комиссияТура(tour, adults, children, baseForComm);
+  const _св=свободнаяИнд(tour,'pf');
+  const comm=_св!=null?комиссияСвободной(_св):комиссияТура(tour, adults, children, baseForComm);
   const cEl=document.getElementById('previewComm2'); if(cEl) cEl.textContent='$'+comm;
 }
 function pfCalcTotal(tour, adults, children, currency, tourUSD){
@@ -3485,7 +3502,8 @@ function bGetFormData(){
       if(flatActive){tourUSD=flatSum; isIndividual=true;}
       else if(flatRow0) isIndividual=true;
     }
-    if(tour){let baseComm=tour.free?adultUSD:tour.group?tour.rows[0].usd+tour.childAdd*children:isIndividual?(flatRow0?tour.rows[0].usd:tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(p+'FlatCheck'+i)?.checked?r.usd:0),0)):(flatRow0?tour.rows[0].usd:adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0));comm=комиссияТура(tour, adults, children, baseComm);}
+    if(tour){let baseComm=tour.free?adultUSD:tour.group?tour.rows[0].usd+tour.childAdd*children:isIndividual?(flatRow0?tour.rows[0].usd:tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(p+'FlatCheck'+i)?.checked?r.usd:0),0)):(flatRow0?tour.rows[0].usd:adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0));comm=комиссияТура(tour, adults, children, baseComm);
+      const _св=свободнаяИнд(tour,p); if(_св!=null){ comm=комиссияСвободной(_св); adultUSD=_св; }}
   }
   return {
     id:editingId,
