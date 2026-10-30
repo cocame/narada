@@ -1192,7 +1192,7 @@ let прайсРегион = '';
 function отрисоватьЧипыРегионов(){
   const el=document.getElementById('price-regions'); if(!el) return;
   // Города — цветными плашками с сокращением, как в форме брони.
-  const кнопки=[['','Все']].concat(РЕГИОНЫ.filter(естьТуры).map(r=>[r,СОКР_ГОРОДА[r]||(r==='Трансфер'?'<svg width="24" height="15" viewBox="0 0 24 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" style="display:block"><path d="M2 11V8l2.5-5h11l4.5 5H22v3"/><path d="M2 11h2.5M9 11h6M20 11h2"/><circle cx="6.5" cy="11.5" r="2.2"/><circle cx="17.5" cy="11.5" r="2.2"/></svg>':r)]));
+  const кнопки=[['','Все']].concat(РЕГИОНЫ.filter(естьТуры).filter(r=>r!=='Трансфер').map(r=>[r,СОКР_ГОРОДА[r]||(r==='Трансфер'?'<svg width="24" height="15" viewBox="0 0 24 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" style="display:block"><path d="M2 11V8l2.5-5h11l4.5 5H22v3"/><path d="M2 11h2.5M9 11h6M20 11h2"/><circle cx="6.5" cy="11.5" r="2.2"/><circle cx="17.5" cy="11.5" r="2.2"/></svg>':r)]));
   el.innerHTML=кнопки.map(([знач,подпись])=>{
     const цвет=знач==='Трансфер'?'#475569':ЦВЕТ_ГОРОДА[СОКР_ГОРОДА[знач]];
     return `<button class="reg-chip${цвет?' city-chip':''}${прайсРегион===знач?' on':''}"${цвет?` style="--c:${цвет}"`:''} title="${знач||'Все города'}" onclick="выбратьРегионПрайса('${знач}')">${подпись}</button>`;
@@ -1210,13 +1210,16 @@ function renderPriceCards(rates, skeleton) {
   const cards=TOURS.map((t,idx)=>{
     // Номер тура считаем по полному списку: на него завязаны калькулятор
     // и кнопка «Скопировать прайс». Отфильтрованные просто не рисуем.
+    if(регионТура(t)==='Трансфер') return '';
     if(прайсРегион && регионТура(t)!==прайсРегион) return '';
     return карточкаПрайса(t,idx,rates,skeleton);
   });
-  // Прайс по городам: заголовок города, его туры, в конце блока — конвертер
-  // своей суммы в доллары. Трансфер общий — отдельным блоком в самом конце.
-  const блоки=РЕГИОНЫ.filter(естьТуры).filter(r=>!прайсРегион||r===прайсРегион).map(r=>{
-    const свои=TOURS.map((t,idx)=>регионТура(t)===r?cards[idx]:'').join('');
+  // Прайс по городам: заголовок города, его туры, трансфер и в конце блока —
+  // конвертер своей суммы в доллары. Трансфер есть в каждом городе, поэтому
+  // он стоит внизу каждого блока, а не отдельным разделом.
+  const трансфер=TOURS.map((t,idx)=>регионТура(t)==='Трансфер'?карточкаПрайса(t,idx,rates,skeleton):'').join('');
+  const блоки=РЕГИОНЫ.filter(естьТуры).filter(r=>r!=='Трансфер').filter(r=>!прайсРегион||r===прайсРегион).map(r=>{
+    const свои=TOURS.map((t,idx)=>регионТура(t)===r?cards[idx]:'').join('')+трансфер;
     if(!свои) return '';
     const шапка=r==='Трансфер'?'':`<div class="price-city"><span class="b-city" style="background:${ЦВЕТ_ГОРОДА[СОКР_ГОРОДА[r]]}">${СОКР_ГОРОДА[r]}</span>${r}</div>`;
     const конв=r==='Трансфер'?'':`<div class="custom-price-card city-conv">
