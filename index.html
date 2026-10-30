@@ -114,8 +114,9 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .custom-price-wrap{max-width:700px;margin:0 auto;padding:0 12px 16px}
 .price-block{margin-bottom:22px}
 .tr-fields{display:grid;grid-template-columns:1fr 1fr 110px;gap:8px;padding:4px 16px 8px}
+.tr-fields input[hidden]{display:none}
 .tr-fields label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--muted)}
-.tr-fields input{font:13px 'DM Sans',sans-serif;padding:8px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);min-width:0}
+.tr-fields input,.tr-fields select{font:13px 'DM Sans',sans-serif;padding:8px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);min-width:0}
 @media(max-width:560px){.tr-fields{grid-template-columns:1fr 1fr}.tr-fields label:last-child{grid-column:1/-1}}
 .price-city{display:flex;align-items:center;gap:8px;margin:18px 16px 10px;font-weight:700;font-size:16px}
 .city-conv{margin:0 12px 6px}
@@ -1262,17 +1263,36 @@ function renderPriceCards(rates, skeleton) {
   document.getElementById('price-list').innerHTML=colH+блоки;
 }
 
-// Трансфер: цена каждый раз своя, поэтому карточка — с полями «откуда»,
-// «куда» и «цена $». Ниже — та же цена в рублях, донгах и USDT, и кнопка
-// «Скопировать прайс», как у экскурсий. Откуда по умолчанию — аэропорт города.
-const АЭРОПОРТ = {'Дананг':'Аэропорт Дананга','Фукуок':'Аэропорт Фукуока','Нячанг':'Аэропорт Камрань','Хошимин':'Аэропорт Таншоннят','Ханой':'Аэропорт Ноибай','Муйне':'Аэропорт Фантьет'};
+// Трансфер: цена каждый раз своя. «Откуда» и «Куда» — список: аэропорт,
+// вокзал (на Фукуоке вместо вокзала паромный порт) или «Свой адрес», тогда
+// появляется поле для отеля. Ниже — цена в рублях, донгах и USDT и кнопка
+// «Скопировать прайс», как у экскурсий.
+const ТОЧКИ_ТРАНСФЕРА = {
+  'Дананг':['Аэропорт Дананга','ЖД вокзал Дананга'],
+  'Фукуок':['Аэропорт Фукуока','Порт Бай Вонг (паром)'],
+  'Нячанг':['Аэропорт Камрань','ЖД вокзал Нячанга'],
+  'Хошимин':['Аэропорт Таншоннят','ЖД вокзал Сайгона'],
+  'Ханой':['Аэропорт Ноибай','ЖД вокзал Ханоя'],
+  'Муйне':['Аэропорт Фантьет','ЖД вокзал Фантьета']
+};
+function полеТочки(id, класс, город, поУмолчанию){
+  const точки=ТОЧКИ_ТРАНСФЕРА[город]||[];
+  const opts=точки.map(t=>`<option${t===поУмолчанию?' selected':''}>${t}</option>`).join('')+`<option value="__addr"${поУмолчанию==='__addr'?' selected':''}>Свой адрес…</option>`;
+  return `<select class="${класс}-sel" onchange="this.nextElementSibling.hidden=this.value!=='__addr';трансферПрайс('${id}')">${opts}</select>
+      <input type="text" class="${класс}" placeholder="Отель или адрес"${поУмолчанию==='__addr'?'':' hidden'} oninput="трансферПрайс('${id}')">`;
+}
+function точка(c, класс){
+  const sel=c.querySelector('.'+класс+'-sel');
+  return sel.value==='__addr' ? c.querySelector('.'+класс).value.trim() : sel.value;
+}
 function карточкаТрансфера(город){
   const id='tr-'+(СОКР_ГОРОДА[город]||'x');
+  const точки=ТОЧКИ_ТРАНСФЕРА[город]||[];
   return `<div class="tour-card tr-card" id="${id}">
     <div class="tour-header"><div class="tour-icon">🚐</div><div class="tour-name">Трансфер — ${город}</div></div>
     <div class="tr-fields">
-      <label>Откуда<input type="text" class="tr-from" value="${АЭРОПОРТ[город]||''}" oninput="трансферПрайс('${id}')"></label>
-      <label>Куда<input type="text" class="tr-to" placeholder="Отель или адрес" oninput="трансферПрайс('${id}')"></label>
+      <label>Откуда${полеТочки(id,'tr-from',город,точки[0]||'__addr')}</label>
+      <label>Куда${полеТочки(id,'tr-to',город,'__addr')}</label>
       <label>Цена $<input type="number" class="tr-usd" min="0" placeholder="0" oninput="трансферПрайс('${id}')"></label>
     </div>
     <div class="price-rows tr-rows">${priceRowHTML('Машина',null)}</div>
@@ -1286,12 +1306,12 @@ function трансферПрайс(id){
 }
 function копироватьТрансфер(id){
   const c=document.getElementById(id); if(!currentRates){toast('⏳ Загрузка курсов…');return;}
-  const from=c.querySelector('.tr-from').value.trim(), to=c.querySelector('.tr-to').value.trim();
+  const from=точка(c,'tr-from'), to=точка(c,'tr-to');
   const usd=parseFloat(c.querySelector('.tr-usd').value)||0;
-  if(!to){toast('Впиши, куда едем');return;}
+  if(!from||!to){toast('Укажи, откуда и куда');return;}
   if(!usd){toast('Впиши цену в $');return;}
   const p=calcFromUSD(usd,currentRates);
-  copyText('🚐 Трансфер: '+(from?from+' — ':'')+to+'\n──────────────\nМашина:  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt));
+  copyText('🚐 Трансфер: '+from+' — '+to+'\n──────────────\nМашина:  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt));
 }
 
 function карточкаПрайса(t,idx,rates,skeleton){
