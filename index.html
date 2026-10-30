@@ -896,7 +896,9 @@ function ссылкаНаОтель(отель, маршрут){
   if(!чисто) return '';
   const тур = TOURS.find(t => t.key === маршрут);
   const город = тур ? (ГОРОД_ДЛЯ_КАРТЫ[регионТура(тур)] || 'Vietnam') : 'Vietnam';
-  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(чисто + ', ' + город);
+  // Ищем только жильё: «Манго» без уточнения Google находит магазины.
+  const жильё = /hotel|resort|hostel|homestay|villa|apartment|motel|inn|отель|гостиниц|резорт|хостел|вилл|апарт|khách sạn|nhà nghỉ/i.test(чисто) ? '' : ' hotel';
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(чисто + жильё + ', ' + город);
 }
 function картаВФорме(p){
   const a=document.getElementById(p+'HotelMap'), row=document.getElementById(p+'HotelMapRow'); if(!a) return;
