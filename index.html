@@ -810,6 +810,24 @@ const TOURS = [
     rows:[{label:'За человека',usd:160},{label:'Ребёнок — цена та же',usd:160}] },
   { icon:'🏮', name:'Нячанг — Дананг и Хойан из Нячанга, два дня', key:'НТ ДАНАНГ ХОЙАН', noPlat:true, commRate:0.05,
     rows:[{label:'За человека',usd:210},{label:'Ребёнок — цена та же',usd:210}] },
+  // ── ХОШИМИН ──
+  // Туры Ирины Стольной (цены от 30.10). Цена — за всю группу и зависит от
+  // числа взрослых: group[n-1] — сумма за n человек. В брони тур
+  // собирается заново под число взрослых (турБрони), в прайсе видна вся шкала.
+  // Дети до 6 бесплатно, 7–9 — фиксированная доплата, с 10 — как взрослые.
+  // Наша доля — 5 % от суммы без округления.
+  { icon:'🏛', name:'Хошимин — обзорная по городу', key:'ХШ ОБЗОРНАЯ', noPlat:true, commRate:0.05, childAdd:30,
+    group:[120,140,180,200,250,270,315,360,315,350,330,360,390],
+    rows:[{label:'1 чел.',usd:120,flat:true},{label:'2 чел.',usd:140,flat:true},{label:'3 чел.',usd:180,flat:true},{label:'4 чел.',usd:200,flat:true},{label:'5 чел.',usd:250,flat:true},{label:'6 чел.',usd:270,flat:true},{label:'7 чел.',usd:315,flat:true},{label:'8 чел.',usd:360,flat:true},{label:'9 чел.',usd:315,flat:true},{label:'10 чел.',usd:350,flat:true},{label:'11 чел.',usd:330,flat:true},{label:'12 чел.',usd:360,flat:true},{label:'13 чел.',usd:390,flat:true},{label:'Ребёнок 7–9 — доплата',usd:30}] },
+  { icon:'🛶', name:'Хошимин — дельта Меконга', key:'ХШ МЕКОНГ', noPlat:true, commRate:0.05, childAdd:40,
+    group:[220,240,260,280,300,340,380,420,420,450,495,540,585],
+    rows:[{label:'1 чел.',usd:220,flat:true},{label:'2 чел.',usd:240,flat:true},{label:'3 чел.',usd:260,flat:true},{label:'4 чел.',usd:280,flat:true},{label:'5 чел.',usd:300,flat:true},{label:'6 чел.',usd:340,flat:true},{label:'7 чел.',usd:380,flat:true},{label:'8 чел.',usd:420,flat:true},{label:'9 чел.',usd:420,flat:true},{label:'10 чел.',usd:450,flat:true},{label:'11 чел.',usd:495,flat:true},{label:'12 чел.',usd:540,flat:true},{label:'13 чел.',usd:585,flat:true},{label:'Ребёнок 7–9 — доплата',usd:40}] },
+  { icon:'🪖', name:'Хошимин — тоннели Кути', key:'ХШ КУТИ', noPlat:true, commRate:0.05, childAdd:30,
+    group:[170,170,200,240,260,280,300,320,340,360],
+    rows:[{label:'1 чел.',usd:170,flat:true},{label:'2 чел.',usd:170,flat:true},{label:'3 чел.',usd:200,flat:true},{label:'4 чел.',usd:240,flat:true},{label:'5 чел.',usd:260,flat:true},{label:'6 чел.',usd:280,flat:true},{label:'7 чел.',usd:300,flat:true},{label:'8 чел.',usd:320,flat:true},{label:'9 чел.',usd:340,flat:true},{label:'10 чел.',usd:360,flat:true},{label:'Ребёнок 7–9 — доплата',usd:30}] },
+  { icon:'🚢', name:'Хошимин — круиз по реке Сайгон', key:'ХШ КРУИЗ', noPlat:true, commRate:0.05, childAdd:35,
+    group:[130,130,170,210,260,310,360,410,460,510,560,610,660],
+    rows:[{label:'1 чел.',usd:130,flat:true},{label:'2 чел.',usd:130,flat:true},{label:'3 чел.',usd:170,flat:true},{label:'4 чел.',usd:210,flat:true},{label:'5 чел.',usd:260,flat:true},{label:'6 чел.',usd:310,flat:true},{label:'7 чел.',usd:360,flat:true},{label:'8 чел.',usd:410,flat:true},{label:'9 чел.',usd:460,flat:true},{label:'10 чел.',usd:510,flat:true},{label:'11 чел.',usd:560,flat:true},{label:'12 чел.',usd:610,flat:true},{label:'13 чел.',usd:660,flat:true},{label:'Ребёнок 7–9 — доплата',usd:35}] },
 ];
 
 // Направление тура определяется по ключу: у партнёрских маршрутов он
@@ -1041,6 +1059,16 @@ function комиссияТура(tour, adults, children, baseUSD){
   return baseUSD > 0 ? Math.ceil(baseUSD * COMM_DEFAULT * 2) / 2 : 0;
 }
 
+// Тур в брони. У групповых туров Хошимина цена за всю группу зависит от
+// числа взрослых — собираем тур из одной строки «Группа N чел.» и доплаты
+// за детей. Остальные туры возвращаются как есть.
+function турБрони(key, adults){
+  const t=TOURS.find(x=>x.key===key);
+  if(!t||!t.group) return t;
+  const n=Math.min(Math.max(adults||1,1),t.group.length);
+  return {...t, rows:[{label:'Группа '+n+' чел.',usd:t.group[n-1],flat:true},{label:t.rows[t.rows.length-1].label,usd:t.childAdd}]};
+}
+
 // Очень расширенный алиас-словарь маршрутов
 const ROUTE_ALIASES = {
   'ХЮЭ': ['хюэ','хуэ','hue','hué','хье','хьюэ','хуэй','хюэй','хьюй','hyue','хuэ','хue','huê','хюе','хyэ','hyé'],
@@ -1237,7 +1265,7 @@ function buildPriceCalc(t, idx) {
         <button class="calc-btn" onclick="pCalcChange(${idx},'r${i}',1)">+</button>
       </div>
     </div>`).join('');
-  const pExtraUSD=t.rows.find(r=>r.flat)?(t.rows.find(r=>!r.flat)?.usd||t.extraPerPerson||0):0;
+  const pExtraUSD=(t.rows.find(r=>r.flat)&&!t.group)?(t.rows.find(r=>!r.flat)?.usd||t.extraPerPerson||0):0;
   const extraRow=pExtraUSD?`
     <div class="calc-row-p" id="pc-${idx}-extraRow" style="display:none">
       <div class="calc-label-p" style="color:var(--accent)" id="pc-${idx}-extraLabel">+ Доп. взр. ${pExtraUSD}$/чел.</div>
@@ -1822,7 +1850,7 @@ function bCardHTML(b){
         ${(()=>{const m=(b.notes||'').match(МЕТКА_ИСТОЧНИКА);const s=m?SOURCES[+m[1]]:'';return s?`<div class="b-exp-item"><label>Откуда</label><span>${экран(s)}</span></div>`:'';})()}
       </div>
       ${(()=>{
-        const tour=TOURS.find(t=>t.key===b.route);
+        const tour=турБрони(b.route,b.adults);
         if(!tour||!currentRates) return '';
         const R=currentRates;
         const _dp=bDetectPlatform(b);const _dpl=_dp?PLATFORMS.find(x=>x.name===_dp):null;
@@ -1839,12 +1867,12 @@ function bCardHTML(b){
         } else {
         if(b.adults){
           if(flatRow0){
-            lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Индивидуально</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${aPrice} $ = ${fmtUSD(aPrice)}</span></div>`;
+            lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">${tour.group?tour.rows[0].label:'Индивидуально'}</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${aPrice} $ = ${fmtUSD(aPrice)}</span></div>`;
           } else {
             lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Взрослый × ${b.adults}</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${b.adults} × ${aPrice} $ = ${fmtUSD(aPrice*b.adults)}</span></div>`;
           }
         }
-        if(b.children&&tour.rows[1]&&!flatRow0) lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Ребёнок × ${b.children}</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${b.children} × ${cPrice} $ = ${fmtUSD(cPrice*b.children)}</span></div>`;
+        if(b.children&&tour.rows[1]&&(!flatRow0||tour.group)) lines+=`<div style="display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border2)"><span style="color:var(--muted)">Ребёнок × ${b.children}</span><span style="font-family:'DM Mono',monospace;color:var(--green)">${b.children} × ${cPrice} $ = ${fmtUSD(cPrice*b.children)}</span></div>`;
         }
         if(tour.tickets&&tour.tickets.length){
           let tkLines='';
@@ -1893,7 +1921,7 @@ function bToggle(id){
 // Init inline calc counts from booking data
 function bcUpdateInit(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
-  const tour=TOURS.find(t=>t.key===b.route); if(!tour) return;
+  const tour=турБрони(b.route,b.adults); if(!tour) return;
   const tid='bc_'+id;
   if(!calcCounts[tid]) calcCounts[tid]={};
   // pre-fill from booking pax if not already set
@@ -1920,7 +1948,7 @@ function bcPriceChange(bid){
 function bcUpdate(bid){
   const tid='bc_'+bid;
   const b=allBookings.find(x=>x.id==bid); if(!b) return;
-  const tour=TOURS.find(t=>t.key===b.route); if(!tour||!currentRates) return;
+  const tour=турБрони(b.route,b.adults); if(!tour||!currentRates) return;
   const R=currentRates; const cc=calcCounts[tid]||{};
 
   // читаем редактируемые цены без перерисовки
@@ -1971,7 +1999,7 @@ function bcUpdate(bid){
 function bcCopy(bid){
   const tid='bc_'+bid;
   const b=allBookings.find(x=>x.id==bid); if(!b) return;
-  const tour=TOURS.find(t=>t.key===b.route);
+  const tour=турБрони(b.route,b.adults);
   const resEl=document.getElementById(`${tid}-result`);
   const curs=bcGetCurs(bid); const cF=curs.length?curs:['usd'];
   const rows=JSON.parse(resEl.dataset.rows||'[]');
@@ -2032,7 +2060,7 @@ function bTicketCount(b, i){
 }
 
 function bBreakdown(b){
-  const tour=TOURS.find(t=>t.key===b.route);
+  const tour=турБрони(b.route,b.adults);
   if(!tour||!currentRates) return [];
   const _dp=bDetectPlatform(b); const _dpl=_dp?PLATFORMS.find(x=>x.name===_dp):null;
   const _ba=tour.rows[0].usd,_bc=tour.rows[1]?tour.rows[1].usd:0;
@@ -2047,10 +2075,10 @@ function bBreakdown(b){
     if(_fr) out.push({label:'Индивидуально',val:fmtUSD(_platP(_fr,_dpl))});
   } else {
     if(b.adults){
-      if(flatRow0) out.push({label:'Индивидуально',val:fmtUSD(aPrice)});
+      if(flatRow0) out.push({label:tour.group?tour.rows[0].label:'Индивидуально',val:fmtUSD(aPrice)});
       else out.push({label:'Взрослый × '+b.adults,val:b.adults+' × '+aPrice+' $ = '+fmtUSD(aPrice*b.adults)});
     }
-    if(b.children&&tour.rows[1]&&!flatRow0) out.push({label:'Ребёнок × '+b.children,val:b.children+' × '+cPrice+' $ = '+fmtUSD(cPrice*b.children)});
+    if(b.children&&tour.rows[1]&&(!flatRow0||tour.group)) out.push({label:'Ребёнок × '+b.children,val:b.children+' × '+cPrice+' $ = '+fmtUSD(cPrice*b.children)});
   }
   if(tour.tickets&&tour.tickets.length){
     const tk=[];
@@ -2420,7 +2448,7 @@ function bEdit(id){
   bUpdatePreview();
   // Восстановить галочку Индивидуально
   if(b.isIndividual||(b.notes||'').endsWith('​')){
-    const _itour=TOURS.find(t=>t.key===b.route);
+    const _itour=турБрони(b.route,b.adults);
     if(_itour){
       const _fi=_itour.rows.reduce((acc,row,i)=>(i>=1&&row.flat)?[...acc,i]:acc,[]);
       if(_fi.length>0){const cb=document.getElementById('fFlatCheck'+_fi[_fi.length-1]);if(cb){cb.checked=true;fFlatToggle(_fi[_fi.length-1]);}}
@@ -2438,7 +2466,7 @@ function bEdit(id){
     fRecalc();
   }
   // восстановить кастомные цены из сохранённых данных брони
-  const _ctour=TOURS.find(t=>t.key===b.route);
+  const _ctour=турБрони(b.route,b.adults);
   if(_ctour){
     if(b.customPriceAdult&&b.customPriceAdult!==_ctour.rows[0].usd){
       const _ce0=document.getElementById('fPriceRow0');
@@ -2745,12 +2773,12 @@ function bUpdatePreview(){
   const children=parseInt(document.getElementById(p+'Children').value)||0;
   const infants=parseInt(document.getElementById(p+'Infants').value)||0;
   // Комиссия: цена тура × кол-во ÷ 10, округление вверх до 0.5$
-  const tour=TOURS.find(t=>t.key===route);
+  const tour=турБрони(route,adults);
   let commRaw=0;
   if(tour){
     const flatRow0=tour.rows[0]&&tour.rows[0].flat;
     if(flatRow0){
-      commRaw=tour.rows[0].usd;
+      commRaw=tour.rows[0].usd+(tour.group?tour.childAdd*children:0);
     } else {
       commRaw+=tour.rows[0].usd*adults;
       if(tour.rows[1]&&!tour.rows[1].flat) commRaw+=tour.rows[1].usd*children;
@@ -2780,7 +2808,7 @@ function fSetPlatformPrices(rate){
   fCurrentPlatRate=rate||0;
   fPlatformName=rate===0.22?'Tripster':rate===0.24?'Sputnik8':'База';
   const route=document.getElementById('fRoute').value;
-  const tour=TOURS.find(t=>t.key===route); if(!tour) return;
+  const tour=турБрони(route,parseInt(document.getElementById('fAdults').value)||0); if(!tour) return;
   tour.rows.forEach((row,i)=>{const el=document.getElementById(`fPriceRow${i}`); if(el) el.value=platPrice(row,rate,tour)||'';});
   const fExtraPlat=extraPrice(tour, rate);
   tour.rows.forEach((row,i)=>{if(row.flat){const ep=document.getElementById(`fExtraPrice${i}`);if(ep)ep.value=fExtraPlat||'';}});
@@ -2791,7 +2819,7 @@ function pfSetPlatformPrices(rate){
   pfCurrentPlatRate=rate||0;
   pfPlatformName=rate===0.22?'Tripster':rate===0.24?'Sputnik8':'База';
   const route=document.getElementById('pfRoute').value;
-  const tour=TOURS.find(t=>t.key===route); if(!tour) return;
+  const tour=турБрони(route,parseInt(document.getElementById('pfAdults').value)||0); if(!tour) return;
   tour.rows.forEach((row,i)=>{const el=document.getElementById(`pfPriceRow${i}`); if(el) el.value=platPrice(row,rate,tour)||'';});
   const pfExtraPlat=extraPrice(tour, rate);
   tour.rows.forEach((row,i)=>{if(row.flat){const ep=document.getElementById(`pfExtraPrice${i}`);if(ep)ep.value=pfExtraPlat||'';}});
@@ -2814,14 +2842,14 @@ const PF_PLAT_BTNS=`<div style="display:flex;gap:5px;margin-bottom:8px;flex-wrap
 function fDrawCalcRows(tour, adults, children){
   // Правленые вручную цены переносим только внутри одного маршрута.
   // Иначе цена Хюэ переезжала в Ба На Хиллс и выглядела как своя.
-  const _keep=(fDrawnRoute===tour.key);
+  const _keep=(fDrawnRoute===tour.key)&&!tour.group;
   const _sv={};
   if(_keep) tour.rows.forEach((_,i)=>{const _e=document.getElementById('fPriceRow'+i);if(_e&&_e.value!=='' &&parseFloat(_e.value)!==tour.rows[i].usd)_sv[i]=_e.value;});
   fDrawnRoute=tour.key;
   // Партнёрских туров нет на площадках — переключатель (у noSp8 только Трипстер)
   // там только сбивал бы с толку и подставлял цены площадок в чужой тур.
   let rowsHTML=tour.noPlat?'':tour.noSp8?PLAT_BTNS.replace(/<button onclick="fSetPlatformPrices\(0\.24\)".*?<\/button>/,''):PLAT_BTNS;
-  const fExtraUSD=tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0;
+  const fExtraUSD=tour.group?0:(tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0);
   const fExtraBtnStyle='width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:16px;cursor:pointer';
   tour.rows.forEach((row,i)=>{
     const count=i===0?adults:i===1?children:0;
@@ -3000,7 +3028,7 @@ function fUpdateCalc(){
     fCalcRoute=''; fOtherRecalc(); return;
   }
   document.getElementById('fOtherPriceSection').style.display='none';
-  const tour=TOURS.find(t=>t.key===route);
+  const tour=турБрони(route,adults);
   const fAllFlat=tour&&tour.rows.every(r=>r.flat);
   if(!tour||!currentRates||((!adults&&!children)&&!fAllFlat)){block.style.display='none';fCalcRoute='';return;}
   block.style.display='block';
@@ -3038,7 +3066,7 @@ function fRecalc(){
   const adults=parseInt(document.getElementById('fAdults').value)||0;
   const children=parseInt(document.getElementById('fChildren').value)||0;
   const currency=document.getElementById('fCurrency').value;
-  const tour=TOURS.find(t=>t.key===route); if(!tour||!currentRates) return;
+  const tour=турБрони(route,adults); if(!tour||!currentRates) return;
   const R=currentRates;
   const fmtVal=(usd)=>currency==='USD'?fmtUSD(usd):currency==='RUB'?fmtRUB(calcFromUSD(usd,R).rub):currency==='USDT'?fmtUSDT(calcFromUSD(usd,R).usdt):fmtVND(calcFromUSD(usd,R).vnd);
   const hasFlatChecked=tour.rows.some((row,i)=>i>=1&&row.flat&&document.getElementById(`fFlatCheck${i}`)?.checked);
@@ -3156,7 +3184,7 @@ function pfUpdateCalc(){
     pfCalcRoute=''; pfOtherRecalc(); return;
   }
   document.getElementById('pfOtherPriceSection').style.display='none';
-  const tour=TOURS.find(t=>t.key===route);
+  const tour=турБрони(route,adults);
   const pfAllFlat=tour&&tour.rows.every(r=>r.flat);
   if(!tour||!currentRates||((!adults&&!children)&&!pfAllFlat)){block.style.display='none';pfCalcRoute='';return;}
   block.style.display='block';
@@ -3166,7 +3194,7 @@ function pfUpdateCalc(){
     // Партнёрских туров нет на площадках — переключатель (у noSp8 только Трипстер)
     // там только сбивал бы с толку и подставлял цены площадок в чужой тур.
     let rowsHTML=tour.noPlat?'':tour.noSp8?PF_PLAT_BTNS.replace(/<button onclick="pfSetPlatformPrices\(0\.24\)".*?<\/button>/,''):PF_PLAT_BTNS;
-    const pfExtraUSD=tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0;
+    const pfExtraUSD=tour.group?0:(tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0);
     const pfExtraBtnStyle='width:24px;height:24px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:16px;cursor:pointer';
     tour.rows.forEach((row,i)=>{
       const count=i===0?adults:i===1?children:0;
@@ -3293,7 +3321,7 @@ function pfRecalc(){
   const adults=parseInt(document.getElementById('pfAdults').value)||0;
   const children=parseInt(document.getElementById('pfChildren').value)||0;
   const currency=document.getElementById('pfCurrency').value;
-  const tour=TOURS.find(t=>t.key===route); if(!tour||!currentRates) return;
+  const tour=турБрони(route,adults); if(!tour||!currentRates) return;
   const R=currentRates;
   const fmtVal=(usd)=>currency==='USD'?fmtUSD(usd):currency==='RUB'?fmtRUB(calcFromUSD(usd,R).rub):currency==='USDT'?fmtUSDT(calcFromUSD(usd,R).usdt):fmtVND(calcFromUSD(usd,R).vnd);
   const hasFlatChecked=tour.rows.some((row,i)=>i>=1&&row.flat&&document.getElementById(`pfFlatCheck${i}`)?.checked);
@@ -3371,7 +3399,7 @@ function bGetFormData(){
   const route=document.getElementById(p+'Route').value;
   const adults=parseInt(document.getElementById(p+'Adults').value)||0;
   const children=parseInt(document.getElementById(p+'Children').value)||0;
-  const tour=TOURS.find(t=>t.key===route);
+  const tour=турБрони(route,adults);
   let routeName=route, adultUSD=0, childUSD=0, comm=0, isIndividual=false;
   if(route==='ДРУГОЕ'){
     const on=document.getElementById(p+'OtherName')?.value.trim();
@@ -3389,7 +3417,7 @@ function bGetFormData(){
     const row1=tour&&tour.rows[1];
     childUSD=parseFloat(document.getElementById(p+'PriceRow1')?.value)||(row1&&!row1.flat?row1.usd:0);
     const flatRow0=tour&&tour.rows[0]&&tour.rows[0].flat;
-    let tourUSD=flatRow0?adultUSD:(adultUSD*adults+childUSD*children);
+    let tourUSD=flatRow0?adultUSD+(tour.group?childUSD*children:0):(adultUSD*adults+childUSD*children);
     // Индивидуально в приоритете: если отмечен flat-чекбокс (i>=1) — заменяем tourUSD
     if(tour){
       let flatActive=false; let flatSum=0;
@@ -3406,7 +3434,7 @@ function bGetFormData(){
       if(flatActive){tourUSD=flatSum; isIndividual=true;}
       else if(flatRow0) isIndividual=true;
     }
-    if(tour){let baseComm=isIndividual?(flatRow0?tour.rows[0].usd:tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(p+'FlatCheck'+i)?.checked?r.usd:0),0)):(flatRow0?tour.rows[0].usd:adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0));comm=комиссияТура(tour, adults, children, baseComm);}
+    if(tour){let baseComm=tour.group?tour.rows[0].usd+tour.childAdd*children:isIndividual?(flatRow0?tour.rows[0].usd:tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(p+'FlatCheck'+i)?.checked?r.usd:0),0)):(flatRow0?tour.rows[0].usd:adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0));comm=комиссияТура(tour, adults, children, baseComm);}
   }
   return {
     id:editingId,
