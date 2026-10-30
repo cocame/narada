@@ -176,6 +176,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .hotel-copy:hover{border-color:var(--accent2);color:var(--accent2)}
 .hotel-map-row{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px}
 .hotel-map-row[hidden]{display:none}
+.hotel-url{font:11px 'DM Mono',monospace;color:var(--muted);margin-top:2px;user-select:all}
 .tr-route{display:grid;gap:8px;margin-bottom:8px}
 .tr-route label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
 .tr-route select,.tr-route input{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;box-sizing:border-box}
@@ -961,10 +962,23 @@ function ссылкаНаОтельВГороде(отель, регион){
   const запрос = (чисто + жильё + ' ' + город).replace(/[,;]+/g,' ').trim().split(/\s+/).map(encodeURIComponent).join('+');
   return 'https://www.google.com/maps/search/' + запрос;
 }
+// Короткая ссылка появляется в форме сама, через секунду после того, как
+// перестали печатать: видно ссылку, её можно сразу скопировать. Готовые
+// ссылки помним — при сохранении второй раз в is.gd не ходим.
+const КОРОТКИЕ={};
+const таймерОтеля={};
 function картаВФорме(p){
   const a=document.getElementById(p+'HotelMap'), row=document.getElementById(p+'HotelMapRow'); if(!a) return;
   const u=ссылкаНаОтель(document.getElementById(p+'Hotel').value, (document.getElementById(p+'Route')||{}).value);
-  row.hidden=!u; if(u) a.href=u;
+  row.hidden=!u; if(!u) return;
+  a.href=КОРОТКИЕ[u]||u; a.textContent='📍 '+(КОРОТКИЕ[u]||'Открыть на карте');
+  if(КОРОТКИЕ[u]||/is\.gd\//.test(u)) return;
+  clearTimeout(таймерОтеля[p]);
+  таймерОтеля[p]=setTimeout(async()=>{
+    const к=await короткаяСсылка(u);
+    if(к!==u) КОРОТКИЕ[u]=к;
+    if(ссылкаНаОтель(document.getElementById(p+'Hotel').value,(document.getElementById(p+'Route')||{}).value)===u){ a.href=к; a.textContent='📍 '+к; }
+  },1000);
 }
 // Ссылка на карту длинная и повторяет название отеля. При сохранении брони
 // делаем из неё короткую через is.gd и дописываем к отелю: дальше везде —
@@ -985,11 +999,12 @@ async function отельСоСсылкой(отель, маршрут){
   const о=String(отель||'').trim();
   if(!о || РЕ_ССЫЛКА.test(о)) return о;
   const u=ссылкаНаОтель(о, маршрут); if(!u) return о;
-  return о+' '+await короткаяСсылка(u);
+  return о+' '+(КОРОТКИЕ[u]||await короткаяСсылка(u));
 }
 // Водителю копируем так: название отеля, ниже ссылка на карту.
 function копироватьОтель(отель, маршрут){
-  const u=ссылкаНаОтель(отель, маршрут); if(!u) return;
+  let u=ссылкаНаОтель(отель, маршрут); if(!u) return;
+  u=КОРОТКИЕ[u]||u;
   // номер комнаты водителю не нужен
   const имя=названиеОтеля(отель).replace(/[,;]?\s*(к\.|комн\w*|номер|room|rm\.?|#)\s*\d+\w*/gi,'').trim();
   copyText(имя+'\n'+u);
@@ -997,7 +1012,8 @@ function копироватьОтель(отель, маршрут){
 function отельСКартой(отель, маршрут){
   if(!отель) return '—';
   const u = ссылкаНаОтель(отель, маршрут);
-  return u ? `<a href="${u}" target="_blank" rel="noopener" class="hotel-map" onclick="event.stopPropagation()">📍 ${экран(названиеОтеля(отель))}</a> <button type="button" class="hotel-copy" title="Скопировать ссылку на карту — отправить водителю" onclick="event.stopPropagation();копироватьОтель(${экран(JSON.stringify(отель))},${экран(JSON.stringify(маршрут||''))})">Копировать ссылку</button>` : экран(отель);
+  const видна = /is\.gd\//.test(u) ? `<div class="hotel-url">${экран(u)}</div>` : '';
+  return u ? `<a href="${u}" target="_blank" rel="noopener" class="hotel-map" onclick="event.stopPropagation()">📍 ${экран(названиеОтеля(отель))}</a>${видна} <button type="button" class="hotel-copy" title="Скопировать ссылку на карту — отправить водителю" onclick="event.stopPropagation();копироватьОтель(${экран(JSON.stringify(отель))},${экран(JSON.stringify(маршрут||''))})">Копировать ссылку</button>` : экран(отель);
 }
 // Метка города на карточке брони — видно и в свёрнутом виде.
 // Своё «Другое» и трансфер без города, метки у них нет.
