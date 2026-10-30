@@ -163,6 +163,9 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .b-card-main{display:grid;grid-template-columns:1.1fr 0.45fr 1fr 20px 20px 20px 20px 50px 45px;gap:3px;padding:10px 12px;align-items:center;cursor:pointer}
 .b-card-amount{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;text-align:right;white-space:nowrap}
 .b-card-route{font-weight:600;font-size:15px}
+.hotel-map{color:var(--accent2);text-decoration:none;font-weight:500}
+.hotel-map:hover{text-decoration:underline}
+#fHotelMap,#pfHotelMap{display:inline-block;margin-top:6px;font-size:12px}
 .b-city{display:inline-block;margin-right:6px;padding:2px 6px;border-radius:4px;color:#fff;font:700 10px 'DM Mono',monospace;letter-spacing:.04em;vertical-align:2px}
 .b-card-pax{font-size:12px;color:var(--muted)}
 .b-card-contact{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -406,7 +409,7 @@ body.ro .ro-badge{display:inline-block}
             </div>
           </div>
           <div class="form-group full"><label>Контакт</label><input type="text" id="fContact" placeholder="Иван, +79001234567"></div>
-          <div class="form-group full"><label>Отель</label><input type="text" id="fHotel" placeholder="Tourane Hotel, к. 204"></div>
+          <div class="form-group full"><label>Отель</label><input type="text" id="fHotel" placeholder="Tourane Hotel, к. 204" oninput="картаВФорме('f')"><a id="fHotelMap" class="hotel-map" target="_blank" rel="noopener" hidden>📍 Открыть на карте</a></div>
           <div class="form-group"><label>Валюта</label>
             <select id="fCurrency" onchange="fCurrencyChanged('f')"><option>USD</option><option>VND</option><option>RUB</option><option>USDT</option></select>
           </div>
@@ -509,7 +512,7 @@ body.ro .ro-badge{display:inline-block}
               </div>
             </div>
             <div class="form-group full"><label>Контакт</label><input type="text" id="pfContact"></div>
-            <div class="form-group full"><label>Отель</label><input type="text" id="pfHotel"></div>
+            <div class="form-group full"><label>Отель</label><input type="text" id="pfHotel" oninput="картаВФорме('pf')"><a id="pfHotelMap" class="hotel-map" target="_blank" rel="noopener" hidden>📍 Открыть на карте</a></div>
             <div class="form-group"><label>Валюта</label>
               <select id="pfCurrency" onchange="fCurrencyChanged('pf')"><option>USD</option><option>VND</option><option>RUB</option><option>USDT</option></select>
             </div>
@@ -868,6 +871,26 @@ function подписьМаршрута(маршрут){
   if(тур) return названиеТура(тур);
   if((маршрут||'').startsWith('ТРАНСФЕР')) return 'Трансфер' + маршрут.slice(8);
   return маршрут;
+}
+// Отель → ссылка на Google Карты, чтобы сразу видеть, где он и нужна ли
+// доплата за трансфер. Город берём по туру; номер комнаты из запроса убираем.
+const ГОРОД_ДЛЯ_КАРТЫ = {'Дананг':'Da Nang','Фукуок':'Phu Quoc','Нячанг':'Nha Trang','Хошимин':'Ho Chi Minh City','Ханой':'Hanoi','Муйне':'Mui Ne'};
+function ссылкаНаОтель(отель, маршрут){
+  const чисто = String(отель||'').replace(/[,;]?\s*(к\.|комн\w*|номер|room|rm\.?|#)\s*\d+\w*/gi,'').trim();
+  if(!чисто) return '';
+  const тур = TOURS.find(t => t.key === маршрут);
+  const город = тур ? (ГОРОД_ДЛЯ_КАРТЫ[регионТура(тур)] || 'Vietnam') : 'Vietnam';
+  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(чисто + ', ' + город);
+}
+function картаВФорме(p){
+  const a=document.getElementById(p+'HotelMap'); if(!a) return;
+  const u=ссылкаНаОтель(document.getElementById(p+'Hotel').value, (document.getElementById(p+'Route')||{}).value);
+  a.hidden=!u; if(u) a.href=u;
+}
+function отельСКартой(отель, маршрут){
+  if(!отель) return '—';
+  const u = ссылкаНаОтель(отель, маршрут);
+  return u ? `<a href="${u}" target="_blank" rel="noopener" class="hotel-map" onclick="event.stopPropagation()">📍 ${экран(отель)}</a>` : экран(отель);
 }
 // Метка города на карточке брони — видно и в свёрнутом виде.
 // Своё «Другое» и трансфер без города, метки у них нет.
@@ -1638,7 +1661,7 @@ function bCardHTML(b){
     <div class="b-card-exp" id="bexp-${b.id}">
       <div class="b-exp-grid">
         <div class="b-exp-item"><label>Контакт</label><span>${b.contact||'—'}</span></div>
-        <div class="b-exp-item"><label>Отель</label><span>${b.hotel||'—'}</span></div>
+        <div class="b-exp-item"><label>Отель</label><span>${отельСКартой(b.hotel, b.route)}</span></div>
         <div class="b-exp-item"><label>Валюта</label><span>${b.currency||'—'}</span></div>
         <div class="b-exp-item"><label>Оплата</label><span>${b.payMethod||'—'}</span></div>
         <div class="b-exp-item"><label>Сумма</label><span>${b.totalAmount||'—'}${b.payStatus==='paid'?`<span style="color:var(--green);font-size:10px;margin-left:6px">оплачено${b.paidAt?' '+shortDate(b.paidAt):''}</span>`:''}</span></div>
@@ -2200,7 +2223,7 @@ function bEdit(id){
   document.getElementById('fChildren').value=b.children||0;
   document.getElementById('fInfants').value=b.infants||0;
   document.getElementById('fContact').value=b.contact||'';
-  document.getElementById('fHotel').value=b.hotel||'';
+  document.getElementById('fHotel').value=b.hotel||''; картаВФорме('f');
   document.getElementById('fCurrency').value=b.currency||'VND';
   document.getElementById('fPayMethod').value=b.payMethod||'Наличные';
   document.getElementById('fAmount').value=b.totalAmount||'';
@@ -2550,6 +2573,7 @@ function mSwitchTab(tab){
   document.getElementById('mPanelPaste').style.display=tab==='paste'?'':'none';
 }
 function bUpdatePreview(){
+  картаВФорме('f'); картаВФорме('pf');
   const p=mTab==='manual'?'f':'pf';
   const route=document.getElementById(p+'Route').value;
   const adults=parseInt(document.getElementById(p+'Adults').value)||0;
@@ -3267,7 +3291,7 @@ function bRepeat(id){
   document.getElementById('fChildren').value=b.children||0;
   document.getElementById('fInfants').value=b.infants||0;
   document.getElementById('fContact').value=b.contact||'';
-  document.getElementById('fHotel').value=b.hotel||'';
+  document.getElementById('fHotel').value=b.hotel||''; картаВФорме('f');
   document.getElementById('fCurrency').value=b.currency||'VND';
   document.getElementById('fPayMethod').value=b.payMethod||'Наличные';
   document.getElementById('fAmount').value='';
@@ -3478,7 +3502,7 @@ function bParseText(){
   if(result.adults) document.getElementById('pfAdults').value=result.adults;
   if(result.children) document.getElementById('pfChildren').value=result.children;
   if(result.contact) document.getElementById('pfContact').value=result.contact;
-  if(result.hotel) document.getElementById('pfHotel').value=result.hotel;
+  if(result.hotel) document.getElementById('pfHotel').value=result.hotel; картаВФорме('pf');
   if(result.currency) document.getElementById('pfCurrency').value=result.currency;
   if(result.payMethod) document.getElementById('pfPayMethod').value=result.payMethod;
   if(result.totalAmount) document.getElementById('pfAmount').value=result.totalAmount.trim();
