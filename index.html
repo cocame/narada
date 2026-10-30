@@ -1853,11 +1853,7 @@ function bSetFilter(f){
 // Короткие ссылки для «Гиду» заранее: на телефоне буфер не ждёт сети после нажатия
 function прогретьСсылки(){
   for(const b of allBookings||[]){
-    if((b.route||'').startsWith('ТРАНСФЕР')){
-      const г=городТрансфера(b.route);
-      (b.route.split(': ')[1]||'').split(/\s*—\s*/).filter(x=>x&&!ТОЧКИ_VI[x]).forEach(x=>короче(ссылкаНаОтельВГороде(x.trim(),г)));
-    }
-    if(b.hotel) короче(ссылкаНаОтель(b.hotel,b.route));
+    if(b.hotel && !(b.route||'').startsWith('ТРАНСФЕР')) короче(ссылкаНаОтель(b.hotel,b.route));
   }
 }
 function bRender(){
@@ -2348,16 +2344,13 @@ async function bCopyGuide(id){
   // Трансфер: полный маршрут «откуда — куда» и карта для каждого адреса/отеля
   if((b.route||'').startsWith('ТРАНСФЕР')){
     const путь=(b.route.split(': ')[1]||'').split(/\s*—\s*/).map(x=>x.trim()).filter(Boolean);
-    const город=городТрансфера(b.route);
     ru[1]='Трансфер: '+путь.join(' — ');
     vi[1]='Đưa đón: '+путь.map(x=>ТОЧКИ_VI[x]||x).join(' — ');
     // на трансфере гида нет, а отель уже в маршруте — лишние строки убираем
     ru[3]=pax?guidePeople(pax):'—'; vi[3]=pax?pax+' người':'—';
     if(!b.hotel){ ru.splice(2,1); vi.splice(2,1); }
-    // аэропорт и вокзал гид знает — карта только для отелей и адресов, короткой ссылкой
-    const карты=await Promise.all(путь.filter(x=>!ТОЧКИ_VI[x]).map(async x=>'📍 '+названиеОтеля(x)+'\n'+await короче(ссылкаНаОтельВГороде(x,город))));
-    const отельКарта=b.hotel&&!путь.includes(названиеОтеля(b.hotel))?['📍 '+await короче(ссылкаНаОтель(b.hotel,b.route))]:[];
-    copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n')+(карты.concat(отельКарта).length?'\n'+карты.concat(отельКарта).join('\n'):''));
+    // ссылка на карту гиду не нужна — она мне для расчёта трансфера
+    copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n'));
     return;
   }
   // Ссылка на отель в Google Картах — водителю и гиду, чтобы не искать вручную
