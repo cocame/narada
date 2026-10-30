@@ -419,7 +419,7 @@ body.ro .ro-badge{display:inline-block}
             </div>
           </div>
           <div class="form-group full"><label>Контакт</label><input type="text" id="fContact" placeholder="Иван, +79001234567"></div>
-          <div class="form-group full"><label>Отель</label><input type="text" id="fHotel" placeholder="Tourane Hotel, к. 204" oninput="картаВФорме('f')"><span id="fHotelMapRow" class="hotel-map-row" hidden><a id="fHotelMap" class="hotel-map" target="_blank" rel="noopener">📍 Открыть на карте</a><button type="button" class="hotel-copy" onclick="copyText(document.getElementById('fHotelMap').href)">Копировать ссылку</button></span><div class="hotel-hint">Если отелей с таким названием несколько — найди нужный на карте, «Поделиться» → скопируй ссылку и вставь сюда после названия.</div></div>
+          <div class="form-group full"><label>Отель</label><input type="text" id="fHotel" placeholder="Tourane Hotel, к. 204" oninput="картаВФорме('f')"><span id="fHotelMapRow" class="hotel-map-row" hidden><a id="fHotelMap" class="hotel-map" target="_blank" rel="noopener">📍 Открыть на карте</a><button type="button" class="hotel-copy" onclick="копироватьОтель(document.getElementById('fHotel').value,(document.getElementById('fRoute')||{}).value)">Копировать ссылку</button></span><div class="hotel-hint">Если отелей с таким названием несколько — найди нужный на карте, «Поделиться» → скопируй ссылку и вставь сюда после названия.</div></div>
           <div class="form-group"><label>Валюта</label>
             <select id="fCurrency" onchange="fCurrencyChanged('f')"><option>USD</option><option>VND</option><option>RUB</option><option>USDT</option></select>
           </div>
@@ -522,7 +522,7 @@ body.ro .ro-badge{display:inline-block}
               </div>
             </div>
             <div class="form-group full"><label>Контакт</label><input type="text" id="pfContact"></div>
-            <div class="form-group full"><label>Отель</label><input type="text" id="pfHotel" oninput="картаВФорме('pf')"><span id="pfHotelMapRow" class="hotel-map-row" hidden><a id="pfHotelMap" class="hotel-map" target="_blank" rel="noopener">📍 Открыть на карте</a><button type="button" class="hotel-copy" onclick="copyText(document.getElementById('pfHotelMap').href)">Копировать ссылку</button></span><div class="hotel-hint">Если отелей с таким названием несколько — найди нужный на карте, «Поделиться» → скопируй ссылку и вставь сюда после названия.</div></div>
+            <div class="form-group full"><label>Отель</label><input type="text" id="pfHotel" oninput="картаВФорме('pf')"><span id="pfHotelMapRow" class="hotel-map-row" hidden><a id="pfHotelMap" class="hotel-map" target="_blank" rel="noopener">📍 Открыть на карте</a><button type="button" class="hotel-copy" onclick="копироватьОтель(document.getElementById('pfHotel').value,(document.getElementById('pfRoute')||{}).value)">Копировать ссылку</button></span><div class="hotel-hint">Если отелей с таким названием несколько — найди нужный на карте, «Поделиться» → скопируй ссылку и вставь сюда после названия.</div></div>
             <div class="form-group"><label>Валюта</label>
               <select id="pfCurrency" onchange="fCurrencyChanged('pf')"><option>USD</option><option>VND</option><option>RUB</option><option>USDT</option></select>
             </div>
@@ -898,17 +898,26 @@ function ссылкаНаОтель(отель, маршрут){
   const город = тур ? (ГОРОД_ДЛЯ_КАРТЫ[регионТура(тур)] || 'Vietnam') : 'Vietnam';
   // Ищем только жильё: «Манго» без уточнения Google находит магазины.
   const жильё = /hotel|resort|hostel|homestay|villa|apartment|motel|inn|отель|гостиниц|резорт|хостел|вилл|апарт|khách sạn|nhà nghỉ/i.test(чисто) ? '' : ' hotel';
-  return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(чисто + жильё + ', ' + город);
+  // Короткий читаемый вид: …/maps/search/Mango+hotel+Da+Nang, без %2C и прочей каши.
+  const запрос = (чисто + жильё + ' ' + город).replace(/[,;]+/g,' ').trim().split(/\s+/).map(encodeURIComponent).join('+');
+  return 'https://www.google.com/maps/search/' + запрос;
 }
 function картаВФорме(p){
   const a=document.getElementById(p+'HotelMap'), row=document.getElementById(p+'HotelMapRow'); if(!a) return;
   const u=ссылкаНаОтель(document.getElementById(p+'Hotel').value, (document.getElementById(p+'Route')||{}).value);
   row.hidden=!u; if(u) a.href=u;
 }
+// Водителю копируем так: название отеля, ниже ссылка на карту.
+function копироватьОтель(отель, маршрут){
+  const u=ссылкаНаОтель(отель, маршрут); if(!u) return;
+  // номер комнаты водителю не нужен
+  const имя=названиеОтеля(отель).replace(/[,;]?\s*(к\.|комн\w*|номер|room|rm\.?|#)\s*\d+\w*/gi,'').trim();
+  copyText(имя+'\n'+u);
+}
 function отельСКартой(отель, маршрут){
   if(!отель) return '—';
   const u = ссылкаНаОтель(отель, маршрут);
-  return u ? `<a href="${u}" target="_blank" rel="noopener" class="hotel-map" onclick="event.stopPropagation()">📍 ${экран(названиеОтеля(отель))}</a> <button type="button" class="hotel-copy" title="Скопировать ссылку на карту — отправить водителю" onclick="event.stopPropagation();copyText('${u}')">Копировать ссылку</button>` : экран(отель);
+  return u ? `<a href="${u}" target="_blank" rel="noopener" class="hotel-map" onclick="event.stopPropagation()">📍 ${экран(названиеОтеля(отель))}</a> <button type="button" class="hotel-copy" title="Скопировать ссылку на карту — отправить водителю" onclick="event.stopPropagation();копироватьОтель(${экран(JSON.stringify(отель))},${экран(JSON.stringify(маршрут||''))})">Копировать ссылку</button>` : экран(отель);
 }
 // Метка города на карточке брони — видно и в свёрнутом виде.
 // Своё «Другое» и трансфер без города, метки у них нет.
