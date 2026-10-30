@@ -1192,7 +1192,7 @@ let прайсРегион = '';
 function отрисоватьЧипыРегионов(){
   const el=document.getElementById('price-regions'); if(!el) return;
   // Города — цветными плашками с сокращением, как в форме брони.
-  const кнопки=[['','Все']].concat(РЕГИОНЫ.filter(естьТуры).map(r=>[r,СОКР_ГОРОДА[r]||(r==='Трансфер'?'🚐':r)]));
+  const кнопки=[['','Все']].concat(РЕГИОНЫ.filter(естьТуры).map(r=>[r,СОКР_ГОРОДА[r]||(r==='Трансфер'?'<svg width="24" height="15" viewBox="0 0 24 15" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" style="display:block"><path d="M2 11V8l2.5-5h11l4.5 5H22v3"/><path d="M2 11h2.5M9 11h6M20 11h2"/><circle cx="6.5" cy="11.5" r="2.2"/><circle cx="17.5" cy="11.5" r="2.2"/></svg>':r)]));
   el.innerHTML=кнопки.map(([знач,подпись])=>{
     const цвет=знач==='Трансфер'?'#475569':ЦВЕТ_ГОРОДА[СОКР_ГОРОДА[знач]];
     return `<button class="reg-chip${цвет?' city-chip':''}${прайсРегион===знач?' on':''}"${цвет?` style="--c:${цвет}"`:''} title="${знач||'Все города'}" onclick="выбратьРегионПрайса('${знач}')">${подпись}</button>`;
