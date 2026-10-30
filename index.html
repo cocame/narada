@@ -962,6 +962,27 @@ function картаВФорме(p){
   const u=ссылкаНаОтель(document.getElementById(p+'Hotel').value, (document.getElementById(p+'Route')||{}).value);
   row.hidden=!u; if(u) a.href=u;
 }
+// Ссылка на карту длинная и повторяет название отеля. При сохранении брони
+// делаем из неё короткую через is.gd и дописываем к отелю: дальше везде —
+// название и ниже короткая ссылка. Сервис не ответил — остаётся длинная.
+function короткаяСсылка(url){
+  return new Promise(resolve=>{
+    const cb='__isgd'+Date.now();
+    const sc=document.createElement('script');
+    const готово=v=>{ clearTimeout(t); delete window[cb]; sc.remove(); resolve(v); };
+    const t=setTimeout(()=>готово(url), 6000);
+    window[cb]=r=>готово(r&&r.shorturl||url);
+    sc.onerror=()=>готово(url);
+    sc.src='https://is.gd/create.php?format=json&callback='+cb+'&url='+encodeURIComponent(url);
+    document.head.appendChild(sc);
+  });
+}
+async function отельСоСсылкой(отель, маршрут){
+  const о=String(отель||'').trim();
+  if(!о || РЕ_ССЫЛКА.test(о)) return о;
+  const u=ссылкаНаОтель(о, маршрут); if(!u) return о;
+  return о+' '+await короткаяСсылка(u);
+}
 // Водителю копируем так: название отеля, ниже ссылка на карту.
 function копироватьОтель(отель, маршрут){
   const u=ссылкаНаОтель(отель, маршрут); if(!u) return;
@@ -2258,13 +2279,14 @@ function bCopyGuide(id){
     ru[3]=pax?guidePeople(pax):'—'; vi[3]=pax?pax+' người':'—';
     if(!b.hotel){ ru.splice(2,1); vi.splice(2,1); }
     const карты=путь.filter(x=>!ТОЧКИ_VI[x]).map(x=>'📍 '+названиеОтеля(x)+'\n'+ссылкаНаОтельВГороде(x,город));
-    const отельКарта=b.hotel&&!путь.includes(b.hotel)?['📍 '+названиеОтеля(b.hotel)+'\n'+ссылкаНаОтель(b.hotel,b.route)]:[];
+    const отельКарта=b.hotel&&!путь.includes(b.hotel)?['📍 '+ссылкаНаОтель(b.hotel,b.route)]:[];
     copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n')+(карты.concat(отельКарта).length?'\n'+карты.concat(отельКарта).join('\n'):''));
     return;
   }
   // Ссылка на отель в Google Картах — водителю и гиду, чтобы не искать вручную
   const карта=ссылкаНаОтель(b.hotel,b.route);
-  copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n')+(карта?'\n📍 '+названиеОтеля(b.hotel)+'\n'+карта:''));
+  // название отеля уже есть выше — тут только ссылка
+  copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n')+(карта?'\n📍 '+карта:''));
 }
 
 function bCopyCard(id){
@@ -3523,6 +3545,7 @@ async function bSave(){
   btn.textContent='Сохранение…'; btn.disabled=true;
   const былиДоЭтого=allBookings.filter(b=>!b.deleted&&сутьБрони(b)===сутьБрони(data)).length;
   try {
+    if(data.hotel && !String(data.route).startsWith('ТРАНСФЕР')) data.hotel=await отельСоСсылкой(data.hotel, data.route);
     const res=await gasSave(editingId?'updateBooking':'addBooking',data);
     if(res&&res.readonly){ btn.textContent='Сохранить'; btn.disabled=false; return; }
     if(res&&res.success===false) throw new Error(res.error||'сервер отказал');
