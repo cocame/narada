@@ -297,9 +297,10 @@ body.ro .b-status-row{display:none!important}
 body.ro .b-notes-row textarea{pointer-events:none;opacity:.8}
 body.ro .b-comm-val{pointer-events:none;border-bottom:none}
 /* Просмотр по ссылке без ключа — для Ленара: только брони «Скоро» и кнопка
-   «Гиду». Прайс, заработок, комиссия, фильтры и копия карточки скрыты. */
+   «Гиду». Комиссию по брони он видит — он её и платит. Прайс, кошелёк
+   с историей, фильтры и копия карточки скрыты. */
 body.ro #tnPrice,body.ro #tabPrice,body.ro .b-earn,body.ro #walletPanel,body.ro #earnHistoryPanel,
-body.ro .b-card-comm,body.ro .b-exp-comm,body.ro #bFilterStatus,body.ro .b-pay-icon,
+body.ro #bFilterStatus,body.ro .b-pay-icon,
 body.ro .b-copy-card-btn:not(.b-copy-guide-btn){display:none!important}
 body.ro .tab-nav .tab-btn{flex:1}
 .ro-badge{display:none;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:2px 8px;font-family:'DM Mono',monospace;margin-left:auto}
