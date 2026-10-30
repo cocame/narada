@@ -109,6 +109,9 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 
 /* CUSTOM PRICE BLOCK */
 .custom-price-wrap{max-width:700px;margin:0 auto;padding:0 12px 16px}
+.price-block{margin-bottom:22px}
+.price-city{display:flex;align-items:center;gap:8px;margin:18px 16px 10px;font-weight:700;font-size:16px}
+.city-conv{margin:0 12px 6px}
 .custom-price-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)}
 .custom-price-title{font-size:9px;letter-spacing:.14em;text-transform:uppercase;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:10px}
 .custom-price-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -299,15 +302,6 @@ body.ro .ro-badge{display:inline-block}
   <div id="price-list-wrap">
     <div id="price-regions"></div>
     <div id="price-list"></div>
-    <div class="custom-price-wrap">
-      <div class="custom-price-card">
-        <div class="custom-price-title">Своя цена — введи сумму в $</div>
-        <div class="custom-price-row">
-          <input class="custom-price-input" type="number" id="customUSD" min="1" placeholder="0" oninput="calcCustom()">
-          <div class="custom-price-label">$</div>
-        </div>
-        <div class="custom-price-result" id="customResult"></div>
-      </div>
     </div>
     <footer style="text-align:center;padding:12px 0 0;font-size:10px;color:#bbb5ad;letter-spacing:.05em">
       Курсы: ExchangeRate-API · обновление раз в сутки
@@ -1212,6 +1206,28 @@ function renderPriceCards(rates, skeleton) {
     // Номер тура считаем по полному списку: на него завязаны калькулятор
     // и кнопка «Скопировать прайс». Отфильтрованные просто не рисуем.
     if(прайсРегион && регионТура(t)!==прайсРегион) return '';
+    return карточкаПрайса(t,idx,rates,skeleton);
+  });
+  // Прайс по городам: заголовок города, его туры, в конце блока — конвертер
+  // своей суммы в доллары. Трансфер общий — отдельным блоком в самом конце.
+  const блоки=РЕГИОНЫ.filter(естьТуры).filter(r=>!прайсРегион||r===прайсРегион).map(r=>{
+    const свои=TOURS.map((t,idx)=>регионТура(t)===r?cards[idx]:'').join('');
+    if(!свои) return '';
+    const шапка=r==='Трансфер'?'':`<div class="price-city"><span class="b-city" style="background:${ЦВЕТ_ГОРОДА[СОКР_ГОРОДА[r]]}">${СОКР_ГОРОДА[r]}</span>${r}</div>`;
+    const конв=r==='Трансфер'?'':`<div class="custom-price-card city-conv">
+        <div class="custom-price-title">Своя цена — введи сумму в $</div>
+        <div class="custom-price-row">
+          <input class="custom-price-input" type="number" min="1" placeholder="0" oninput="calcCustom(this)">
+          <div class="custom-price-label">$</div>
+        </div>
+        <div class="custom-price-result"></div>
+      </div>`;
+    return `<section class="price-block">${шапка}${свои}${конв}</section>`;
+  }).join('');
+  document.getElementById('price-list').innerHTML=colH+блоки;
+}
+
+function карточкаПрайса(t,idx,rates,skeleton){
     if(t.key==='ТРАНСФЕР') return `<div class="tour-card">
       <div class="tour-header"><div class="tour-icon">${t.icon}</div><div class="tour-name">${t.name}</div></div>
       <div class="price-rows"><div style="padding:8px 0;color:var(--muted);font-size:13px">Цена по запросу — считаем под маршрут</div></div>
@@ -1231,8 +1247,6 @@ function renderPriceCards(rates, skeleton) {
       <button class="calc-toggle" onclick="this.nextElementSibling.classList.toggle('open');this.textContent=this.nextElementSibling.classList.contains('open')?'▲ Закрыть калькулятор':'▼ Калькулятор группы'">▼ Калькулятор группы</button>
       ${buildPriceCalc(t,idx)}
     </div>`;
-  }).join('');
-  document.getElementById('price-list').innerHTML=colH+cards;
 }
 
 function copyPriceCard(idx){
@@ -1359,9 +1373,9 @@ function pCalcCopy(idx){
 }
 
 // CUSTOM PRICE
-function calcCustom(){
-  const usd=parseFloat(document.getElementById('customUSD').value)||0;
-  const el=document.getElementById('customResult');
+function calcCustom(inp){
+  const usd=parseFloat(inp.value)||0;
+  const el=inp.closest('.custom-price-card').querySelector('.custom-price-result');
   if(!usd||!currentRates){el.innerHTML='';return;}
   const p=calcFromUSD(usd,currentRates);
   el.innerHTML=`<span class="r-usd">${fmtUSD(p.usd)}</span><span class="r-rub">${fmtRUB(p.rub)}</span><span class="r-vnd">${fmtVND(p.vnd)}</span><span class="r-usdt">${fmtUSDT(p.usdt)}</span>`;
