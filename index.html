@@ -170,6 +170,8 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .b-card-route{font-weight:600;font-size:15px}
 .hotel-map{color:var(--accent2);text-decoration:none;font-weight:500}
 .hotel-map:hover{text-decoration:underline}
+.hotel-copy{margin-left:6px;padding:2px 8px;font:600 11px 'DM Sans',sans-serif;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--muted);cursor:pointer}
+.hotel-copy:hover{border-color:var(--accent2);color:var(--accent2)}
 #fHotelMap,#pfHotelMap{display:inline-block;margin-top:6px;font-size:12px}
 .b-city{display:inline-block;margin-right:6px;padding:2px 6px;border-radius:4px;color:#fff;font:700 10px 'DM Mono',monospace;letter-spacing:.04em;vertical-align:2px}
 .b-card-pax{font-size:12px;color:var(--muted)}
@@ -895,7 +897,7 @@ function картаВФорме(p){
 function отельСКартой(отель, маршрут){
   if(!отель) return '—';
   const u = ссылкаНаОтель(отель, маршрут);
-  return u ? `<a href="${u}" target="_blank" rel="noopener" class="hotel-map" onclick="event.stopPropagation()">📍 ${экран(отель)}</a>` : экран(отель);
+  return u ? `<a href="${u}" target="_blank" rel="noopener" class="hotel-map" onclick="event.stopPropagation()">📍 ${экран(отель)}</a> <button type="button" class="hotel-copy" title="Скопировать ссылку на карту — отправить водителю" onclick="event.stopPropagation();copyText('${u}')">Копировать ссылку</button>` : экран(отель);
 }
 // Метка города на карточке брони — видно и в свёрнутом виде.
 // Своё «Другое» и трансфер без города, метки у них нет.
@@ -2119,7 +2121,9 @@ function bCopyGuide(id){
   const ru=[guideDate(b.date), ROUTE_RU[b.route]||b.route||'—', hotel, pax?guidePeople(pax)+' + гид':'—'];
   // переведённый отель, если перевод уже доехал; иначе словарь как запасной
   const vi=[guideDateVi(b.date), ROUTE_VI[b.route]||b.route||'—', b.hotelVi||hotelVi(hotel), pax?pax+' người + hướng dẫn viên':'—'];
-  copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n'));
+  // Ссылка на отель в Google Картах — водителю и гиду, чтобы не искать вручную
+  const карта=ссылкаНаОтель(b.hotel,b.route);
+  copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n')+(карта?'\n📍 '+карта:''));
 }
 
 function bCopyCard(id){
