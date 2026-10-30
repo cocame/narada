@@ -1719,7 +1719,6 @@ function bCardHTML(b){
       <div class="b-card-route">${меткаГорода(b.route)}${подписьМаршрута(b.route)}${(()=>{const _p=bDetectPlatform(b);const _z=значокПлощадки(_p,13);return _z?`<span style="margin-left:5px">${_z}</span>`:(_p?`<span style="font-size:9px;color:var(--accent);margin-left:4px;font-family:'DM Mono',monospace;opacity:.8">${_p}</span>`:'');})()} </div>
       <div class="b-card-pax">${paxParts.join('+')||'—'}</div>
       <div class="b-card-contact">${b.contact||'—'}</div>
-      ${b.hotel?`<div class="b-card-hotel">${отельСКартой(b.hotel, b.route)}</div>`:''}
       <span onclick="event.stopPropagation();bCyclePay('${b.id}')" style="cursor:pointer;font-size:15px;line-height:1">${payIcon}</span>
       <button class="b-action-btn" onclick="event.stopPropagation();bRepeat('${b.id}')" title="Повторить бронь">♻️</button>
       <button class="b-action-btn" onclick="event.stopPropagation();bEdit('${b.id}')">✏️</button>
