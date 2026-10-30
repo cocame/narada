@@ -2334,14 +2334,14 @@ async function bWarmGuide(){
   } finally { guideWarming=false; }
 }
 
-async function bCopyGuide(id){
+function bCopyGuide(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   const pax=(parseInt(b.adults)||0)+(parseInt(b.children)||0)+(parseInt(b.infants)||0);
   const hotel=названиеОтеля(b.hotel)||'—';
   const ru=[guideDate(b.date), ROUTE_RU[b.route]||b.route||'—', hotel, pax?guidePeople(pax)+' + гид':'—'];
   // переведённый отель, если перевод уже доехал; иначе словарь как запасной
   const vi=[guideDateVi(b.date), ROUTE_VI[b.route]||b.route||'—', b.hotelVi||hotelVi(hotel), pax?pax+' người + hướng dẫn viên':'—'];
-  // Трансфер: полный маршрут «откуда — куда» и карта для каждого адреса/отеля
+  // Трансфер: полный маршрут «откуда — куда»
   if((b.route||'').startsWith('ТРАНСФЕР')){
     const путь=(b.route.split(': ')[1]||'').split(/\s*—\s*/).map(x=>x.trim()).filter(Boolean);
     ru[1]='Трансфер: '+путь.join(' — ');
@@ -2353,10 +2353,8 @@ async function bCopyGuide(id){
     copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n'));
     return;
   }
-  // Ссылка на отель в Google Картах — водителю и гиду, чтобы не искать вручную
-  const карта=await короче(ссылкаНаОтель(b.hotel,b.route));
-  // название отеля уже есть выше — тут только ссылка
-  copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n')+(карта?'\n📍 '+карта:''));
+  // ссылки на карту гиду не нужны — только мне
+  copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n'));
 }
 
 function bCopyCard(id){
