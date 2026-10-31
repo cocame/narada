@@ -695,6 +695,9 @@ function platPrice(row, rate, tour){
 // На Трипстере показываем только то, что вписано в прайс руками.
 // Нет вписанной цены — значит на Трипстере этого нет: строки не будет.
 // Базы и Спутника это не касается, там расчёт от базовой цены сохраняется.
+// «Ребёнок — цена та же» в прайсе не показываем: детского тарифа нет, только раздувает прайс.
+// В брони строка остаётся — по ней считаются дети.
+const детскаяКакВзрослый = r => /цена та же/i.test(r.label);
 function rowOff(row, rate, tour){
   return (rate===0.22 || (rate===0.24 && tour && tour.noSp8)) && !platPrice(row, rate, tour);
 }
@@ -1332,7 +1335,7 @@ function skelRowHTML(isTicket){
 }
 
 function buildPriceCalc(t, idx) {
-  const rows = t.rows.map((r,i)=>r.free?`
+  const rows = t.rows.map((r,i)=>детскаяКакВзрослый(r)?'':r.free?`
     <div class="calc-row-p" id="pc-${idx}-row${i}">
       <div class="calc-label-p">${r.label}</div>
       <div class="calc-counter"><input type="number" id="pc-${idx}-free${i}" min="0" placeholder="0" oninput="pCalcUpdate(${idx})" style="width:64px;padding:3px 8px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;font-size:12px;text-align:center;background:var(--bg);color:var(--text)"> $</div>
@@ -1407,7 +1410,7 @@ function platformPricesHTML(t, rates, skeleton) {
   PLATFORMS.forEach(pl => {
     if (t.noSp8 && pl.rate===0.24) return;
     html += `<div class="ticket-section-label">${pl.name}</div><div class="price-rows" style="padding-top:0">`;
-    mainRows.filter(r => !r.free).forEach(r => {
+    mainRows.filter(r => !r.free && !детскаяКакВзрослый(r)).forEach(r => {
       if (t.noPlat) { html += skeleton ? skelRowHTML(true) : priceRowHTML(lbl(r.label), null, true); return; }
       const platUSD = platPrice(r, pl.rate, t);
       const p = rates ? calcFromUSD(platUSD, rates) : null;
@@ -1523,7 +1526,7 @@ function карточкаПрайса(t,idx,rates,skeleton){
       <div class="tour-header"><div class="tour-icon">${t.icon}</div><div class="tour-name">${t.name}</div></div>
       <div class="price-rows"><div style="padding:8px 0;color:var(--muted);font-size:13px">Цена по запросу — считаем под маршрут</div></div>
     </div>`;
-    const mainRows=t.rows.filter(r=>!r.free).map(r=>skeleton?skelRowHTML(false):priceRowHTML(r.label,calcFromUSD(r.usd,rates))).join('');
+    const mainRows=t.rows.filter(r=>!r.free&&!детскаяКакВзрослый(r)).map(r=>skeleton?skelRowHTML(false):priceRowHTML(r.label,calcFromUSD(r.usd,rates))).join('');
     let ticketRows='';
     if(t.tickets&&t.tickets.length){
       const trs=skeleton?t.tickets.map(()=>skelRowHTML(true)).join(''):t.tickets.map(tk=>priceRowHTML(tk.label,calcFromVND(tk.vnd_fixed,rates),true)).join('');
@@ -1543,7 +1546,7 @@ function карточкаПрайса(t,idx,rates,skeleton){
 function copyPriceCard(idx){
   const t=TOURS[idx]; if(!currentRates){toast('⏳ Загрузка курсов…');return;}
   let text=t.icon+' '+названиеСГородом(t)+'\n──────────────\n';
-  t.rows.filter(r=>!r.free).forEach(r=>{const p=calcFromUSD(r.usd,currentRates); text+=r.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});
+  t.rows.filter(r=>!r.free&&!детскаяКакВзрослый(r)).forEach(r=>{const p=calcFromUSD(r.usd,currentRates); text+=r.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});
   if(t.tickets){text+='\nВходные билеты:\n'; t.tickets.forEach(tk=>{const p=calcFromVND(tk.vnd_fixed,currentRates); text+=tk.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVNDticket(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});}
   copyText(text.trim());
 }
@@ -1575,7 +1578,7 @@ function pCalcUpdate(idx){
   const pPlatPrice=(r)=>platPrice(r, selRate, t);
   let total=zeroP(); let hasAny=false; const rows=[]; const tickets=[];
   t.rows.forEach((r,i)=>{
-    const скрыта=rowOff(r,selRate,t);
+    const скрыта=rowOff(r,selRate,t)||детскаяКакВзрослый(r);
     const rowEl=document.getElementById(`pc-${idx}-row${i}`);
     if(rowEl) rowEl.style.display=скрыта?'none':'';
     if(скрыта){ cc['r'+i]=0; const numEl=document.getElementById(`pc-${idx}-r${i}`); if(numEl) numEl.textContent='0'; return; }
