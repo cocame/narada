@@ -138,6 +138,7 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .custom-price-result .r-rub{color:var(--accent)}
 .custom-price-result .r-vnd{color:var(--accent2)}
 .custom-price-result .r-usdt{color:var(--purple)}
+.custom-price-result button{font:inherit;font-size:15px;padding:8px 14px;margin:0 8px 0 0;border:1px solid var(--border);border-radius:8px;background:var(--bg);cursor:pointer}
 
 /* BOOKING TAB */
 #booking-wrap{max-width:680px;margin:0 auto}
@@ -332,13 +333,12 @@ body.ro .ro-badge{display:inline-block}
   <button class="tab-btn active" onclick="switchTab('booking')" id="tnBooking"><span>📋</span>Бронь</button>
 </nav>
 <div class="custom-price-card nav-conv" id="navConv" hidden>
-  <div class="custom-price-title">Своя цена — введи сумму в $</div>
+  <div class="custom-price-title">Своя цена в $ — нажми на рубли или донги, чтобы скопировать</div>
   <div class="custom-price-row">
     <input class="custom-price-input" type="number" min="1" placeholder="0" oninput="calcCustom(this)">
     <div class="custom-price-label">$</div>
   </div>
   <div class="custom-price-result"></div>
-  <button class="copy-price-btn" onclick="копироватьСвоюЦену(this)">Скопировать</button>
 </div>
 
 <!-- ══ TAB: ПРАЙС ══ -->
@@ -1682,12 +1682,12 @@ function pCalcCopy(idx){
 }
 
 // CUSTOM PRICE
-function копироватьСвоюЦену(btn){
-  const usd=parseFloat(btn.closest('.custom-price-card').querySelector('.custom-price-input').value)||0;
-  if(!usd){toast('Впиши сумму в $');return;}
-  if(!currentRates){toast('⏳ Загрузка курсов…');return;}
+// Нажатие на рубли или донги копирует одну строку: «10 $ = 930 ₽»
+function копироватьСвоюЦену(вал){
+  const usd=parseFloat(document.querySelector('#navConv .custom-price-input').value)||0;
+  if(!usd||!currentRates) return;
   const p=calcFromUSD(usd,currentRates);
-  copyText(fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt));
+  copyText(fmtUSD(p.usd)+' = '+(вал==='rub'?fmtRUB(p.rub):fmtVND(p.vnd)));
 }
 // Реквизиты, которые постоянно отправляю клиентам: кнопки 💳 и ₮ в верхней панели
 const РЕКВИЗИТЫ={
@@ -1706,7 +1706,7 @@ function calcCustom(inp){
   const el=inp.closest('.custom-price-card').querySelector('.custom-price-result');
   if(!usd||!currentRates){el.innerHTML='';return;}
   const p=calcFromUSD(usd,currentRates);
-  el.innerHTML=`<span class="r-usd">${fmtUSD(p.usd)}</span><span class="r-rub">${fmtRUB(p.rub)}</span><span class="r-vnd">${fmtVND(p.vnd)}</span><span class="r-usdt">${fmtUSDT(p.usdt)}</span>`;
+  el.innerHTML=`<button class="r-rub" onclick="копироватьСвоюЦену('rub')">${fmtRUB(p.rub)}</button><button class="r-vnd" onclick="копироватьСвоюЦену('vnd')">${fmtVND(p.vnd)}</button>`;
 }
 
 // ══════════════════════════════════════
