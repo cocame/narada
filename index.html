@@ -377,7 +377,7 @@ body.ro .ro-badge{display:inline-block}
         <div class="b-earn" style="display:flex;align-items:flex-start;gap:6px">
           <div>
             <div class="b-stat-val" id="bStatEarn">$0</div>
-            <div class="b-stat-label">Итого / мес</div>
+            <div class="b-stat-label">В кошельке</div>
           </div>
           <div style="display:flex;flex-direction:row;gap:6px;padding-top:2px">
             <button onclick="toggleWallet()" style="background:none;border:none;font-size:20px;cursor:pointer;padding:0;line-height:1" title="Мой кошелёк">💰</button>
@@ -2445,14 +2445,12 @@ function bCopyCard(id){
 
 function bUpdateStats(){
   const tod=todayStr(),tom=tomorrowStr();
-  const nm=new Date().getMonth(),ny=new Date().getFullYear();
   // Удалённые лежат в общем списке ради корзины, но в счётчики и деньги не идут.
   const live=allBookings.filter(b=>!b.deleted);
   document.getElementById('bStatToday').textContent=live.filter(b=>b.date===tod&&b.tripStatus!=='cancelled').length;
   document.getElementById('bStatTomorrow').textContent=live.filter(b=>b.date===tom&&b.tripStatus!=='cancelled').length;
-  let earn=0;
-  live.forEach(b=>{if(b.tripStatus==='done'&&b.date){const bd=new Date(b.date+'T00:00:00');if(bd.getMonth()===nm&&bd.getFullYear()===ny)earn+=parseFloat(b.commission)||0;}});
-  document.getElementById('bStatEarn').textContent='$'+(Math.round(earn*100)/100);
+  // Наверху — остаток в кошельке, а не заработок за месяц: за месяц — в 📅.
+  refreshWalletBalance();
 }
 
 // ══════════════════════════════════════
@@ -3940,6 +3938,7 @@ function refreshWalletBalance(){
   const balance=Math.round((totalEarned-paid)*100)/100;
   const el=document.getElementById('walletBalance');
   if(el){el.textContent='$'+balance;el.style.color=balance<0?'var(--red)':'var(--green)';}
+  const top=document.getElementById('bStatEarn'); if(top) top.textContent='$'+balance;
   const pT=document.getElementById('walletPaidTotal');
   if(pT&&!pT.querySelector('input')) pT.textContent='Выплачено: $'+paid;
   const eT=document.getElementById('walletEarnTotal'); if(eT) eT.textContent='Начислено всего: $'+totalEarned;
