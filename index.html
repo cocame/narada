@@ -2729,6 +2729,7 @@ function суммаВДоллары(текст){
 // всё. Поэтому, если поле пустое, берём остаток к оплате.
 function сдачаПоБрони(b){
   if(!b || b.payStatus==='paid') return null;
+  if(турПартнёра(TOURS.find(t=>t.key===b.route))) return null;
   const наМесте=parseFloat(b.onsite);
   if(наМесте>0){
     if((b.onsiteCur||'USD')!=='USD') return null;
@@ -2908,6 +2909,14 @@ function mSwitchTab(tab){
 function естьДетскийТариф(t){
   return !!t.group || t.rows.some(r=>/ребён|дет/i.test(r.label) && !детскаяКакВзрослый(r));
 }
+// У туров партнёров (все города, кроме Дананга) на месте платят партнёру —
+// сдачу мы не готовим. Строки «Сдача» нет ни в форме, ни в карточке брони.
+const турПартнёра = t => !!t && !['Дананг','Трансфер'].includes(регионТура(t));
+function сдачаВФорме(p){
+  const el=document.getElementById(p+'Change'); if(!el) return;
+  const t=TOURS.find(x=>x.key===(document.getElementById(p+'Route')||{}).value);
+  el.closest('.form-group').hidden=турПартнёра(t);
+}
 function детиВФорме(p){
   const inp=document.getElementById(p+'Children'); if(!inp) return;
   const t=TOURS.find(x=>x.key===(document.getElementById(p+'Route')||{}).value);
@@ -2917,7 +2926,7 @@ function детиВФорме(p){
   if(!есть&&n){ const a=document.getElementById(p+'Adults'); a.value=(parseInt(a.value)||0)+n; inp.value=0; }
 }
 function bUpdatePreview(){
-  картаВФорме('f'); картаВФорме('pf'); обновитьЧипыМаршрута(); детиВФорме('f'); детиВФорме('pf');
+  картаВФорме('f'); картаВФорме('pf'); обновитьЧипыМаршрута(); детиВФорме('f'); детиВФорме('pf'); сдачаВФорме('f'); сдачаВФорме('pf');
   const p=mTab==='manual'?'f':'pf';
   const route=document.getElementById(p+'Route').value;
   const adults=parseInt(document.getElementById(p+'Adults').value)||0;
