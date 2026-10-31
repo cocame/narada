@@ -31,13 +31,13 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .tab-btn{flex:1;padding:11px 4px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
 .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
 .tab-btn span{font-size:15px;display:block;margin-bottom:2px}
-.nav-mid{display:flex;align-items:center;gap:2px;padding:0 2px}
-.nav-bron{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;min-width:0}
-.nav-bron .tab-btn{flex:none;padding-left:14px;padding-right:14px}
-.nav-bron .b-add-btn{margin:0}
-.nav-ico{height:34px;min-width:34px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0 5px;line-height:1;color:var(--muted);flex-shrink:0}
+.nav-mid{display:flex;align-items:center;gap:12px;padding:0 4px}
+.nav-bron{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;min-width:0;padding-left:12px}
+.nav-bron .tab-btn{flex:none;padding-left:8px;padding-right:8px}
+.nav-bron .b-add-btn{margin:0 4px 0 0}
+.nav-ico{height:34px;min-width:22px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;color:var(--muted);flex-shrink:0}
 .nav-ico.on{color:var(--accent)}
-.nav-bybit{font-family:'DM Sans',sans-serif;font-weight:800;font-size:11px;letter-spacing:.02em;color:var(--text)}
+.nav-bybit{font-family:'DM Sans',sans-serif;font-weight:800;font-size:13px;letter-spacing:.02em;color:var(--text)}
 .nav-bybit b{color:#F7A600;font-weight:800}
 .nav-conv{position:sticky;top:60px;z-index:99;margin:8px auto;width:calc(100% - 24px);max-width:680px;box-sizing:border-box}
 .tab-panel{display:none}
@@ -329,13 +329,13 @@ body.ro .ro-badge{display:inline-block}
 <nav class="tab-nav">
   <button class="tab-btn" onclick="switchTab('price')" id="tnPrice"><span>💰</span>Прайс</button>
   <div class="nav-mid">
-    <button class="nav-ico" id="navConvBtn" title="Своя цена в $" onclick="конвертерВверху()"><svg width="18" height="22" viewBox="0 0 18 22" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="16" height="20" rx="2.5"/><line x1="4.5" y1="6" x2="13.5" y2="6"/><line x1="5" y1="11" x2="7" y2="11"/><line x1="11" y1="11" x2="13" y2="11"/><line x1="5" y1="16" x2="7" y2="16"/><line x1="11" y1="16" x2="13" y2="16"/></svg></button>
-    <button class="nav-ico" title="Реквизиты: СБП Т-Банк" onclick="copyText(РЕКВИЗИТЫ.сбп)"><svg width="24" height="17" viewBox="0 0 24 17" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="22" height="15" rx="2.5"/><line x1="1" y1="5.5" x2="23" y2="5.5" stroke-width="2.4"/><line x1="4.5" y1="11.5" x2="10" y2="11.5"/></svg></button>
-    <button class="nav-ico nav-bybit" title="Реквизиты: Bybit / USDT TRC20" onclick="copyText(РЕКВИЗИТЫ.крипта)">BYB<b>I</b>T</button>
+    <button class="nav-ico" id="navConvBtn" title="Своя цена в $" onclick="конвертерВверху()"><svg width="15" height="18" viewBox="0 0 18 22" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="16" height="20" rx="2.5"/><line x1="4.5" y1="6" x2="13.5" y2="6"/><line x1="5" y1="11" x2="7" y2="11"/><line x1="11" y1="11" x2="13" y2="11"/><line x1="5" y1="16" x2="7" y2="16"/><line x1="11" y1="16" x2="13" y2="16"/></svg></button>
+    <button class="nav-ico" title="Реквизиты: СБП Т-Банк" onclick="copyText(РЕКВИЗИТЫ.сбп)"><svg width="25" height="18" viewBox="0 0 24 17" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="22" height="15" rx="2.5"/><line x1="1" y1="5.5" x2="23" y2="5.5" stroke-width="2.4"/><line x1="4.5" y1="11.5" x2="10" y2="11.5"/></svg></button>
+    <button class="nav-ico nav-bybit" title="Реквизиты: Bybit / USDT TRC20" onclick="copyText(РЕКВИЗИТЫ.крипта)"><svg width="40" height="18" viewBox="0 0 40 18"><text x="0" y="17" font-family="DM Sans,Arial,sans-serif" font-weight="800" font-size="23" textLength="40" lengthAdjust="spacingAndGlyphs" fill="currentColor">BYB<tspan fill="#F7A600">I</tspan>T</text></svg></button>
   </div>
   <div class="nav-bron">
-    <button class="tab-btn active" onclick="switchTab('booking')" id="tnBooking"><span>📋</span>Бронь</button>
     <button class="b-add-btn" title="Новая бронь" onclick="switchTab('booking');bOpenModal()">+</button>
+    <button class="tab-btn active" onclick="switchTab('booking')" id="tnBooking"><span>📋</span>Бронь</button>
   </div>
 </nav>
 <div class="custom-price-card nav-conv" id="navConv" hidden>
