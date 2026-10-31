@@ -2872,8 +2872,21 @@ function mSwitchTab(tab){
   document.getElementById('mPanelManual').style.display=tab==='manual'?'':'none';
   document.getElementById('mPanelPaste').style.display=tab==='paste'?'':'none';
 }
+// Детский тариф есть — поле «Дети» показываем; нет (или «цена та же») — детей не вносим,
+// они идут во взрослых. Касается всех городов.
+function естьДетскийТариф(t){
+  return !!t.group || t.rows.some(r=>/ребён|дет/i.test(r.label) && !детскаяКакВзрослый(r));
+}
+function детиВФорме(p){
+  const inp=document.getElementById(p+'Children'); if(!inp) return;
+  const t=TOURS.find(x=>x.key===(document.getElementById(p+'Route')||{}).value);
+  const есть=!t||t.key==='ТРАНСФЕР'||естьДетскийТариф(t);
+  inp.parentElement.hidden=!есть;
+  const n=parseInt(inp.value)||0;
+  if(!есть&&n){ const a=document.getElementById(p+'Adults'); a.value=(parseInt(a.value)||0)+n; inp.value=0; }
+}
 function bUpdatePreview(){
-  картаВФорме('f'); картаВФорме('pf'); обновитьЧипыМаршрута();
+  картаВФорме('f'); картаВФорме('pf'); обновитьЧипыМаршрута(); детиВФорме('f'); детиВФорме('pf');
   const p=mTab==='manual'?'f':'pf';
   const route=document.getElementById(p+'Route').value;
   const adults=parseInt(document.getElementById(p+'Adults').value)||0;
