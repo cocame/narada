@@ -1526,7 +1526,8 @@ function карточкаПрайса(t,idx,rates,skeleton){
       <div class="tour-header"><div class="tour-icon">${t.icon}</div><div class="tour-name">${t.name}</div></div>
       <div class="price-rows"><div style="padding:8px 0;color:var(--muted);font-size:13px">Цена по запросу — считаем под маршрут</div></div>
     </div>`;
-    const mainRows=t.rows.filter(r=>!r.free&&!детскаяКакВзрослый(r)).map(r=>skeleton?skelRowHTML(false):priceRowHTML(r.label,calcFromUSD(r.usd,rates))).join('');
+    // «Индивидуально» без цены — строкой «по запросу», сумму считаю в калькуляторе ниже
+    const mainRows=t.rows.filter(r=>!детскаяКакВзрослый(r)).map(r=>skeleton?skelRowHTML(false):r.free?`<div class="price-row"><div class="row-label">${r.label}</div><div class="price-cell usd" style="grid-column:2/-1;color:var(--muted)">по запросу</div></div>`:priceRowHTML(r.label,calcFromUSD(r.usd,rates))).join('');
     let ticketRows='';
     if(t.tickets&&t.tickets.length){
       const trs=skeleton?t.tickets.map(()=>skelRowHTML(true)).join(''):t.tickets.map(tk=>priceRowHTML(tk.label,calcFromVND(tk.vnd_fixed,rates),true)).join('');
@@ -1546,7 +1547,7 @@ function карточкаПрайса(t,idx,rates,skeleton){
 function copyPriceCard(idx){
   const t=TOURS[idx]; if(!currentRates){toast('⏳ Загрузка курсов…');return;}
   let text=t.icon+' '+названиеСГородом(t)+'\n──────────────\n';
-  t.rows.filter(r=>!r.free&&!детскаяКакВзрослый(r)).forEach(r=>{const p=calcFromUSD(r.usd,currentRates); text+=r.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});
+  t.rows.filter(r=>!детскаяКакВзрослый(r)).forEach(r=>{ if(r.free){ text+=r.label+':  по запросу\n'; return; } const p=calcFromUSD(r.usd,currentRates); text+=r.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});
   if(t.tickets){text+='\nВходные билеты:\n'; t.tickets.forEach(tk=>{const p=calcFromVND(tk.vnd_fixed,currentRates); text+=tk.label+':  '+fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVNDticket(p.vnd)+' / '+fmtUSDT(p.usdt)+'\n';});}
   copyText(text.trim());
 }
