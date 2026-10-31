@@ -2443,6 +2443,9 @@ function bCopyCard(id){
   copyText(head.concat(mid,tail).join('\n'));
 }
 
+// Комиссия идёт в месяц, когда бронь отметили «Ездил» (doneAt). У старых
+// броней этой отметки нет — для них месяц по дате экскурсии.
+const днёмЗаработка = b => b.doneAt || b.date;
 function bUpdateStats(){
   const tod=todayStr(),tom=tomorrowStr();
   const nm=new Date().getMonth(),ny=new Date().getFullYear();
@@ -2451,7 +2454,7 @@ function bUpdateStats(){
   document.getElementById('bStatToday').textContent=live.filter(b=>b.date===tod&&b.tripStatus!=='cancelled').length;
   document.getElementById('bStatTomorrow').textContent=live.filter(b=>b.date===tom&&b.tripStatus!=='cancelled').length;
   let earn=0;
-  live.forEach(b=>{if(b.tripStatus==='done'&&b.date){const bd=new Date(b.date+'T00:00:00');if(bd.getMonth()===nm&&bd.getFullYear()===ny)earn+=parseFloat(b.commission)||0;}});
+  live.forEach(b=>{if(b.tripStatus==='done'&&днёмЗаработка(b)){const bd=new Date(днёмЗаработка(b)+'T00:00:00');if(bd.getMonth()===nm&&bd.getFullYear()===ny)earn+=parseFloat(b.commission)||0;}});
   document.getElementById('bStatEarn').textContent='$'+(Math.round(earn*100)/100);
 }
 
@@ -2483,6 +2486,9 @@ async function bCyclePay(id){
 }
 async function bSetTrip(id,status){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
+  // «Ездил» засчитывается в месяц, когда нажали, а не в месяц экскурсии.
+  if(status==='done'){ if(b.tripStatus!=='done'||!b.doneAt) b.doneAt=todayStr(); }
+  else b.doneAt='';
   b.tripStatus=status;
   const r=await gasSave('updateBooking',b); bWarnBackup(r); bLoad();
 }
@@ -3631,6 +3637,7 @@ function bGetFormData(){
     platform:mTab==='manual'?fPlatformName:pfPlatformName,
     payStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.payStatus||'unpaid') : 'unpaid',
     tripStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.tripStatus||'waiting') : (document.getElementById(p+'TripStatus')?.value||'waiting'),
+    doneAt: editingId ? (allBookings.find(x=>x.id==editingId)?.doneAt||'') : ((document.getElementById(p+'TripStatus')?.value==='done')?todayStr():''),
     notes:(()=>{const _pn=mTab==='manual'?fPlatformName:pfPlatformName;const _pm=_pn==='Sputnik8'?'‌S':_pn==='Tripster'?'‌T':_pn==='База'?'‌B':'';// Метку источника больше не ставим руками, но у старых броней её нужно сохранить —
     // иначе при любой правке примечания источник исчезнет.
     const _sm=editingId?((allBookings.find(x=>x.id==editingId)?.notes||'').match(МЕТКА_ИСТОЧНИКА)?.[0]||''):'';return(document.getElementById(p+'Notes').value||'').replace(/​/g,'').replace(/‌[TSB]/g,'').replace(МЕТКА_ИСТОЧНИКА,'')+_pm+_sm+(isIndividual?'​':'');})()
@@ -3890,8 +3897,8 @@ function renderEarnHistory(){
   const months={};
   allBookings.forEach(b=>{
     if(b.deleted) return;
-    if(b.tripStatus==='done'&&b.date){
-      const d=new Date(b.date+'T00:00:00'); if(isNaN(d)) return;
+    if(b.tripStatus==='done'&&днёмЗаработка(b)){
+      const d=new Date(днёмЗаработка(b)+'T00:00:00'); if(isNaN(d)) return;
       const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
       if(!months[key]) months[key]={earn:0,count:0,label:MNAMES[d.getMonth()]+' '+d.getFullYear()};
       months[key].earn=Math.round((months[key].earn+(parseFloat(b.commission)||0))*100)/100;
@@ -3913,7 +3920,7 @@ function calcTotalEarned(){
   let t=0;
   allBookings.forEach(b=>{
     if(b.deleted) return;
-    if(b.tripStatus==='done'&&b.date) t+=parseFloat(b.commission)||0;
+    if(b.tripStatus==='done'&&днёмЗаработка(b)) t+=parseFloat(b.commission)||0;
   });
   return Math.round(t*100)/100;
 }
