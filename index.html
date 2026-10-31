@@ -31,7 +31,11 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 .tab-btn{flex:1;padding:11px 4px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
 .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent)}
 .tab-btn span{font-size:15px;display:block;margin-bottom:2px}
-.nav-add{position:absolute;left:calc(75% - 70px);top:50%;transform:translateY(-50%);margin:0}
+.nav-mid{display:flex;align-items:center;gap:6px;padding:0 4px}
+.nav-mid .b-add-btn{margin:0}
+.nav-ico{width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--surface);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;color:var(--text);flex-shrink:0}
+.nav-ico.on{border-color:var(--accent)}
+.nav-conv{position:sticky;top:60px;z-index:99;margin:8px auto;width:calc(100% - 24px);max-width:680px;box-sizing:border-box}
 .tab-panel{display:none}
 .tab-panel.active{display:block}
 
@@ -293,6 +297,8 @@ header{padding:18px 20px 12px;text-align:center;background:var(--surface);border
 }
 /* режим только для чтения */
 body.ro .b-add-btn,
+body.ro .nav-ico,
+body.ro #navConv,
 body.ro .b-action-btn,
 body.ro .b-status-row{display:none!important}
 body.ro .b-notes-row textarea{pointer-events:none;opacity:.8}
@@ -317,9 +323,23 @@ body.ro .ro-badge{display:inline-block}
 
 <nav class="tab-nav">
   <button class="tab-btn" onclick="switchTab('price')" id="tnPrice"><span>💰</span>Прайс</button>
-  <button class="b-add-btn nav-add" title="Новая бронь" onclick="switchTab('booking');bOpenModal()">+</button>
+  <div class="nav-mid">
+    <button class="nav-ico" id="navConvBtn" title="Своя цена в $" onclick="конвертерВверху()">🧮</button>
+    <button class="nav-ico" title="Реквизиты: СБП Т-Банк" onclick="copyText(РЕКВИЗИТЫ.сбп)">💳</button>
+    <button class="nav-ico" title="Реквизиты: Bybit / USDT TRC20" onclick="copyText(РЕКВИЗИТЫ.крипта)">₮</button>
+    <button class="b-add-btn" title="Новая бронь" onclick="switchTab('booking');bOpenModal()">+</button>
+  </div>
   <button class="tab-btn active" onclick="switchTab('booking')" id="tnBooking"><span>📋</span>Бронь</button>
 </nav>
+<div class="custom-price-card nav-conv" id="navConv" hidden>
+  <div class="custom-price-title">Своя цена — введи сумму в $</div>
+  <div class="custom-price-row">
+    <input class="custom-price-input" type="number" min="1" placeholder="0" oninput="calcCustom(this)">
+    <div class="custom-price-label">$</div>
+  </div>
+  <div class="custom-price-result"></div>
+  <button class="copy-price-btn" onclick="копироватьСвоюЦену(this)">Скопировать</button>
+</div>
 
 <!-- ══ TAB: ПРАЙС ══ -->
 <div class="tab-panel" id="tabPrice">
@@ -1448,24 +1468,15 @@ function renderPriceCards(rates, skeleton) {
     if(прайсРегион && регионТура(t)!==прайсРегион) return '';
     return карточкаПрайса(t,idx,rates,skeleton);
   });
-  // Прайс по городам: заголовок города, его туры, трансфер и в конце блока —
-  // конвертер своей суммы в доллары. Трансфер есть в каждом городе, поэтому
-  // он стоит внизу каждого блока, а не отдельным разделом.
+  // Прайс по городам: заголовок города, его туры и трансфер. Трансфер есть
+  // в каждом городе, поэтому он стоит внизу каждого блока, а не отдельным
+  // разделом. Конвертер своей суммы — кнопкой 🧮 в верхней панели.
   const трансфер=r=>карточкаТрансфера(r);
   const блоки=РЕГИОНЫ.filter(естьТуры).filter(r=>r!=='Трансфер').filter(r=>!прайсРегион||r===прайсРегион).map(r=>{
     const свои=TOURS.map((t,idx)=>регионТура(t)===r?cards[idx]:'').join('')+трансфер(r);
     if(!свои) return '';
     const шапка=r==='Трансфер'?'':`<div class="price-city"><span class="b-city" style="background:${ЦВЕТ_ГОРОДА[СОКР_ГОРОДА[r]]}">${СОКР_ГОРОДА[r]}</span>${r}</div>`;
-    const конв=r==='Трансфер'?'':`<div class="custom-price-card city-conv">
-        <div class="custom-price-title">Своя цена — введи сумму в $</div>
-        <div class="custom-price-row">
-          <input class="custom-price-input" type="number" min="1" placeholder="0" oninput="calcCustom(this)">
-          <div class="custom-price-label">$</div>
-        </div>
-        <div class="custom-price-result"></div>
-        <button class="copy-price-btn" onclick="копироватьСвоюЦену(this)">Скопировать</button>
-      </div>`;
-    return `<section class="price-block">${шапка}${свои}${конв}</section>`;
+    return `<section class="price-block">${шапка}${свои}</section>`;
   }).join('');
   document.getElementById('price-list').innerHTML=colH+блоки;
 }
@@ -1677,6 +1688,18 @@ function копироватьСвоюЦену(btn){
   if(!currentRates){toast('⏳ Загрузка курсов…');return;}
   const p=calcFromUSD(usd,currentRates);
   copyText(fmtUSD(p.usd)+' / '+fmtRUB(p.rub)+' / '+fmtVND(p.vnd)+' / '+fmtUSDT(p.usdt));
+}
+// Реквизиты, которые постоянно отправляю клиентам: кнопки 💳 и ₮ в верхней панели
+const РЕКВИЗИТЫ={
+  сбп:'Перевод по СБП\nТолько в Т-Банк\n+79871852709\nСахапов Актас Наильевич',
+  крипта:'Bybit UID 552592324\nTRC 20\nTGw752fEriT3V1gf391cNjPk5oN69dstnq'
+};
+// 🧮 в верхней панели открывает и закрывает «Своя цена» под панелью
+function конвертерВверху(){
+  const п=document.getElementById('navConv');
+  п.hidden=!п.hidden;
+  document.getElementById('navConvBtn').classList.toggle('on',!п.hidden);
+  if(!п.hidden) п.querySelector('input').focus();
 }
 function calcCustom(inp){
   const usd=parseFloat(inp.value)||0;
