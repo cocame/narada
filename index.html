@@ -3190,6 +3190,13 @@ function fFlatToggle(i){
       });
     }
   }
+  // Индивидуальная — до 4 человек; 5-й и дальше сразу ставим доплатой,
+  // а не нулём: иначе на 6 человек сумма выходила как на четверых.
+  if(checked && document.getElementById('fExtraRow'+i)){
+    const n=(parseInt(document.getElementById('fAdults').value)||0)+(parseInt(document.getElementById('fChildren').value)||0);
+    fExtraAdults[i]=Math.max(0,n-4);
+    const ec=document.getElementById('fExtraCount'+i); if(ec) ec.textContent=fExtraAdults[i];
+  }
   fRecalc();
 }
 function fExtraChange(i,d){
@@ -3331,7 +3338,7 @@ function fRecalc(){
     const tot=document.getElementById(`fTotRow${i}`); if(tot) tot.textContent=fmtVal(sub);
   });
   // Доп. взрослые (5-й+ чел.) в индивидуальном режиме
-  let fExtraUSD=0;
+  let fExtraUSD=0, fExtraUSDБаза=0;
   tour.rows.forEach((row,i)=>{
     if(!row.flat) return;
     const isActive=i===0?true:(document.getElementById(`fFlatCheck${i}`)?.checked||false);
@@ -3339,6 +3346,8 @@ function fRecalc(){
       const priceEl=document.getElementById(`fExtraPrice${i}`);
       const extraPrice=priceEl&&priceEl.value!==''?(parseFloat(priceEl.value)||0):(tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0);
       const extraN=fExtraAdults[i]||0;
+      // комиссия — от нашей цены доп. человека, без наценки площадки
+      fExtraUSDБаза+=(tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0)*extraN;
       const sub=extraPrice*extraN;
       fExtraUSD+=sub;
       const tot=document.getElementById(`fExtraTot${i}`);if(tot)tot.textContent=sub>0?fmtVal(sub):'';
@@ -3349,7 +3358,7 @@ function fRecalc(){
   // У нячангских туров доля — 5 % от всего набранного по цене партнёра:
   // форматов там больше двух, и пара «взрослый + ребёнок» их не описывает.
   // Считаем от базы, а не от цены площадки: с Трипстера доля та же.
-  const baseForComm=tour.commRate?baseUSD:(hasFlatChecked?tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(`fFlatCheck${i}`)?.checked?r.usd:0),0)+fExtraUSD:(tour.rows[0]?.flat?tour.rows[0].usd:adults*(tour.rows[0]?.usd||0)+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0))+fExtraUSD);
+  const baseForComm=tour.commRate?baseUSD:(hasFlatChecked?tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(`fFlatCheck${i}`)?.checked?r.usd:0),0)+fExtraUSDБаза:(tour.rows[0]?.flat?tour.rows[0].usd:adults*(tour.rows[0]?.usd||0)+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0))+fExtraUSDБаза);
   const _св=свободнаяИнд(tour,'f');
   const comm=_св!=null?комиссияСвободной(_св):комиссияТура(tour, adults, children, baseForComm);
   const cEl=document.getElementById('previewComm'); if(cEl) cEl.textContent='$'+comm;
@@ -3555,6 +3564,11 @@ function pfFlatToggle(i){
       });
     }
   }
+  if(checked && document.getElementById('pfExtraRow'+i)){
+    const n=(parseInt(document.getElementById('pfAdults').value)||0)+(parseInt(document.getElementById('pfChildren').value)||0);
+    pfExtraAdults[i]=Math.max(0,n-4);
+    const ec=document.getElementById('pfExtraCount'+i); if(ec) ec.textContent=pfExtraAdults[i];
+  }
   pfRecalc();
 }
 function pfExtraChange(i,d){
@@ -3588,7 +3602,7 @@ function pfRecalc(){
     const tot=document.getElementById(`pfTotRow${i}`); if(tot) tot.textContent=fmtVal(sub);
   });
   // Доп. взрослые (5-й+ чел.) в индивидуальном режиме
-  let pfExtraUSDTotal=0;
+  let pfExtraUSDTotal=0, pfExtraUSDTotalБаза=0;
   tour.rows.forEach((row,i)=>{
     if(!row.flat) return;
     const isActive=i===0?true:(document.getElementById(`pfFlatCheck${i}`)?.checked||false);
@@ -3596,6 +3610,8 @@ function pfRecalc(){
       const priceEl=document.getElementById(`pfExtraPrice${i}`);
       const extraPrice=priceEl&&priceEl.value!==''?(parseFloat(priceEl.value)||0):(tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0);
       const extraN=pfExtraAdults[i]||0;
+      // комиссия — от нашей цены доп. человека, без наценки площадки
+      pfExtraUSDTotalБаза+=(tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0)*extraN;
       const sub=extraPrice*extraN;
       pfExtraUSDTotal+=sub;
       const tot=document.getElementById(`pfExtraTot${i}`);if(tot)tot.textContent=sub>0?fmtVal(sub):'';
@@ -3606,7 +3622,7 @@ function pfRecalc(){
   // У нячангских туров доля — 5 % от всего набранного по цене партнёра:
   // форматов там больше двух, и пара «взрослый + ребёнок» их не описывает.
   // Считаем от базы, а не от цены площадки: с Трипстера доля та же.
-  const baseForComm=tour.commRate?baseUSD:(hasFlatChecked?tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(`pfFlatCheck${i}`)?.checked?r.usd:0),0)+pfExtraUSDTotal:(tour.rows[0]?.flat?tour.rows[0].usd:adults*(tour.rows[0]?.usd||0)+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0))+pfExtraUSDTotal);
+  const baseForComm=tour.commRate?baseUSD:(hasFlatChecked?tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(`pfFlatCheck${i}`)?.checked?r.usd:0),0)+pfExtraUSDTotalБаза:(tour.rows[0]?.flat?tour.rows[0].usd:adults*(tour.rows[0]?.usd||0)+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0))+pfExtraUSDTotalБаза);
   const _св=свободнаяИнд(tour,'pf');
   const comm=_св!=null?комиссияСвободной(_св):комиссияТура(tour, adults, children, baseForComm);
   const cEl=document.getElementById('previewComm2'); if(cEl) cEl.textContent='$'+comm;
@@ -3681,7 +3697,10 @@ function bGetFormData(){
       if(flatActive){tourUSD=flatSum; isIndividual=true;}
       else if(flatRow0) isIndividual=true;
     }
-    if(tour){let baseComm=tour.free?adultUSD:tour.group?tour.rows[0].usd+tour.childAdd*children:isIndividual?(flatRow0?tour.rows[0].usd:tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(p+'FlatCheck'+i)?.checked?r.usd:0),0)):(flatRow0?tour.rows[0].usd:adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0));comm=комиссияТура(tour, adults, children, baseComm);
+    if(tour){let baseComm=tour.free?adultUSD:tour.group?tour.rows[0].usd+tour.childAdd*children:isIndividual?(flatRow0?tour.rows[0].usd:tour.rows.reduce((s,r,i)=>s+(i>=1&&r.flat&&document.getElementById(p+'FlatCheck'+i)?.checked?r.usd:0),0)):(flatRow0?tour.rows[0].usd:adults*tour.rows[0].usd+(tour.rows[1]&&!tour.rows[1].flat?children*tour.rows[1].usd:0));
+      // доп. люди сверх четырёх в индивидуальной — тоже в комиссию, по нашей цене
+      if(isIndividual){ const _ex=p==='f'?fExtraAdults:pfExtraAdults; baseComm+=Object.values(_ex).reduce((a,b)=>a+(b||0),0)*(tour.rows.find(r=>!r.flat)?.usd||tour.extraPerPerson||0); }
+      comm=комиссияТура(tour, adults, children, baseComm);
       const _св=свободнаяИнд(tour,p); if(_св!=null){ comm=комиссияСвободной(_св); adultUSD=_св; }}
   }
   return {
