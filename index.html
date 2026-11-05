@@ -488,7 +488,7 @@ body.ro .ro-badge{display:inline-block}
         </div>
         <div style="margin-top:10px">
           <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Сумма оплаты</div>
-          <input type="text" id="fAmount" placeholder="заполнится автоматически" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px">
+          <input type="text" id="fAmount" placeholder="заполнится автоматически" oninput="считатьСдачу('f')" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px">
         
             <div class="pay-hint" id="fAmountHint"></div>
           </div>
@@ -590,7 +590,7 @@ body.ro .ro-badge{display:inline-block}
           </div>
           <div style="margin-top:10px">
             <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Сумма оплаты</div>
-            <input type="text" id="pfAmount" placeholder="заполнится автоматически" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px">
+            <input type="text" id="pfAmount" placeholder="заполнится автоматически" oninput="считатьСдачу('pf')" style="width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:7px;font-family:'DM Sans',sans-serif;font-size:13px">
           
             <div class="pay-hint" id="pfAmountHint"></div>
           </div>
@@ -2780,7 +2780,16 @@ function считатьСдачу(p){
     el.value=''; hint.textContent='на месте платят в '+вал+' — сдача не считается';
     return;
   }
-  const c=расчётСдачи(document.getElementById(p+'Onsite')?.value,'USD');
+  // Считаем так же, как карточка брони: поле «На месте» пустое — от остатка
+  // к оплате. Иначе в форме пусто, а после сохранения сдача появляется.
+  const v=id=>document.getElementById(p+id)?.value||'';
+  const usdИз=id=>parseFloat(v(id).split('~')[1])||0;
+  const c=сдачаПоБрони({
+    payStatus: editingId ? allBookings.find(x=>x.id==editingId)?.payStatus : 'unpaid',
+    route:v('Route'), onsite:v('Onsite'), onsiteCur:вал, totalAmount:v('Amount'),
+    prepay:v('Prepay'), prepayCur:v('PrepayCur'), prepayUsd:usdИз('PrepayUsd'),
+    plat:v('Plat'), platCur:v('PlatCur'), platUsd:usdИз('PlatUsd')
+  });
   if(!c||c.сдача<=0){
     el.value = c ? '0' : '';
     hint.textContent = c ? 'клиент даёт ровно '+c.дают+' $ — сдача не нужна' : '';
@@ -2811,7 +2820,9 @@ function bToggleInsertBtn(){
     if(b) b.style.display = editingId ? '' : 'none';
   });
 }
-function autoAmount(p, val){
+// Сумма меняется — сдача в форме пересчитывается вместе с ней.
+function autoAmount(p, val){ автоСумма(p, val); считатьСдачу(p); }
+function автоСумма(p, val){
   const el=document.getElementById(p+'Amount'); if(!el||!val) return;
   const hint=document.getElementById(p+'AmountHint');
   const сейчас=(el.value||'').trim();
