@@ -464,7 +464,7 @@ body.ro .ro-badge{display:inline-block}
             <select id="fCurrency" onchange="fCurrencyChanged('f')"><option>USD</option><option>VND</option><option>RUB</option><option>USDT</option></select>
           </div>
           <div class="form-group"><label>Оплата</label>
-            <select id="fPayMethod"><option>Наличные</option><option>Перевод</option><option>USDT</option></select>
+            <select id="fPayMethod" onchange="payHints('f')"><option>Наличные</option><option>Перевод</option><option>USDT</option></select>
           </div>
         </div>
         <!-- КАЛЬКУЛЯТОР В ФОРМЕ -->
@@ -567,7 +567,7 @@ body.ro .ro-badge{display:inline-block}
               <select id="pfCurrency" onchange="fCurrencyChanged('pf')"><option>USD</option><option>VND</option><option>RUB</option><option>USDT</option></select>
             </div>
             <div class="form-group"><label>Оплата</label>
-              <select id="pfPayMethod"><option>Наличные</option><option>Перевод</option><option>USDT</option></select>
+              <select id="pfPayMethod" onchange="payHints('pf')"><option>Наличные</option><option>Перевод</option><option>USDT</option></select>
             </div>
           </div>
           <div id="pfCalcBlock" style="display:none;margin-top:12px;background:var(--note-bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px">
@@ -2554,7 +2554,7 @@ function bOpenModal(){
 }
 function bEdit(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
-  editingId=id;
+  editingId=id; условияБрони=null; formTouched=false;
   // сбросить счётчики билетов, доп. взрослых и кэш маршрута
   Object.keys(fTickCounts).forEach(k=>delete fTickCounts[k]);
   Object.keys(fExtraAdults).forEach(k=>delete fExtraAdults[k]);
@@ -2643,6 +2643,7 @@ function bEdit(id){
   bToggleInsertBtn();
   payHints('f');
   formTouched=false;
+  условияБрони=условияФормы('f');
   document.getElementById('modalOverlay').classList.add('open');
 }
 function bCloseModal(){ document.getElementById('modalOverlay').classList.remove('open'); }
@@ -2749,11 +2750,12 @@ function суммаВДоллары(текст){
   return n;
 }
 // Сдача нужна там, где на месте платят наличными долларами: клиент даёт
-// круглую сотню, сдачу получает донгами. Поле «На месте» заполняется само
-// только когда есть предоплата — без неё оно пустое, хотя на месте платят
-// всё. Поэтому, если поле пустое, берём остаток к оплате.
+// круглую сотню, сдачу получает донгами. Считается от поля «На месте»;
+// у старых броней, где оно пустое, — от остатка к оплате.
+// Оплата не наличными или бронь оплачена — сдачи нет.
 function сдачаПоБрони(b){
   if(!b || b.payStatus==='paid') return null;
+  if(b.payMethod && b.payMethod!=='Наличные') return null;
   if(турПартнёра(TOURS.find(t=>t.key===b.route))) return null;
   const наМесте=parseFloat(b.onsite);
   if(наМесте>0){
@@ -2780,13 +2782,13 @@ function считатьСдачу(p){
     el.value=''; hint.textContent='на месте платят в '+вал+' — сдача не считается';
     return;
   }
-  // Считаем так же, как карточка брони: поле «На месте» пустое — от остатка
-  // к оплате. Иначе в форме пусто, а после сохранения сдача появляется.
+  // Считаем той же функцией, что и карточка: в форме ровно то, что будет после сохранения.
   const v=id=>document.getElementById(p+id)?.value||'';
   const usdИз=id=>parseFloat(v(id).split('~')[1])||0;
   const c=сдачаПоБрони({
     payStatus: editingId ? allBookings.find(x=>x.id==editingId)?.payStatus : 'unpaid',
-    route:v('Route'), onsite:v('Onsite'), onsiteCur:вал, totalAmount:v('Amount'),
+    payMethod:v('PayMethod'), route:v('Route'), onsite:v('Onsite'), onsiteCur:вал,
+    totalAmount:v('Amount'),
     prepay:v('Prepay'), prepayCur:v('PrepayCur'), prepayUsd:usdИз('PrepayUsd'),
     plat:v('Plat'), platCur:v('PlatCur'), platUsd:usdИз('PlatUsd')
   });
@@ -2838,6 +2840,31 @@ function автоСумма(p, val){
   if (сейчас==='' || сейчас===_autoAmt[p]) { el.value=val; _autoAmt[p]=val; }
 }
 
+// Условия брони: маршрут, люди, площадка, «индивидуально». Меняются они —
+// прежние предоплаты к брони уже не относятся (сняли со Спутника — его
+// предоплаты нет). Стираем все платежи, дальше сумма, «На месте», сдача
+// и комиссия считаются заново сами.
+let условияБрони=null;
+function условияФормы(p){
+  const v=id=>document.getElementById(p+id)?.value||'';
+  const инд=[...document.querySelectorAll('[id^="'+p+'FlatCheck"]')].some(c=>c.checked);
+  const пл=(p==='f'?fPlatformName:pfPlatformName)||'База';
+  return [v('Route'),v('Adults'),v('Children'),пл,инд].join('|');
+}
+function стеретьПлатежиПриСменеУсловий(p){
+  if(!editingId || p!=='f' || условияБрони===null) return;
+  const b=allBookings.find(x=>x.id==editingId);
+  if(b && b.payStatus==='paid') return;   // оплаченная бронь заморожена
+  const сейчас=условияФормы(p);
+  if(сейчас===условияБрони) return;
+  условияБрони=сейчас;
+  ['Plat','Prepay'].forEach(поле=>['','Date','Usd','Fx'].forEach(x=>{
+    const e=document.getElementById(p+поле+x); if(e) e.value='';
+  }));
+  const o=document.getElementById(p+'Onsite'); if(o) o.value='';
+  formTouched=true;
+}
+
 function prepayAutoFill(p) {
   // Оплаченная бронь заморожена — ничего не досчитываем.
   if (editingId){
@@ -2850,7 +2877,12 @@ function prepayAutoFill(p) {
   function платёж(поле){
     const el=document.getElementById(p+поле);
     const сумма=parseFloat(el?.value);
-    if(!сумма || сумма<=0) return 0;
+    if(!сумма || сумма<=0){
+      // Сумму стёрли — дата, доллары и курс этого платежа тоже уходят,
+      // иначе они висели в форме и сохранялись без суммы.
+      ['Date','Usd','Fx'].forEach(x=>{const e=document.getElementById(p+поле+x); if(e) e.value='';});
+      return 0;
+    }
     const dateEl=document.getElementById(p+поле+'Date');
     if(dateEl && !dateEl.value) dateEl.value = todayStr();
     if(!currentRates) return 0;
@@ -2869,10 +2901,17 @@ function prepayAutoFill(p) {
   }
   const platUsd = платёж('Plat');
   const ourUsd  = платёж('Prepay');
-  if (!platUsd && !ourUsd) return;
-
   const calcEl = document.getElementById(p==='f'?'fCalcResult':'pfCalcResult');
   const totalUsd = parseFloat(calcEl?.dataset?.usd)||0;
+  if (!platUsd && !ourUsd){
+    // Предоплат нет — на месте платят всю сумму. Только что открытую бронь
+    // не трогаем: досчитываем, когда в ней что-то меняют.
+    if (editingId && !formTouched) return;
+    const _o=document.getElementById(p+'Onsite');
+    if (_o) _o.value = (totalUsd && currentRates)
+      ? usdToPay(totalUsd, document.getElementById(p+'OnsiteCur').value||'USD', currentRates) : '';
+    payHints(p); return;
+  }
   if (!totalUsd || !currentRates) return;
 
   // Остаток пересчитываем: раз ты правишь предоплату, значит ждёшь пересчёта.
@@ -3167,6 +3206,7 @@ function fOtherRecalc(){
     document.getElementById('fCalcResult').style.display='block';
     document.getElementById('fCalcResult').dataset.val=val;
     document.getElementById('fCalcResult').dataset.usd=total.usd;
+    стеретьПлатежиПриСменеУсловий('f');
     autoAmount('f',val);
     prepayAutoFill('f');
   } else {
@@ -3346,6 +3386,7 @@ function fCalcTotal(tour, adults, children, currency, tourUSD){
   document.getElementById('fCalcResult').style.display='block';
   document.getElementById('fCalcResult').dataset.val=val;
   document.getElementById('fCalcResult').dataset.usd=total.usd;
+  стеретьПлатежиПриСменеУсловий('f');
   autoAmount('f',val);
   prepayAutoFill('f');
 }
@@ -3648,12 +3689,12 @@ function bGetFormData(){
     totalAmount:document.getElementById(p+'Amount').value,
     plat:document.getElementById(p+'Plat')?.value||'',
     platCur:document.getElementById(p+'PlatCur')?.value||'',
-    platDate:document.getElementById(p+'PlatDate')?.value||'',
+    platDate:parseFloat(document.getElementById(p+'Plat')?.value)>0?(document.getElementById(p+'PlatDate')?.value||''):'',
     platUsd:parseFloat((document.getElementById(p+'PlatUsd')?.value||'').split('~')[1])||0,
     platFx:document.getElementById(p+'PlatFx')?.value||'',
     prepay:document.getElementById(p+'Prepay').value,
     prepayCur:document.getElementById(p+'PrepayCur').value,
-    prepayDate:document.getElementById(p+'PrepayDate')?.value||'',
+    prepayDate:parseFloat(document.getElementById(p+'Prepay')?.value)>0?(document.getElementById(p+'PrepayDate')?.value||''):'',
     prepayUsd:parseFloat((document.getElementById(p+'PrepayUsd')?.value||'').split('~')[1])||0,
     prepayFx:document.getElementById(p+'PrepayFx')?.value||'',
     onsite:document.getElementById(p+'Onsite').value,
