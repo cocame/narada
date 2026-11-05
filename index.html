@@ -836,9 +836,6 @@ const TOURS = [
   // (1,75 $) + половина надбавки 15 $ (7,50 $) = 9,25 $. Трипстер снял тур 03.11;
   // на Спутнике — на модерации, 66 $ (50 $ нам после его 24 %).
   { icon:'🐊', name:'Нячанг — Янгбэй', key:'НТ ЯНГБЭЙ',
-    // На месте турист платит гиду цену партнёра минус наши 10 %: 35 − 3,50 = 31,50 $.
-    // Остальное (3,50 + надбавка 15 = 18,50 $) — предоплата нам. Сдачи у партнёрских туров нет.
-    onsitePerPerson:31.5,
     rows:[{label:'За человека',usd:50,comm:9.25,sp8:66},{label:'Ребёнок — цена та же',usd:50,comm:9.25,sp8:66},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🏝', name:'Нячанг — остров Хон Там', key:'НТ ХОН ТАМ', noPlat:true, commRate:0.05,
     rows:[{label:'За человека',usd:45},{label:'Ребёнок — цена та же',usd:45},{label:'Индивидуально',usd:0,flat:true,free:true}] },
@@ -2016,7 +2013,7 @@ function bCardHTML(b){
         <div class="b-exp-item"><label>Валюта</label><span>${b.currency||'—'}</span></div>
         <div class="b-exp-item"><label>Оплата</label><span>${b.payMethod||'—'}</span></div>
         <div class="b-exp-item"><label>Сумма</label><span>${b.totalAmount||'—'}${b.payStatus==='paid'?`<span style="color:var(--green);font-size:10px;margin-left:6px">оплачено${b.paidAt?' '+shortDate(b.paidAt):''}</span>`:''}</span></div>
-        <div class="b-exp-item"><label>Предоплата</label><span>${b.prepay?(b.prepay+' '+(b.prepayCur||'')+(b.prepayDate?' · '+shortDate(b.prepayDate):'')):(нужнаПредоплата(b)&&currentRates?'нужно '+строкаВсеВалюты(нужнаПредоплата(b),currentRates):'—')}${b.prepay&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.prepay),b.prepayCur||'USD',currentRates,b.prepayFx)}</div>`:''}</span></div>
+        <div class="b-exp-item"><label>Предоплата</label><span>${b.prepay?(b.prepay+' '+(b.prepayCur||'')+(b.prepayDate?' · '+shortDate(b.prepayDate):'')):'—'}${b.prepay&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.prepay),b.prepayCur||'USD',currentRates,b.prepayFx)}</div>`:''}</span></div>
         <div class="b-exp-item"><label>Площадка</label><span>${b.plat?(b.plat+' '+(b.platCur||'')+(b.platDate?' · '+shortDate(b.platDate):'')):'—'}${b.plat&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.plat),b.platCur||'USD',currentRates,b.platFx)}</div>`:''}</span></div>
         <div class="b-exp-item"><label>На месте</label><span>${b.onsite?(b.onsite+' '+(b.onsiteCur||'')):'—'}${(parseFloat(b.onsite)>0&&currentRates)?`<div class="pay-hint">${payLine(parseFloat(b.onsite),b.onsiteCur||'USD',currentRates)}</div>`:''}</span></div>
         ${(()=>{const c=сдачаПоБрони(b);return c?`<div class="b-exp-item"><label>Сдача</label><span>${c.сдача} $<div class="pay-hint">с ${c.дают} $ · ${c.донги.toLocaleString('ru-RU')} ₫</div></span></div>`:'';})()}
@@ -2566,8 +2563,6 @@ function bOpenModal(){
 function bEdit(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   editingId=id; условияБрони=null; formTouched=false;
-  // сохранённая предоплата считается вписанной сама — пересчитается при правке
-  _autoPrepay['f']=String(b.prepay||'');
   // сбросить счётчики билетов, доп. взрослых и кэш маршрута
   Object.keys(fTickCounts).forEach(k=>delete fTickCounts[k]);
   Object.keys(fExtraAdults).forEach(k=>delete fExtraAdults[k]);
@@ -2697,23 +2692,6 @@ function fxToRates(fx){
   if(!fx) return null;
   const ч=String(fx).split('|').map(Number);
   return (ч.length===3 && ч.every(n=>n>0)) ? {RUB:ч[0],VND:ч[1],USDT:ч[2]} : null;
-}
-// Сколько нужно предоплатой нам у партнёрского тура с фиксированной суммой гиду
-// (Янгбэй): вся сумма минус «На месте» гиду и минус уже внесённое площадке.
-// Во всех валютах — сразу видно, сколько просить у туриста.
-function нужнаПредоплата(b){
-  const t=TOURS.find(x=>x.key===b.route);
-  if(!t||!t.onsitePerPerson||b.payStatus==='paid') return 0;
-  const всего=суммаВДоллары(b.totalAmount), наМесте=parseFloat(b.onsite)||0;
-  const пл=parseFloat(b.platUsd)||0;
-  const n=Math.round((всего-наМесте-пл)*100)/100;
-  return n>0?n:0;
-}
-function строкаВсеВалюты(usd, R){
-  if(!usd||!R) return '';
-  return usd+' $ = '+ceilTo(usd*R.RUB*(1+MARKUP.RUB), ROUND_STEP.RUB).toLocaleString('ru-RU')+' ₽  ·  '
-    +ceilTo(usd*R.VND*(1+MARKUP.VND), ROUND_STEP.VND).toLocaleString('ru-RU')+' ₫  ·  '
-    +ceilTo(usd*(R.USDT||1)*(1+MARKUP.USDT), ROUND_STEP.USDT)+' USDT';
 }
 function payLine(sum, cur, R, fx){
   R = fxToRates(fx) || R;
@@ -2875,7 +2853,6 @@ function автоСумма(p, val){
 // предоплаты нет). Стираем все платежи, дальше сумма, «На месте», сдача
 // и комиссия считаются заново сами.
 let условияБрони=null;
-const _autoPrepay={};
 function условияФормы(p){
   const v=id=>document.getElementById(p+id)?.value||'';
   const инд=[...document.querySelectorAll('[id^="'+p+'FlatCheck"]')].some(c=>c.checked);
@@ -2932,41 +2909,6 @@ function prepayAutoFill(p) {
   }
   const platUsd = платёж('Plat');
   const ourUsd  = платёж('Prepay');
-
-  // Партнёрский тур с надбавкой (Янгбэй): «На месте» гиду — фиксированно
-  // с человека, не остаток. Индивидуальный — цена плавающая, вписывают руками.
-  {
-    const _t=TOURS.find(x=>x.key===document.getElementById(p+'Route')?.value);
-    const _инд=[...document.querySelectorAll('[id^="'+p+'FlatCheck"]')].some(c=>c.checked);
-    if(_t && _t.onsitePerPerson && !_инд){
-      if (editingId && !formTouched) return;
-      const n=(parseInt(document.getElementById(p+'Adults')?.value)||0)+(parseInt(document.getElementById(p+'Children')?.value)||0);
-      const наМесте=Math.round(_t.onsitePerPerson*n*100)/100;
-      const всего=parseFloat(document.getElementById(p==='f'?'fCalcResult':'pfCalcResult')?.dataset?.usd)||0;
-      document.getElementById(p+'Onsite').value=наМесте||'';
-      document.getElementById(p+'OnsiteCur').value='USD';
-      payHints(p);
-      // Предоплата нам вписывается сама (вся сумма − гиду − площадке).
-      // Вписали руками другую — не трогаем.
-      const нужно=Math.round((всего-наМесте-platUsd)*100)/100;
-      const pe=document.getElementById(p+'Prepay');
-      const сейчас=(pe.value||'').trim();
-      if(нужно>0 && (сейчас===''||сейчас===_autoPrepay[p])){
-        const v=String(нужно);
-        pe.value=v; _autoPrepay[p]=v;
-        document.getElementById(p+'PrepayCur').value='USD';
-        const ue=document.getElementById(p+'PrepayUsd'); if(ue) ue.value=v+'|USD~'+нужно.toFixed(2);
-        const de=document.getElementById(p+'PrepayDate'); if(de&&!de.value) de.value=todayStr();
-      }
-      payHints(p);
-      const ph=document.getElementById(p+'PrepayHint');
-      const внес=parseFloat(pe.value)||0;
-      if(ph&&внес>0&&(document.getElementById(p+'PrepayCur').value==='USD')) ph.textContent=строкаВсеВалюты(внес,currentRates);
-      const h=document.getElementById(p+'OnsiteHint');
-      if(h&&n) h.textContent='гиду: '+_t.onsitePerPerson+' $ × '+n+' · нам: '+(Math.round((всего-наМесте-platUsd)*100)/100)+' $'+(platUsd?' (без доли площадки)':'');
-      return;
-    }
-  }
   const calcEl = document.getElementById(p==='f'?'fCalcResult':'pfCalcResult');
   const totalUsd = parseFloat(calcEl?.dataset?.usd)||0;
   if (!platUsd && !ourUsd){
@@ -3033,7 +2975,6 @@ function bClearForm(){
   ['fPrepayUsd','fPrepayFx','pfPrepayUsd','pfPrepayFx'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['fAmountHint','pfAmountHint','fPrepayHint','pfPrepayHint'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML='';});
   Object.keys(_autoAmt).forEach(k=>delete _autoAmt[k]);
-  Object.keys(_autoPrepay).forEach(k=>delete _autoPrepay[k]);
   // скрыть калькулятор
   const fb=document.getElementById('fCalcBlock'); if(fb) fb.style.display='none';
   const pb=document.getElementById('pfCalcBlock'); if(pb) pb.style.display='none';
