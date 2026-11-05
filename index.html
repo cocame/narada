@@ -836,6 +836,9 @@ const TOURS = [
   // (1,75 $) + половина надбавки 15 $ (7,50 $) = 9,25 $. Трипстер снял тур 03.11;
   // на Спутнике — на модерации, 66 $ (50 $ нам после его 24 %).
   { icon:'🐊', name:'Нячанг — Янгбэй', key:'НТ ЯНГБЭЙ',
+    // На месте турист платит гиду цену партнёра минус наши 10 %: 35 − 3,50 = 31,50 $.
+    // Остальное (3,50 + надбавка 15 = 18,50 $) — предоплата нам. Сдачи у партнёрских туров нет.
+    onsitePerPerson:31.5,
     rows:[{label:'За человека',usd:50,comm:9.25,sp8:66},{label:'Ребёнок — цена та же',usd:50,comm:9.25,sp8:66},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🏝', name:'Нячанг — остров Хон Там', key:'НТ ХОН ТАМ', noPlat:true, commRate:0.05,
     rows:[{label:'За человека',usd:45},{label:'Ребёнок — цена та же',usd:45},{label:'Индивидуально',usd:0,flat:true,free:true}] },
@@ -2904,6 +2907,25 @@ function prepayAutoFill(p) {
   }
   const platUsd = платёж('Plat');
   const ourUsd  = платёж('Prepay');
+
+  // Партнёрский тур с надбавкой (Янгбэй): «На месте» гиду — фиксированно
+  // с человека, не остаток. Индивидуальный — цена плавающая, вписывают руками.
+  {
+    const _t=TOURS.find(x=>x.key===document.getElementById(p+'Route')?.value);
+    const _инд=[...document.querySelectorAll('[id^="'+p+'FlatCheck"]')].some(c=>c.checked);
+    if(_t && _t.onsitePerPerson && !_инд){
+      if (editingId && !formTouched) return;
+      const n=(parseInt(document.getElementById(p+'Adults')?.value)||0)+(parseInt(document.getElementById(p+'Children')?.value)||0);
+      const наМесте=Math.round(_t.onsitePerPerson*n*100)/100;
+      const всего=parseFloat(document.getElementById(p==='f'?'fCalcResult':'pfCalcResult')?.dataset?.usd)||0;
+      document.getElementById(p+'Onsite').value=наМесте||'';
+      document.getElementById(p+'OnsiteCur').value='USD';
+      payHints(p);
+      const h=document.getElementById(p+'OnsiteHint');
+      if(h&&n) h.textContent='гиду: '+_t.onsitePerPerson+' $ × '+n+' · нам: '+(Math.round((всего-наМесте-platUsd)*100)/100)+' $'+(platUsd?' (без доли площадки)':'');
+      return;
+    }
+  }
   const calcEl = document.getElementById(p==='f'?'fCalcResult':'pfCalcResult');
   const totalUsd = parseFloat(calcEl?.dataset?.usd)||0;
   if (!platUsd && !ourUsd){
