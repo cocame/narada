@@ -2058,30 +2058,16 @@ function доляВВалюте(r,usd){
   return ' = '+n.toLocaleString('ru-RU')+' '+(r.вВалюте.cur==='RUB'?'₽':r.вВалюте.cur==='VND'?'₫':r.вВалюте.cur);
 }
 function пакетHTML(b){
+  // Коротко, одной плашкой: своя доля уже видна в «Предоплате» этой брони,
+  // здесь — только общее по клиенту и сходится ли.
   const r=пакетБрони(b); if(!r) return '';
-  const имя=экран(String(b.contact||'').replace(/\+?\d[\d\s()-]{6,}/,'').trim()||b.contact||'Клиент');
-  const строки=r.rows.map(x=>{
-    const a=x.price?x.pp/x.price*100:0;
-    const t=x.price===0?'сумма не указана':[
-      x.pp>0?'предоплата '+деньги(x.pp)+доляВВалюте(r,x.pp):'',
-      x.onsite>0?'на месте '+деньги(x.onsite):'',
-      x.rest>0.5?'не вписано '+деньги(x.rest):''].filter(Boolean).join(' · ')||'—';
-    return `<div class="b-pack-r${x.b.id==b.id?' cur':''}"><span>${shortDate(x.b.date)} — ${подписьМаршрута(x.b.route)}</span><span class="b-pack-n">${деньги(x.price)}</span>
-      <div class="b-pack-bar"><i style="width:${a}%;background:var(--green)"></i><i style="width:${x.price?x.onsite/x.price*100:0}%;background:#d69e2e"></i></div>
-      <div class="b-pack-s">${t}</div></div>`;}).join('');
-  const внесено=r.платежи.map(x=>экран(x.prepay+' '+(x.prepayCur||''))+(x.prepayDate?' · '+shortDate(x.prepayDate):'')).join(', ');
-  const итог=r.лишнее>1.5?`<div class="b-pack-s" style="margin-top:6px;color:var(--red)">Предоплата больше, чем выходит по турам, на ${деньги(r.лишнее)} — проверьте «На месте»</div>`
-    :r.лишнее<-1.5?`<div class="b-pack-s" style="margin-top:6px;color:var(--red)">Предоплаты не хватает на ${деньги(-r.лишнее)} — проверьте «На месте»</div>`
-    :r.rest>1.5?`<div class="b-pack-s" style="margin-top:6px;color:var(--red)">Не распределено: ${деньги(r.rest)} — впишите «На месте» в нужной брони</div>`
-    :r.rest<-1.5?`<div class="b-pack-s" style="margin-top:6px;color:var(--red)">Получается больше стоимости на ${деньги(-r.rest)}</div>`
-    :`<div class="b-pack-s" style="margin-top:6px;color:var(--green)">Всё сходится</div>`;
-  return `<div class="b-pack" onclick="event.stopPropagation()"><div class="b-pack-h"><span>Пакет · ${имя}</span><span>${r.rows.length} ${слово(r.rows.length,'экскурсия','экскурсии','экскурсий')}</span></div>
-    ${строки}
-    <div class="b-pack-t"><div><label>Итого</label><b>${деньги(r.total)}</b></div>
-      <div><label>Предоплата</label><b style="color:var(--green)">${деньги(r.pp)}</b></div>
-      <div><label>На месте</label><b>${деньги(r.onsite)}</b></div></div>
-    ${внесено?`<div class="b-pack-s" style="margin-top:4px">Внесено: ${внесено}</div>`:''}
-    ${итог}</div>`;
+  const внесено=r.платежи.map(x=>экран(x.prepay+' '+(x.prepayCur||''))).join(' + ');
+  const ок=Math.abs(r.лишнее)<=1.5&&Math.abs(r.rest)<=1.5;
+  const итог=ок?'<span style="color:var(--green)">✓ сходится</span>'
+    :r.лишнее>1.5?`<span style="color:var(--red)">предоплата больше на ${деньги(r.лишнее)}</span>`
+    :r.лишнее<-1.5?`<span style="color:var(--red)">предоплаты не хватает ${деньги(-r.лишнее)}</span>`
+    :`<span style="color:var(--red)">не вписано на месте ${деньги(r.rest)}</span>`;
+  return `<div class="b-pack" onclick="event.stopPropagation()">Пакет · ${r.rows.length} ${слово(r.rows.length,'экскурсия','экскурсии','экскурсий')} · итого ${деньги(r.total)} · предоплата ${внесено||'—'} · на месте ${деньги(r.onsite)} · ${итог}</div>`;
 }
 // Кнопка «Пакет» в открытой брони: отметить брони этого же клиента
 function пакетРедактор(id){
