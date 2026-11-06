@@ -2062,8 +2062,13 @@ function пакетБрони(b){
   const rows=list.map(x=>{const price=суммаВДоллары(x.totalAmount),onsite=наМестеВДолларах(x);
     return {b:x,price,onsite,вписано:onsite>0,pp:onsite>0?r2(Math.max(price-onsite,0)):0};});
   let left=pp-rows.filter(x=>x.вписано).reduce((s,x)=>s+x.pp,0);
-  rows.filter(x=>!x.вписано).forEach(x=>{const a=Math.min(x.price,Math.max(left,0));left-=a;x.pp=r2(a);});
-  rows.forEach(x=>x.rest=r2(x.price-x.pp-x.onsite));
+  // «На месте» в одной брони может быть больше её цены (клиент платит за все туры сразу): излишек покрывает брони без «На месте»
+  let пул=rows.filter(x=>x.вписано).reduce((s,x)=>s+Math.max(x.onsite-x.price,0),0);
+  rows.filter(x=>!x.вписано).forEach(x=>{
+    const a=Math.min(x.price,Math.max(left,0)); left-=a; x.pp=r2(a);
+    const из=Math.min(x.price-x.pp,пул); пул-=из; x.изОбщего=r2(из);
+  });
+  rows.forEach(x=>x.rest=Math.max(r2(x.price-x.pp-x.onsite-(x.изОбщего||0)),0));
   const total=rows.reduce((s,x)=>s+x.price,0);
   const onsite=rows.reduce((s,x)=>s+x.onsite,0);
   const долей=rows.reduce((s,x)=>s+x.pp,0);
@@ -2211,7 +2216,7 @@ function bCardHTML(b){
         <div class="b-exp-item"><label>Предоплата</label><span>${b.pack?(()=>{const r=пакетБрони(b);const m=r&&r.rows.find(x=>x.b.id==b.id);return m?(m.pp>0?'из пакета '+деньги(m.pp)+доляВВалюте(r,m.pp):'из пакета —'):'—';})():b.prepay?(b.prepay+' '+(b.prepayCur||'')+(b.prepayDate?' · '+shortDate(b.prepayDate):'')):'—'}${!b.pack&&b.prepay&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.prepay),b.prepayCur||'USD',currentRates,b.prepayFx)}</div>`:''}</span></div>
         <div class="b-exp-item"><label>Площадка</label><span>${b.plat?(b.plat+' '+(b.platCur||'')+(b.platDate?' · '+shortDate(b.platDate):'')):'—'}${b.plat&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.plat),b.platCur||'USD',currentRates,b.platFx)}</div>`:''}</span></div>
         <div class="b-exp-item"><label>На месте</label><span>${b.onsite?(b.onsite+' '+(b.onsiteCur||'')):'—'}${(parseFloat(b.onsite)>0&&currentRates)?`<div class="pay-hint">${payLine(parseFloat(b.onsite),b.onsiteCur||'USD',currentRates)}</div>`:''}</span></div>
-        ${(()=>{const c=сдачаПоБрони(b);return c?`<div class="b-exp-item"><label>Сдача</label><span>${c.сдача} $<div class="pay-hint">с ${c.дают} $ · ${c.донги.toLocaleString('ru-RU')} ₫</div></span></div>`:'';})()}
+        ${(()=>{const c=сдачаПоБрони(b);return c&&c.сдача>0?`<div class="b-exp-item"><label>Сдача</label><span>${c.сдача} $<div class="pay-hint">с ${c.дают} $ · ${c.донги.toLocaleString('ru-RU')} ₫</div></span></div>`:'';})()}
         <div class="b-exp-item b-exp-comm"><label>Комиссия</label><span class="b-comm-val" id="comm-${b.id}" onclick="event.stopPropagation();editComm('${b.id}')">$${b.commission||0}</span></div>
         ${(()=>{const _p=bDetectPlatform(b);const _z=значокПлощадки(_p,15);return _p?`<div class="b-exp-item"><label>Платформа</label><span style="color:var(--accent);font-weight:600">${_z||_p}</span></div>`:'';})()}
         ${(()=>{const m=(b.notes||'').match(МЕТКА_ИСТОЧНИКА);const s=m?SOURCES[+m[1]]:'';return s?`<div class="b-exp-item"><label>Откуда</label><span>${экран(s)}</span></div>`:'';})()}
