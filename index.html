@@ -2020,6 +2020,8 @@ function цветПакета(id){
   return ЦВЕТА_ПАКЕТОВ[(i<0?0:i)%ЦВЕТА_ПАКЕТОВ.length];
 }
 function имяПакета(b){
+  // своё название (пакет переименован) — показываем его; иначе «Имя …1234»
+  if(b.pack&&!/^\d+$/.test(String(b.pack))) return String(b.pack);
   const c=String(b.contact||'');
   const имя=(c.replace(/[@+\d][^\s]*/g,' ').trim().split(/\s+/)[0])||'Пакет';
   const цифры=c.replace(/\D/g,'');
@@ -2111,6 +2113,7 @@ function пакетРедактор(id){
   box.innerHTML=`<div class="b-pack-edit" onclick="event.stopPropagation()">
     <b>Брони в пакете</b><span style="color:var(--muted);font-size:12px">Брони этого клиента (по контакту). Отметьте, какие вместе.</span>
     ${свои.map(x=>`<label><input type="checkbox" value="${x.id}" ${(x.id==b.id||(pack&&x.pack===pack))?'checked':''}> ${shortDate(x.date)} — ${подписьМаршрута(x.route)} · ${экран(x.totalAmount||'')}${x.pack&&x.pack!==pack?' <span style="color:var(--muted)">(в другом пакете)</span>':''}</label>`).join('')}
+    <label style="display:grid;gap:4px;margin-top:6px"><span style="font:500 11px 'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Название пакета</span><input type="text" id="packname-${id}" value="${экран(/^\d+$/.test(String(pack))?'':pack)}" placeholder="Например: Ирина Украина" style="padding:8px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);font:14px 'DM Sans',sans-serif"></label>
     <div style="display:flex;gap:8px;margin-top:4px"><button class="b-status-btn act-done" onclick="пакетСохранить('${id}')">Сохранить пакет</button>
     ${pack?`<button class="b-status-btn" onclick="пакетСохранить('${id}',true)">Расформировать</button>`:''}</div></div>`;
 }
@@ -2120,7 +2123,12 @@ async function пакетСохранить(id, расформировать){
   const отмечены=расформировать?[]:[...box.querySelectorAll('input:checked')].map(i=>i.value);
   if(!расформировать&&отмечены.length<2){ toast('Отметьте хотя бы две брони'); return; }
   const старый=b.pack||'';
-  const новый=расформировать?'':(старый||String(отмечены.slice().sort()[0]));
+  let новый=расформировать?'':(старый||String(отмечены.slice().sort()[0]));
+  const имяВвод=((document.getElementById('packname-'+id)||{}).value||'').trim();
+  if(!расформировать&&имяВвод&&имяВвод!==новый){
+    if(allBookings.some(x=>!x.deleted&&x.pack===имяВвод&&!отмечены.includes(String(x.id)))){ toast('Такое название уже у другого пакета'); return; }
+    новый=имяВвод;
+  }
   const менять=allBookings.filter(x=>(отмечены.includes(String(x.id))&&x.pack!==новый)||(старый&&x.pack===старый&&!отмечены.includes(String(x.id))));
   box.innerHTML='<div class="b-pack-edit">Сохраняю…</div>';
   try{
