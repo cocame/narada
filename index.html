@@ -326,6 +326,8 @@ body.ro #bFilterStatus,body.ro .b-pay-icon{display:none!important}
 .b-pack-t{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;border-top:1px dashed #7c5cbf;margin-top:6px;padding-top:6px}
 .b-pack-t div{display:grid}.b-pack-t label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .b-pack-t b{font-family:'DM Mono',monospace;font-size:14px}
+.b-pack-copy{margin-left:6px;padding:2px 10px;border:1px solid #7c5cbf;border-radius:99px;background:none;color:#7c5cbf;font:600 11px 'DM Sans',sans-serif;cursor:pointer}
+body.ro .b-pack-copy{display:none}
 .b-pack-edit{margin-top:10px;padding:10px 12px;border:1px dashed #7c5cbf;border-radius:8px;font-size:13px;display:grid;gap:6px}
 .b-pack-edit label{display:flex;gap:8px;align-items:center;cursor:pointer}
 .b-pack-btn{flex:0 0 22%!important;border-color:#7c5cbf!important;color:#7c5cbf!important}
@@ -2085,7 +2087,17 @@ function пакетHTML(b){
     :r.лишнее>1.5?`<span style="color:var(--red)">предоплата больше на ${деньги(r.лишнее)}</span>`
     :r.лишнее<-1.5?`<span style="color:var(--red)">предоплаты не хватает ${деньги(-r.лишнее)}</span>`
     :`<span style="color:var(--red)">не вписано на месте ${деньги(r.rest)}</span>`;
-  return `<div class="b-pack" onclick="event.stopPropagation()" style="border-color:${цветПакета(b.pack)}"><b style="background:${цветПакета(b.pack)};color:${СВЕТЛЫЕ_ПАКЕТЫ.has(цветПакета(b.pack))?'#1f1d1a':'#fff'};border-radius:99px;padding:0 7px">${экран(имяПакета(b))}</b> · ${r.rows.length} ${слово(r.rows.length,'экскурсия','экскурсии','экскурсий')} · итого ${деньги(r.total)} · предоплата ${внесено||'—'} · на месте ${деньги(r.onsite)} · ${итог}</div>`;
+  return `<div class="b-pack" onclick="event.stopPropagation()" style="border-color:${цветПакета(b.pack)}"><b style="background:${цветПакета(b.pack)};color:${СВЕТЛЫЕ_ПАКЕТЫ.has(цветПакета(b.pack))?'#1f1d1a':'#fff'};border-radius:99px;padding:0 7px">${экран(имяПакета(b))}</b> · ${r.rows.length} ${слово(r.rows.length,'экскурсия','экскурсии','экскурсий')} · итого ${деньги(r.total)} · предоплата ${внесено||'—'} · на месте ${деньги(r.onsite)} · ${итог} <button type="button" class="b-pack-copy" onclick="event.stopPropagation();пакетКопия('${b.id}')">Копировать</button></div>`;
+}
+// Текст пакета: брони, итог, внесённая предоплата и остаток — можно отправить клиенту или себе
+function пакетКопия(id){
+  const b=allBookings.find(x=>x.id==id); const r=пакетБрони(b); if(!r) return;
+  const строки=[`Пакет — ${имяПакета(b)}`].concat(r.rows.map(x=>`${shortDate(x.b.date)} ${подписьМаршрута(x.b.route)} — ${деньги(x.price)}`));
+  строки.push('', `Итого: ${деньги(r.total)}`);
+  if(r.платежи.length) строки.push('Предоплата: '+r.платежи.map(x=>x.prepay+' '+(x.prepayCur||'')+(x.prepayDate?' ('+shortDate(x.prepayDate)+')':'')).join(' + '));
+  const остаток=Math.max(Math.round((r.total-r.pp)*100)/100,0);
+  строки.push(остаток>=1?`Остаток на месте: ${деньги(остаток)}`:'Оплачено полностью');
+  copyText(строки.join('\n'));
 }
 // Кнопка «Пакет» в открытой брони: отметить брони этого же клиента
 function пакетРедактор(id){
