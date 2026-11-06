@@ -1339,7 +1339,9 @@ function менюОтправки(txt){
     <div style="font:500 12px 'DM Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Отправить</div>
     <pre style="margin:0 0 6px;max-height:28vh;overflow:auto;white-space:pre-wrap;font:13px/1.4 'DM Sans',sans-serif;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px"></pre>
     <a style="${стиль}" target="_blank" rel="noopener" href="https://wa.me/?text=${q}">WhatsApp</a>
-    <a style="${стиль}" target="_blank" rel="noopener" href="https://t.me/share/url?url=&text=${q}">Telegram</a>
+    <a style="${стиль}" data-copy="1" href="tg://msg?text=${q}">Telegram</a>
+    <a style="${стиль}" data-copy="1" href="zalo://">Zalo</a>
+    <div style="font:12px/1.35 DM Sans,sans-serif;color:var(--muted);margin-top:6px">В Telegram и Zalo текст копируется сам — если в чате его нет, вставьте.</div>
     <button type="button" id="sendCopy" style="${стиль}">Скопировать</button>
     <button type="button" id="sendClose" style="${стиль};color:var(--muted)">Закрыть</button></div>`;
   w.querySelector('pre').textContent=txt;
@@ -1347,7 +1349,7 @@ function менюОтправки(txt){
   w.addEventListener('click',e=>{ if(e.target===w) закрыть(); });
   w.querySelector('#sendClose').onclick=закрыть;
   w.querySelector('#sendCopy').onclick=()=>{ copyText(txt); закрыть(); };
-  w.querySelectorAll('a').forEach(x=>x.addEventListener('click',()=>setTimeout(закрыть,300)));
+  w.querySelectorAll('a').forEach(x=>x.addEventListener('click',()=>{ if(x.dataset.copy) copyText(txt); setTimeout(закрыть,300); }));
   document.body.appendChild(w);
 }
 function copyText(txt) {
