@@ -1851,7 +1851,7 @@ async function bLoad(){
     if(!Array.isArray(data)) throw new Error(data&&data.error ? data.error : 'неожиданный ответ');
     allBookings=data;
     bCacheWrite(allBookings);
-    bRender(); bUpdateStats();
+    bRender(); bUpdateStats(); пакетыЧинить();
     bSyncNote('');
     bWarmGuide();
   } catch(e){
@@ -2145,6 +2145,33 @@ async function пакетСохранить(id, расформировать){
     toast(расформировать?'✓ Пакет расформирован':'✓ Пакет сохранён');
   }catch(e){ toast('Не все брони обновились — откройте «Пакет» и нажмите «Сохранить пакет» ещё раз'); }
   await bLoad();
+}
+
+// Самолечение пакетов: если запись оборвалась на середине (сервер Google не ответил),
+// у части броней остаётся старый номер пакета, у части — новое название. Такие «хвосты» дописываются сами.
+// Признак: бронь с id = номеру пакета уже вышла в пакет с названием, а другие брони всё ещё в пакете с этим номером.
+let _чинится=false;
+async function пакетыЧинить(){
+  if(_чинится||!canEdit()) return;
+  const сироты=allBookings.filter(x=>!x.deleted&&x.pack&&/^\d+$/.test(String(x.pack))&&(()=>{
+    const основа=allBookings.find(y=>String(y.id)===String(x.pack));
+    return основа&&!основа.deleted&&основа.pack&&основа.pack!==x.pack&&!/^\d+$/.test(String(основа.pack));
+  })());
+  if(!сироты.length) return;
+  _чинится=true;
+  try{
+    for(const x of сироты){
+      const основа=allBookings.find(y=>String(y.id)===String(x.pack));
+      const новое=основа.pack;
+      let ok=false;
+      for(let k=0;k<4&&!ok;k++){
+        try{ const r=await gasSave('updateBooking',{...x,pack:новое}); if(!r||r.success!==false){ x.pack=новое; ok=true; } }
+        catch(e){ await new Promise(res=>setTimeout(res,1500)); }
+      }
+    }
+    toast('✓ Пакет «'+имяПакета(сироты[0])+'» дописан');
+    bRender();
+  }finally{ _чинится=false; }
 }
 
 function bCardHTML(b){
