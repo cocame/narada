@@ -3056,6 +3056,8 @@ function стеретьПлатежиПриСменеУсловий(p){
 }
 
 function prepayAutoFill(p) {
+  // Бронь в пакете: «На месте» и предоплату ведёт пакет, форма их сама не подставляет (иначе в оплаченной брони появлялся долг)
+  { const _eb=editingId?allBookings.find(x=>x.id==editingId):null; if(_eb&&_eb.pack) return; }
   // Оплаченная бронь заморожена — ничего не досчитываем.
   if (editingId){
     const _b=allBookings.find(x=>x.id==editingId);
