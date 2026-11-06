@@ -2133,11 +2133,11 @@ async function пакетСохранить(id, расформировать){
   try{
     for(const x of менять){
       x.pack=отмечены.includes(String(x.id))?новый:'';
-      const r=await gasSave('updateBooking',x);
+      let r; try{ r=await gasSave('updateBooking',x); }catch(e){ r=await gasSave('updateBooking',x); }   // сервер Google иногда не отвечает с первого раза
       if(r&&r.success===false) throw new Error(r.error||'сервер отказал');
     }
     toast(расформировать?'✓ Пакет расформирован':'✓ Пакет сохранён');
-  }catch(e){ toast('Ошибка сохранения пакета'); }
+  }catch(e){ toast('Не все брони обновились — откройте «Пакет» и нажмите «Сохранить пакет» ещё раз'); }
   await bLoad();
 }
 
