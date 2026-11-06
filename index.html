@@ -2584,7 +2584,7 @@ function bCopyCard(id){
     подписьМаршрута(b.route)||'',
     pax,
     b.contact,
-    b.hotel,
+    названиеОтеля(b.hotel).replace(/[.,;\s]+$/,''),
     b.totalAmount?'Стоимость: '+b.totalAmount:'',
     parseFloat(b.onsite)>0?'Взять на месте: '+b.onsite+' '+(b.onsiteCur||'')+вДолларах(b.onsite,b.onsiteCur):'',
     (()=>{const c=сдачаПоБрони(b);
