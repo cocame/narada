@@ -2006,8 +2006,15 @@ function экран(s){
 // Поэтому доли круглые, без копеек. «На месте» она пишет сама в нужной брони.
 // ══════════════════════════════════════
 // У каждого пакета свой цвет и подпись «Имя …1234» — два пакета подряд не спутать
-const ЦВЕТА_ПАКЕТОВ=['#7c5cbf','#0f8a8a','#c2410c','#2f6db5','#b7791f','#be185d','#4d7c0f','#6b21a8'];
-function цветПакета(id){ let h=0; for(const ch of String(id)) h=(h*31+ch.charCodeAt(0))>>>0; return ЦВЕТА_ПАКЕТОВ[h%ЦВЕТА_ПАКЕТОВ.length]; }
+// Цвет — по порядку пакетов (по первой дате), соседние цвета заметно разные
+const ЦВЕТА_ПАКЕТОВ=['#7c5cbf','#0f8a8a','#c2410c','#2f6db5','#be185d','#4d7c0f','#b7791f','#334155'];
+function цветПакета(id){
+  const первая={};
+  allBookings.forEach(x=>{ if(x.pack&&!x.deleted&&(!первая[x.pack]||String(x.date)<первая[x.pack])) первая[x.pack]=String(x.date); });
+  const порядок=Object.keys(первая).sort((a,c)=>первая[a].localeCompare(первая[c])||a.localeCompare(c));
+  const i=порядок.indexOf(String(id));
+  return ЦВЕТА_ПАКЕТОВ[(i<0?0:i)%ЦВЕТА_ПАКЕТОВ.length];
+}
 function имяПакета(b){
   const c=String(b.contact||'');
   const имя=(c.replace(/[@+\d][^\s]*/g,' ').trim().split(/\s+/)[0])||'Пакет';
