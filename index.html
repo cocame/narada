@@ -2891,6 +2891,11 @@ function сдачаПоБрони(b){
     return расчётСдачи(наМесте,'USD');
   }
   if(/₫|vnd|₽|rub/i.test(String(b.totalAmount||''))) return null;
+  // В пакете предоплата общая: считаем остаток по доле этой брони, а не по её собственной предоплате
+  if(b.pack){
+    const r=пакетБрони(b), m=r&&r.rows.find(x=>x.b.id==b.id);
+    if(m) return m.rest<1 ? null : расчётСдачи(m.rest,'USD');
+  }
   const всего=суммаВДоллары(b.totalAmount);
   if(!(всего>0)) return null;
   const платёжUsd=(usd,сумма,вал)=>parseFloat(usd)||суммаВДоллары(сумма?сумма+(вал==='VND'?'₫':вал==='RUB'?'₽':''):'');
