@@ -1332,7 +1332,7 @@ function поделиться(txt){
 function менюОтправки(txt){
   const старое=document.getElementById('sendSheet'); if(старое) старое.remove();
   const q=encodeURIComponent(txt);
-  const стиль='display:block;text-align:center;padding:14px;margin-top:8px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font:600 15px 'DM Sans',sans-serif;text-decoration:none;cursor:pointer;width:100%;box-sizing:border-box';
+  const стиль='display:block;text-align:center;padding:14px;margin-top:8px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font:600 15px DM Sans,sans-serif;text-decoration:none;cursor:pointer;width:100%;box-sizing:border-box';
   const w=document.createElement('div'); w.id='sendSheet';
   w.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center';
   w.innerHTML=`<div style="width:100%;max-width:480px;background:var(--card,#fff);border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));box-sizing:border-box">
