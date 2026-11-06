@@ -312,6 +312,24 @@ body.ro .b-comm-val{pointer-events:none;border-bottom:none}
 body.ro #tnPrice,body.ro #tabPrice,body.ro .b-earn,body.ro #walletPanel,body.ro #earnHistoryPanel,
 body.ro #bFilterStatus,body.ro .b-pay-icon,
 body.ro .b-copy-card-btn:not(.b-copy-guide-btn){display:none!important}
+/* Пакет: один клиент, несколько броней, общая предоплата */
+.booking-card.s-pack{border-left:3px solid #7c5cbf}
+.b-pack-tag{font-family:'DM Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.06em;color:#7c5cbf;border:1px solid #7c5cbf;border-radius:99px;padding:0 6px;margin-left:6px;vertical-align:1px}
+.b-pack{margin-top:10px;padding:10px 12px;border:1px solid #7c5cbf;border-radius:8px;background:rgba(124,92,191,.07);font-size:12px}
+.b-pack-h{display:flex;justify-content:space-between;gap:8px;font-weight:600;margin-bottom:6px}
+.b-pack-r{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:5px 0;border-top:1px solid var(--border2)}
+.b-pack-r.cur{font-weight:600}
+.b-pack-bar{grid-column:1/-1;height:6px;border-radius:99px;background:var(--border);overflow:hidden;display:flex}
+.b-pack-bar i{display:block;height:100%}
+.b-pack-s{grid-column:1/-1;color:var(--muted);font-size:11px}
+.b-pack-n{font-family:'DM Mono',monospace;white-space:nowrap}
+.b-pack-t{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;border-top:1px dashed #7c5cbf;margin-top:6px;padding-top:6px}
+.b-pack-t div{display:grid}.b-pack-t label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.b-pack-t b{font-family:'DM Mono',monospace;font-size:14px}
+.b-pack-edit{margin-top:10px;padding:10px 12px;border:1px dashed #7c5cbf;border-radius:8px;font-size:13px;display:grid;gap:6px}
+.b-pack-edit label{display:flex;gap:8px;align-items:center;cursor:pointer}
+.b-pack-btn{flex:0 0 22%!important;border-color:#7c5cbf!important;color:#7c5cbf!important}
+body.ro .b-pack-btn{display:none!important}
 body.ro .tab-nav .tab-btn{flex:1}
 .ro-badge{display:none;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:2px 8px;font-family:'DM Mono',monospace;margin-left:auto}
 body.ro .ro-badge{display:inline-block}
@@ -1980,6 +1998,125 @@ function чистоеПримечание(b){
 function экран(s){
   return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 }
+// ══════════════════════════════════════
+// ПАКЕТ: один клиент, несколько броней, общая предоплата.
+// Брони остаются отдельными (свой гид, трансфер, «Гиду», копирование).
+// Предоплату вносят как обычно в любую бронь пакета — она становится общей
+// и закрывает туры по порядку дат: первый целиком, потом следующий.
+// Поэтому доли круглые, без копеек. «На месте» она пишет сама в нужной брони.
+// ══════════════════════════════════════
+function слово(n,a,b,c){ const m=n%100,d=n%10; return m>=11&&m<=14?c:d===1?a:d>=2&&d<=4?b:c; }
+function деньги(n){ return (Math.round(n*100)/100).toLocaleString('ru-RU')+' $'; }
+function ключКлиента(b){
+  const c=String(b.contact||'');
+  const d=c.replace(/\D/g,'');
+  return d.length>=7?d.slice(-9):c.trim().toLowerCase();
+}
+function предоплатаВДолларах(b){
+  const n=parseFloat(String(b.prepay||'').replace(',','.'));
+  if(!(n>0)) return 0;
+  if(b.prepayUsd>0) return parseFloat(b.prepayUsd);
+  const cur=b.prepayCur||'USD';
+  if(cur==='USD') return n;
+  const R=fxToRates(b.prepayFx)||currentRates;
+  return R?payToUsd(n,cur,R):0;
+}
+function наМестеВДолларах(b){
+  const n=parseFloat(String(b.onsite||'').replace(',','.'));
+  if(!(n>0)) return 0;
+  const cur=b.onsiteCur||'USD';
+  return cur==='USD'?n:(currentRates?payToUsd(n,cur,currentRates):0);
+}
+function пакетБрони(b){
+  if(!b||!b.pack) return null;
+  const list=allBookings.filter(x=>!x.deleted&&x.pack===b.pack&&x.tripStatus!=='cancelled')
+    .sort((a,c)=>String(a.date).localeCompare(String(c.date))||String(a.id).localeCompare(String(c.id)));
+  if(!list.length) return null;
+  const платежи=list.filter(x=>предоплатаВДолларах(x)>0);
+  const pp=платежи.reduce((s,x)=>s+предоплатаВДолларах(x),0);
+  const r2=n=>Math.round(n*100)/100;
+  // Обратный расчёт: где вписано «На месте», доля предоплаты = цена − на месте.
+  // Где не вписано — остаток предоплаты закрывает такие туры по порядку дат.
+  const rows=list.map(x=>{const price=суммаВДоллары(x.totalAmount),onsite=наМестеВДолларах(x);
+    return {b:x,price,onsite,вписано:onsite>0,pp:onsite>0?r2(Math.max(price-onsite,0)):0};});
+  let left=pp-rows.filter(x=>x.вписано).reduce((s,x)=>s+x.pp,0);
+  rows.filter(x=>!x.вписано).forEach(x=>{const a=Math.min(x.price,Math.max(left,0));left-=a;x.pp=r2(a);});
+  rows.forEach(x=>x.rest=r2(x.price-x.pp-x.onsite));
+  const total=rows.reduce((s,x)=>s+x.price,0);
+  const onsite=rows.reduce((s,x)=>s+x.onsite,0);
+  const долей=rows.reduce((s,x)=>s+x.pp,0);
+  // одна валюта у всех предоплат — показываем долю ещё и в ней (для отчёта)
+  const валюты=[...new Set(платежи.map(x=>x.prepayCur||'USD'))];
+  const вВалюте=валюты.length===1&&валюты[0]!=='USD'&&pp>0
+    ? {cur:валюты[0],k:платежи.reduce((s,x)=>s+parseFloat(String(x.prepay).replace(',','.')),0)/pp} : null;
+  return {rows,total,pp,onsite,платежи,вВалюте,лишнее:r2(pp-долей),rest:r2(total-pp-onsite)};
+}
+function доляВВалюте(r,usd){
+  if(!r.вВалюте||!(usd>0)) return '';
+  const n=Math.round(usd*r.вВалюте.k);
+  return ' = '+n.toLocaleString('ru-RU')+' '+(r.вВалюте.cur==='RUB'?'₽':r.вВалюте.cur==='VND'?'₫':r.вВалюте.cur);
+}
+function пакетHTML(b){
+  const r=пакетБрони(b); if(!r) return '';
+  const имя=экран(String(b.contact||'').replace(/\+?\d[\d\s()-]{6,}/,'').trim()||b.contact||'Клиент');
+  const строки=r.rows.map(x=>{
+    const a=x.price?x.pp/x.price*100:0;
+    const t=x.price===0?'сумма не указана':[
+      x.pp>0?'предоплата '+деньги(x.pp)+доляВВалюте(r,x.pp):'',
+      x.onsite>0?'на месте '+деньги(x.onsite):'',
+      x.rest>0.5?'не вписано '+деньги(x.rest):''].filter(Boolean).join(' · ')||'—';
+    return `<div class="b-pack-r${x.b.id==b.id?' cur':''}"><span>${shortDate(x.b.date)} — ${подписьМаршрута(x.b.route)}</span><span class="b-pack-n">${деньги(x.price)}</span>
+      <div class="b-pack-bar"><i style="width:${a}%;background:var(--green)"></i><i style="width:${x.price?x.onsite/x.price*100:0}%;background:#d69e2e"></i></div>
+      <div class="b-pack-s">${t}</div></div>`;}).join('');
+  const внесено=r.платежи.map(x=>экран(x.prepay+' '+(x.prepayCur||''))+(x.prepayDate?' · '+shortDate(x.prepayDate):'')).join(', ');
+  const итог=r.лишнее>0.5?`<div class="b-pack-s" style="margin-top:6px;color:var(--red)">Предоплата больше, чем выходит по турам, на ${деньги(r.лишнее)} — проверьте «На месте»</div>`
+    :r.лишнее<-0.5?`<div class="b-pack-s" style="margin-top:6px;color:var(--red)">Предоплаты не хватает на ${деньги(-r.лишнее)} — проверьте «На месте»</div>`
+    :r.rest>0.5?`<div class="b-pack-s" style="margin-top:6px;color:var(--red)">Не распределено: ${деньги(r.rest)} — впишите «На месте» в нужной брони</div>`
+    :r.rest<-0.5?`<div class="b-pack-s" style="margin-top:6px;color:var(--red)">Получается больше стоимости на ${деньги(-r.rest)}</div>`
+    :`<div class="b-pack-s" style="margin-top:6px;color:var(--green)">Всё сходится</div>`;
+  return `<div class="b-pack" onclick="event.stopPropagation()"><div class="b-pack-h"><span>Пакет · ${имя}</span><span>${r.rows.length} ${слово(r.rows.length,'экскурсия','экскурсии','экскурсий')}</span></div>
+    ${строки}
+    <div class="b-pack-t"><div><label>Итого</label><b>${деньги(r.total)}</b></div>
+      <div><label>Предоплата</label><b style="color:var(--green)">${деньги(r.pp)}</b></div>
+      <div><label>На месте</label><b>${деньги(r.onsite)}</b></div></div>
+    ${внесено?`<div class="b-pack-s" style="margin-top:4px">Внесено: ${внесено}</div>`:''}
+    ${итог}</div>`;
+}
+// Кнопка «Пакет» в открытой брони: отметить брони этого же клиента
+function пакетРедактор(id){
+  const b=allBookings.find(x=>x.id==id); if(!b) return;
+  const box=document.getElementById('bpackedit-'+id); if(!box) return;
+  if(box.innerHTML){ box.innerHTML=''; return; }
+  const k=ключКлиента(b);
+  const свои=allBookings.filter(x=>!x.deleted&&x.tripStatus!=='cancelled'&&(x.id==b.id||(k&&ключКлиента(x)===k)))
+    .sort((a,c)=>String(a.date).localeCompare(String(c.date)));
+  const pack=b.pack||'';
+  box.innerHTML=`<div class="b-pack-edit" onclick="event.stopPropagation()">
+    <b>Брони в пакете</b><span style="color:var(--muted);font-size:12px">Брони этого клиента (по контакту). Отметьте, какие вместе.</span>
+    ${свои.map(x=>`<label><input type="checkbox" value="${x.id}" ${(x.id==b.id||(pack&&x.pack===pack))?'checked':''}> ${shortDate(x.date)} — ${подписьМаршрута(x.route)} · ${экран(x.totalAmount||'')}${x.pack&&x.pack!==pack?' <span style="color:var(--muted)">(в другом пакете)</span>':''}</label>`).join('')}
+    <div style="display:flex;gap:8px;margin-top:4px"><button class="b-status-btn act-done" onclick="пакетСохранить('${id}')">Сохранить пакет</button>
+    ${pack?`<button class="b-status-btn" onclick="пакетСохранить('${id}',true)">Расформировать</button>`:''}</div></div>`;
+}
+async function пакетСохранить(id, расформировать){
+  const b=allBookings.find(x=>x.id==id); if(!b) return;
+  const box=document.getElementById('bpackedit-'+id);
+  const отмечены=расформировать?[]:[...box.querySelectorAll('input:checked')].map(i=>i.value);
+  if(!расформировать&&отмечены.length<2){ toast('Отметьте хотя бы две брони'); return; }
+  const старый=b.pack||'';
+  const новый=расформировать?'':(старый||String(отмечены.slice().sort()[0]));
+  const менять=allBookings.filter(x=>(отмечены.includes(String(x.id))&&x.pack!==новый)||(старый&&x.pack===старый&&!отмечены.includes(String(x.id))));
+  box.innerHTML='<div class="b-pack-edit">Сохраняю…</div>';
+  try{
+    for(const x of менять){
+      x.pack=отмечены.includes(String(x.id))?новый:'';
+      const r=await gasSave('updateBooking',x);
+      if(r&&r.success===false) throw new Error(r.error||'сервер отказал');
+    }
+    toast(расформировать?'✓ Пакет расформирован':'✓ Пакет сохранён');
+  }catch(e){ toast('Ошибка сохранения пакета'); }
+  await bLoad();
+}
+
 function bCardHTML(b){
   const paxParts=[];
   if(b.adults>0) paxParts.push(b.adults+' взр');
@@ -1988,7 +2125,7 @@ function bCardHTML(b){
   const tom=tomorrowStr();
   const sc=b.tripStatus==='done'?' s-done':b.tripStatus==='cancelled'?' s-cancelled':(b.date&&b.date===tom)?' s-tomorrow':'';
   const _bTourInd=TOURS.find(t=>t.key===b.route);const _flatOnly=_bTourInd&&_bTourInd.rows[0]&&_bTourInd.rows[0].flat;
-  const scInd=(b.isIndividual||(b.notes||'').endsWith('​')||_flatOnly)?' s-individual':'';
+  const scInd=((b.isIndividual||(b.notes||'').endsWith('​')||_flatOnly)?' s-individual':'')+(b.pack?' s-pack':'');
   const payIcon=b.payStatus==='refund'?'🤑':(b.payStatus==='paid'||b.prepay||b.plat)?'💲':'💳';
   const comm=b.tripStatus==='done'?'$'+(parseFloat(b.commission)||0):'';
   const starCol=b.inBase?'#7c5cbf':'#ccc';
@@ -1996,7 +2133,7 @@ function bCardHTML(b){
   return `<div class="booking-card${sc}${scInd}" id="bcard-${b.id}">
     <div class="b-card-main" onclick="bToggle('${b.id}')">
       <div class="b-card-route">${меткаГорода(b.route)}${подписьМаршрута(b.route)}${(()=>{const _p=bDetectPlatform(b);const _z=значокПлощадки(_p,13);return _z?`<span style="margin-left:5px">${_z}</span>`:(_p?`<span style="font-size:9px;color:var(--accent);margin-left:4px;font-family:'DM Mono',monospace;opacity:.8">${_p}</span>`:'');})()} </div>
-      <div class="b-card-pax">${paxParts.join('+')||'—'}</div>
+      <div class="b-card-pax">${paxParts.join('+')||'—'}${b.pack?'<span class="b-pack-tag">ПАКЕТ</span>':''}</div>
       <div class="b-card-contact">${b.contact||'—'}</div>
       <span class="b-pay-icon" onclick="event.stopPropagation();bCyclePay('${b.id}')" style="cursor:pointer;font-size:15px;line-height:1">${payIcon}</span>
       <button class="b-action-btn" onclick="event.stopPropagation();bRepeat('${b.id}')" title="Повторить бронь">♻️</button>
@@ -2013,7 +2150,7 @@ function bCardHTML(b){
         <div class="b-exp-item"><label>Валюта</label><span>${b.currency||'—'}</span></div>
         <div class="b-exp-item"><label>Оплата</label><span>${b.payMethod||'—'}</span></div>
         <div class="b-exp-item"><label>Сумма</label><span>${b.totalAmount||'—'}${b.payStatus==='paid'?`<span style="color:var(--green);font-size:10px;margin-left:6px">оплачено${b.paidAt?' '+shortDate(b.paidAt):''}</span>`:''}</span></div>
-        <div class="b-exp-item"><label>Предоплата</label><span>${b.prepay?(b.prepay+' '+(b.prepayCur||'')+(b.prepayDate?' · '+shortDate(b.prepayDate):'')):'—'}${b.prepay&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.prepay),b.prepayCur||'USD',currentRates,b.prepayFx)}</div>`:''}</span></div>
+        <div class="b-exp-item"><label>Предоплата</label><span>${b.pack?(()=>{const r=пакетБрони(b);const m=r&&r.rows.find(x=>x.b.id==b.id);return m?(m.pp>0?'из пакета '+деньги(m.pp)+доляВВалюте(r,m.pp):'из пакета —')+'<div class="pay-hint">общая — в карточке пакета ниже</div>':'—';})():b.prepay?(b.prepay+' '+(b.prepayCur||'')+(b.prepayDate?' · '+shortDate(b.prepayDate):'')):'—'}${!b.pack&&b.prepay&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.prepay),b.prepayCur||'USD',currentRates,b.prepayFx)}</div>`:''}</span></div>
         <div class="b-exp-item"><label>Площадка</label><span>${b.plat?(b.plat+' '+(b.platCur||'')+(b.platDate?' · '+shortDate(b.platDate):'')):'—'}${b.plat&&currentRates?`<div class="pay-hint">${payLine(parseFloat(b.plat),b.platCur||'USD',currentRates,b.platFx)}</div>`:''}</span></div>
         <div class="b-exp-item"><label>На месте</label><span>${b.onsite?(b.onsite+' '+(b.onsiteCur||'')):'—'}${(parseFloat(b.onsite)>0&&currentRates)?`<div class="pay-hint">${payLine(parseFloat(b.onsite),b.onsiteCur||'USD',currentRates)}</div>`:''}</span></div>
         ${(()=>{const c=сдачаПоБрони(b);return c?`<div class="b-exp-item"><label>Сдача</label><span>${c.сдача} $<div class="pay-hint">с ${c.дают} $ · ${c.донги.toLocaleString('ru-RU')} ₫</div></span></div>`:'';})()}
@@ -2021,6 +2158,8 @@ function bCardHTML(b){
         ${(()=>{const _p=bDetectPlatform(b);const _z=значокПлощадки(_p,15);return _p?`<div class="b-exp-item"><label>Платформа</label><span style="color:var(--accent);font-weight:600">${_z||_p}</span></div>`:'';})()}
         ${(()=>{const m=(b.notes||'').match(МЕТКА_ИСТОЧНИКА);const s=m?SOURCES[+m[1]]:'';return s?`<div class="b-exp-item"><label>Откуда</label><span>${экран(s)}</span></div>`:'';})()}
       </div>
+      ${b.pack?пакетHTML(b):''}
+      <div id="bpackedit-${b.id}"></div>
       ${(()=>{
         const tour=турБрони(b.route,b.adults);
         if(!tour||!currentRates) return '';
@@ -2068,6 +2207,7 @@ function bCardHTML(b){
       <div class="b-copy-row">
         <button class="b-copy-card-btn" onclick="event.stopPropagation();bCopyCard('${b.id}')">Скопировать карточку</button>
         <button class="b-copy-card-btn b-copy-guide-btn" onclick="event.stopPropagation();bCopyGuide('${b.id}')">Гиду</button>
+        <button class="b-copy-card-btn b-pack-btn" onclick="event.stopPropagation();пакетРедактор('${b.id}')">Пакет</button>
       </div>
       <div class="b-status-row">
         ${b.deleted ? `
@@ -2465,6 +2605,7 @@ function bCopyCard(id){
 
   const tail=[
     amountLine||'',
+    b.pack?(()=>{const r=пакетБрони(b);const m=r&&r.rows.find(x=>x.b.id==b.id);return m&&m.pp>0?'Предоплата: '+деньги(m.pp)+доляВВалюте(r,m.pp)+' (из общей предоплаты за '+r.rows.length+' '+слово(r.rows.length,'экскурсию','экскурсии','экскурсий')+')':'';})():
     parseFloat(b.prepay)>0?'Предоплата: '+b.prepay+' '+(b.prepayCur||'')+вДолларах(b.prepay,b.prepayCur,b.prepayFx)+(b.prepayDate?' · '+shortDate(b.prepayDate):''):'',
     parseFloat(b.plat)>0?'Площадка: '+b.plat+' '+(b.platCur||'')+вДолларах(b.plat,b.platCur,b.platFx)+(b.platDate?' · '+shortDate(b.platDate):''):'',
     parseFloat(b.onsite)>0?'На месте: '+b.onsite+' '+(b.onsiteCur||'')+вДолларах(b.onsite,b.onsiteCur):'',
