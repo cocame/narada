@@ -1316,16 +1316,6 @@ function toast(msg) {
   el.style.opacity='1'; clearTimeout(el._t);
   el._t=setTimeout(()=>el.style.opacity='0',1800);
 }
-// На телефоне «Гиду» и «Трансфер» открывают окно «Поделиться» (WhatsApp, Telegram, Zalo)
-// с готовым текстом. На компьютере и если окно не открылось — просто копируют.
-function поделиться(txt){
-  const телефон=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
-  if(телефон&&navigator.share){
-    navigator.share({text:txt}).catch(e=>{ if(e&&e.name!=='AbortError') copyText(txt); });
-    return;
-  }
-  copyText(txt);
-}
 function copyText(txt) {
   // Запасной способ — для телефонов и браузеров, где буфер закрыт
   const fallback=()=>{
@@ -2576,11 +2566,11 @@ function bCopyGuide(id){
     ru[3]=pax?guidePeople(pax):'—'; vi[3]=pax?pax+' người':'—';
     if(!b.hotel){ ru.splice(2,1); vi.splice(2,1); }
     // ссылка на карту гиду не нужна — она мне для расчёта трансфера
-    поделиться(ru.join('\n')+'\n──────────\n'+vi.join('\n'));
+    copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n'));
     return;
   }
   // ссылки на карту гиду не нужны — только мне
-  поделиться(ru.join('\n')+'\n──────────\n'+vi.join('\n'));
+  copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n'));
 }
 
 function bCopyCard(id){
@@ -2605,7 +2595,7 @@ function bCopyCard(id){
     (()=>{const c=сдачаПоБрони(b);
       return c&&c.сдача>0?'Сдача с '+c.дают+' $: '+c.сдача+' $ = '+c.донги.toLocaleString('ru-RU')+' ₫':'';})()
   ].filter(Boolean);
-  поделиться(строки.join('\n'));
+  copyText(строки.join('\n'));
 }
 
 function bUpdateStats(){
