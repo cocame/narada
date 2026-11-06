@@ -2206,8 +2206,8 @@ function bCardHTML(b){
         <textarea onclick="event.stopPropagation()" onchange="event.stopPropagation();bSaveNote('${b.id}',this.value)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:40px;color:var(--text)">${экран(чистоеПримечание(b))}</textarea>
       </div>
       <div class="b-copy-row">
-        <button class="b-copy-card-btn" onclick="event.stopPropagation();bCopyCard('${b.id}')">Скопировать карточку</button>
-        <button class="b-copy-card-btn b-copy-guide-btn" onclick="event.stopPropagation();bCopyGuide('${b.id}')">Гиду</button>
+        <button class="b-copy-card-btn" onclick="event.stopPropagation();bCopyCard('${b.id}')">Гиду</button>
+        <button class="b-copy-card-btn b-copy-guide-btn" onclick="event.stopPropagation();bCopyGuide('${b.id}')">Трансфер</button>
         <button class="b-copy-card-btn b-pack-btn" onclick="event.stopPropagation();пакетРедактор('${b.id}')">Пакет</button>
       </div>
       <div class="b-status-row">
@@ -2569,55 +2569,28 @@ function bCopyGuide(id){
 }
 
 function bCopyCard(id){
+  // Кнопка «Гиду»: только заявка — дата, тур, люди, контакт, отель,
+  // стоимость, сколько взять на месте и сдача. Площадки, расчёт
+  // и предоплату гиду знать не нужно (06.11).
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   const pax=[b.adults?b.adults+' взр':'',b.children?b.children+' дет':'',b.infants?b.infants+' мал':''].filter(Boolean).join(', ');
-  const amountLine=b.totalAmount?(b.payStatus==='paid'?'Оплачено: '+b.totalAmount:'К оплате: '+b.totalAmount):'';
-  // Платёж не в долларах — дописываем, сколько это в долларах
-  const вДолларах=(сумма,вал,fx)=>{
+  const вДолларах=(сумма,вал)=>{
     const n=parseFloat(сумма);
     if(!(n>0)||!вал||вал==='USD'||!currentRates) return '';
-    return ' ('+Math.round(payToUsd(n,вал,fxToRates(fx)||currentRates))+' $)';
+    return ' ('+Math.round(payToUsd(n,вал,currentRates))+' $)';
   };
-  const plat=bDetectPlatform(b);
-  // Индивидуальную помечаем только здесь — в карточке гиду этого не пишем
-  const _tour=TOURS.find(t=>t.key===b.route);
-  const _isInd=!!(b.isIndividual||(b.notes||'').endsWith('​')||(_tour&&_tour.rows[0]&&_tour.rows[0].flat));
-  const routeLine=[подписьМаршрута(b.route)||'—',plat,_isInd?'Индивидуально':''].filter(Boolean).join(' · ');
-
-  // Пустые поля и способ оплаты не пишем — суммы ниже говорят сами за себя
-  const head=[
+  const строки=[
     b.date?formatDateLabel(b.date):'',
-    routeLine,
+    подписьМаршрута(b.route)||'',
     pax,
     b.contact,
-    b.hotel
-  ].filter(Boolean);
-
-  // расклад: за что сколько
-  const bd=bBreakdown(b); const mid=[];
-  if(bd.length){
-    mid.push('','Расчёт:');
-    bd.forEach(it=>{
-      if(it.section){ mid.push(it.section+':'); it.items.forEach(t=>mid.push('  '+t.label+' — '+t.val)); }
-      else mid.push(it.label+' — '+it.val);
-    });
-    mid.push('');
-  }
-
-  const tail=[
-    amountLine||'',
-    b.pack?(()=>{const r=пакетБрони(b);const m=r&&r.rows.find(x=>x.b.id==b.id);return m&&m.pp>0?'Предоплата: '+деньги(m.pp)+доляВВалюте(r,m.pp)+' (из общей предоплаты за '+r.rows.length+' '+слово(r.rows.length,'экскурсию','экскурсии','экскурсий')+')':'';})():
-    parseFloat(b.prepay)>0?'Предоплата: '+b.prepay+' '+(b.prepayCur||'')+вДолларах(b.prepay,b.prepayCur,b.prepayFx)+(b.prepayDate?' · '+shortDate(b.prepayDate):''):'',
-    parseFloat(b.plat)>0?'Площадка: '+b.plat+' '+(b.platCur||'')+вДолларах(b.plat,b.platCur,b.platFx)+(b.platDate?' · '+shortDate(b.platDate):''):'',
-    parseFloat(b.onsite)>0?'На месте: '+b.onsite+' '+(b.onsiteCur||'')+вДолларах(b.onsite,b.onsiteCur):'',
-    // сдачу гид готовит наличными — донги нужны прямо в карточке
+    b.hotel,
+    b.totalAmount?'Стоимость: '+b.totalAmount:'',
+    parseFloat(b.onsite)>0?'Взять на месте: '+b.onsite+' '+(b.onsiteCur||'')+вДолларах(b.onsite,b.onsiteCur):'',
     (()=>{const c=сдачаПоБрони(b);
-      return c&&c.сдача>0?'Сдача с '+c.дают+' $: '+c.сдача+' $ = '+c.донги.toLocaleString('ru-RU')+' ₫':'';})(),
-    // примечание в карточку не идёт — оно для себя, а не для того,
-    // кому карточку отправляют; в списке оно и так видно строкой
+      return c&&c.сдача>0?'Сдача с '+c.дают+' $: '+c.сдача+' $ = '+c.донги.toLocaleString('ru-RU')+' ₫':'';})()
   ].filter(Boolean);
-
-  copyText(head.concat(mid,tail).join('\n'));
+  copyText(строки.join('\n'));
 }
 
 function bUpdateStats(){
