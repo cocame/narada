@@ -1319,12 +1319,19 @@ function toast(msg) {
 // На телефоне «Гиду» и «Трансфер» открывают окно «Поделиться» (WhatsApp, Telegram, Zalo)
 // с готовым текстом. На компьютере и если окно не открылось — просто копируют.
 function поделиться(txt){
-  const телефон=window.matchMedia&&matchMedia('(pointer:coarse)').matches;
-  if(телефон&&navigator.share){
-    navigator.share({text:txt}).catch(e=>{ if(e&&e.name!=='AbortError') copyText(txt); });
+  const телефон=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent||'');
+  if(!телефон){ copyText(txt); return; }
+  if(!navigator.share){
+    copyText(txt);
+    // во встроенном браузере Telegram/WhatsApp окна «Поделиться» нет — скажем об этом
+    setTimeout(()=>toast('Здесь нет «Поделиться» — откройте в Safari/Chrome. Текст скопирован'),50);
     return;
   }
-  copyText(txt);
+  navigator.share({text:txt}).catch(e=>{
+    if(e&&e.name==='AbortError') return;   // закрыла окно сама
+    copyText(txt);
+    setTimeout(()=>toast('«Поделиться» не открылось ('+(e&&e.name||'ошибка')+'). Текст скопирован'),50);
+  });
 }
 function copyText(txt) {
   // Запасной способ — для телефонов и браузеров, где буфер закрыт
