@@ -313,7 +313,7 @@ body.ro #tnPrice,body.ro #tabPrice,body.ro .b-earn,body.ro #walletPanel,body.ro 
 body.ro #bFilterStatus,body.ro .b-pay-icon{display:none!important}
 /* Ленар может копировать карточку брони (с 06.11) */
 /* Пакет: один клиент, несколько броней, общая предоплата */
-.booking-card.s-pack{border-left:3px solid #7c5cbf}
+.booking-card.s-pack{border-left:5px solid #7c3aed}
 .b-pack-tag{font-family:'DM Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.06em;color:#7c5cbf;border:1px solid #7c5cbf;border-radius:99px;padding:0 6px;margin-left:6px;vertical-align:1px}
 .b-pack{margin-top:10px;padding:10px 12px;border:1px solid #7c5cbf;border-radius:8px;background:rgba(124,92,191,.07);font-size:12px}
 .b-pack-h{display:flex;justify-content:space-between;gap:8px;font-weight:600;margin-bottom:6px}
@@ -2007,7 +2007,9 @@ function экран(s){
 // ══════════════════════════════════════
 // У каждого пакета свой цвет и подпись «Имя …1234» — два пакета подряд не спутать
 // Цвет — по порядку пакетов (по первой дате), соседние цвета заметно разные
-const ЦВЕТА_ПАКЕТОВ=['#7c5cbf','#0f8a8a','#c2410c','#2f6db5','#be185d','#4d7c0f','#b7791f','#334155'];
+// чередуем тёмный и светлый: фиолетовый, оранжевый, зелёный, лимонный, синий, салатовый, малиновый, голубой
+const ЦВЕТА_ПАКЕТОВ=['#7c3aed','#f97316','#15803d','#eab308','#1d4ed8','#84cc16','#be185d','#38bdf8'];
+const СВЕТЛЫЕ_ПАКЕТЫ=new Set(['#f97316','#eab308','#84cc16','#38bdf8']);
 function цветПакета(id){
   const первая={};
   allBookings.forEach(x=>{ if(x.pack&&!x.deleted&&(!первая[x.pack]||String(x.date)<первая[x.pack])) первая[x.pack]=String(x.date); });
@@ -2083,7 +2085,7 @@ function пакетHTML(b){
     :r.лишнее>1.5?`<span style="color:var(--red)">предоплата больше на ${деньги(r.лишнее)}</span>`
     :r.лишнее<-1.5?`<span style="color:var(--red)">предоплаты не хватает ${деньги(-r.лишнее)}</span>`
     :`<span style="color:var(--red)">не вписано на месте ${деньги(r.rest)}</span>`;
-  return `<div class="b-pack" onclick="event.stopPropagation()" style="border-color:${цветПакета(b.pack)}"><b style="color:${цветПакета(b.pack)}">${экран(имяПакета(b))}</b> · ${r.rows.length} ${слово(r.rows.length,'экскурсия','экскурсии','экскурсий')} · итого ${деньги(r.total)} · предоплата ${внесено||'—'} · на месте ${деньги(r.onsite)} · ${итог}</div>`;
+  return `<div class="b-pack" onclick="event.stopPropagation()" style="border-color:${цветПакета(b.pack)}"><b style="background:${цветПакета(b.pack)};color:${СВЕТЛЫЕ_ПАКЕТЫ.has(цветПакета(b.pack))?'#1f1d1a':'#fff'};border-radius:99px;padding:0 7px">${экран(имяПакета(b))}</b> · ${r.rows.length} ${слово(r.rows.length,'экскурсия','экскурсии','экскурсий')} · итого ${деньги(r.total)} · предоплата ${внесено||'—'} · на месте ${деньги(r.onsite)} · ${итог}</div>`;
 }
 // Кнопка «Пакет» в открытой брони: отметить брони этого же клиента
 function пакетРедактор(id){
@@ -2137,7 +2139,7 @@ function bCardHTML(b){
   return `<div class="booking-card${sc}${scInd}" id="bcard-${b.id}"${_packStyle}>
     <div class="b-card-main" onclick="bToggle('${b.id}')">
       <div class="b-card-route">${меткаГорода(b.route)}${подписьМаршрута(b.route)}${(()=>{const _p=bDetectPlatform(b);const _z=значокПлощадки(_p,13);return _z?`<span style="margin-left:5px">${_z}</span>`:(_p?`<span style="font-size:9px;color:var(--accent);margin-left:4px;font-family:'DM Mono',monospace;opacity:.8">${_p}</span>`:'');})()} </div>
-      <div class="b-card-pax">${paxParts.join('+')||'—'}${b.pack?`<span class="b-pack-tag" style="color:${цветПакета(b.pack)};border-color:${цветПакета(b.pack)}">${экран(имяПакета(b))}</span>`:''}</div>
+      <div class="b-card-pax">${paxParts.join('+')||'—'}${b.pack?`<span class="b-pack-tag" style="background:${цветПакета(b.pack)};border-color:${цветПакета(b.pack)};color:${СВЕТЛЫЕ_ПАКЕТЫ.has(цветПакета(b.pack))?'#1f1d1a':'#fff'}">${экран(имяПакета(b))}</span>`:''}</div>
       <div class="b-card-contact">${b.contact||'—'}</div>
       <span class="b-pay-icon" onclick="event.stopPropagation();bCyclePay('${b.id}')" style="cursor:pointer;font-size:15px;line-height:1">${payIcon}</span>
       <button class="b-action-btn" onclick="event.stopPropagation();bRepeat('${b.id}')" title="Повторить бронь">♻️</button>
