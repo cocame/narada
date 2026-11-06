@@ -2556,7 +2556,7 @@ function bCopyGuide(id){
 
 function bCopyCard(id){
   // Кнопка «Гиду»: только заявка — дата, тур, люди, контакт, отель,
-  // стоимость, сколько взять на месте и сдача. Площадки, расчёт
+  // стоимость, сколько взять на месте и сдача; отель со ссылкой (06.11). Площадки, расчёт
   // и предоплату гиду знать не нужно (06.11).
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   const pax=[b.adults?b.adults+' взр':'',b.children?b.children+' дет':'',b.infants?b.infants+' мал':''].filter(Boolean).join(', ');
@@ -2570,7 +2570,7 @@ function bCopyCard(id){
     подписьМаршрута(b.route)||'',
     pax,
     b.contact,
-    названиеОтеля(b.hotel).replace(/[.,;\s]+$/,''),
+    b.hotel,
     b.totalAmount?'Стоимость: '+b.totalAmount:'',
     parseFloat(b.onsite)>0?'Взять на месте: '+b.onsite+' '+(b.onsiteCur||'')+вДолларах(b.onsite,b.onsiteCur):'',
     (()=>{const c=сдачаПоБрони(b);
