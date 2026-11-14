@@ -842,8 +842,9 @@ const TOURS = [
   // вовсе. Детские билеты бывают только в Винперл (по росту).
   { icon:'🌲', name:'Нячанг — Далат Classic', key:'НТ ДАЛАТ', noPlat:true, commRate:0.05,
     rows:[{label:'В группе',usd:43},{label:'Ребёнок — цена та же',usd:43},{label:'VIP, за человека',usd:80},{label:'Индивидуально',usd:0,flat:true,free:true}] },
-  { icon:'🌉', name:'Нячанг — Далат Bridge', key:'НТ ДАЛАТ БРИДЖ', noPlat:true, commRate:0.05,
-    rows:[{label:'В группе',usd:60},{label:'Ребёнок — цена та же',usd:60},{label:'VIP, за человека',usd:95},{label:'Индивидуально',usd:0,flat:true,free:true}] },
+  { icon:'🌉', name:'Нячанг — Далат Bridge', key:'НТ ДАЛАТ БРИДЖ', commRate:0.05,
+    // Трипстер: цена партнёра ÷ 0,78 (комиссия 22 %), вверх до доллара — правило от 30.10 в ЧТО ЗАПИСАНО.
+    rows:[{label:'В группе',usd:60,tr:77},{label:'Ребёнок — цена та же',usd:60,tr:77},{label:'VIP, за человека',usd:95,tr:122},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🎢', name:'Нячанг — Далат 2.0 Перезагрузка', key:'НТ ДАЛАТ 2.0', noPlat:true, commRate:0.05,
     rows:[{label:'В группе',usd:70},{label:'Ребёнок — цена та же',usd:70},{label:'VIP, за человека',usd:120},{label:'Индивидуально',usd:0,flat:true,free:true}] },
   { icon:'🏞', name:'Нячанг — Далат на два дня', key:'НТ ДАЛАТ 2 ДНЯ', noPlat:true, commRate:0.05,
