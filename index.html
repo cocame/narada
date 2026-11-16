@@ -708,6 +708,12 @@ const SOURCES = [
 // записывает только поля из своего списка, а чужие молча отбрасывает —
 // проверено записью, поле source до сервера не доехало.
 const МЕТКА_ИСТОЧНИКА=/\u200C(\d)/;
+// Примечание для гида живёт в том же поле notes между двумя невидимыми
+// разделителями U+2063 (отдельной колонки на сервере нет). В свои записи
+// оно не попадает, а кнопка «Гиду» добавляет его последней строкой (16.11).
+const ЗАМЕТКА_ГИДУ=/\u2063([^\u2063]*)\u2063/;
+function заметкаГиду(b){ const m=(b.notes||'').match(ЗАМЕТКА_ГИДУ); return m?m[1].trim():''; }
+function безЗаметкиГиду(s){ return String(s||'').replace(ЗАМЕТКА_ГИДУ,''); }
 // У брони с площадки источник и так известен по своей метке — не заставляем
 // выбирать его руками второй раз.
 function источникБрони(b){
@@ -2000,7 +2006,7 @@ function bRender(){
 // В примечании живут невидимые метки — платформа (‌T/‌S) и признак
 // «индивидуально». В строке списка они не нужны, нужен только текст.
 function чистоеПримечание(b){
-  return (b.notes||'').replace(/‌[TSB]/g,'').replace(МЕТКА_ИСТОЧНИКА,'').replace(/[​‌‍]/g,'').trim();
+  return безЗаметкиГиду(b.notes).replace(/‌[TSB]/g,'').replace(МЕТКА_ИСТОЧНИКА,'').replace(/[​‌‍]/g,'').trim();
 }
 function экран(s){
   return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -2273,6 +2279,10 @@ function bCardHTML(b){
         <label>Примечание</label>
         <textarea onclick="event.stopPropagation()" onchange="event.stopPropagation();bSaveNote('${b.id}',this.value)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:40px;color:var(--text)">${экран(чистоеПримечание(b))}</textarea>
       </div>
+      <div class="b-notes-row">
+        <label>Примечание для гида (уходит в «Гиду», в свои записи не попадает)</label>
+        <textarea onclick="event.stopPropagation()" onchange="event.stopPropagation();bSaveGuideNote('${b.id}',this.value)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:12px;resize:vertical;min-height:40px;color:var(--text)">${экран(заметкаГиду(b))}</textarea>
+      </div>
       <div class="b-copy-row">
         <button class="b-copy-card-btn" onclick="event.stopPropagation();bCopyCard('${b.id}')">Гиду</button>
         <button class="b-copy-card-btn b-copy-guide-btn" onclick="event.stopPropagation();bCopyGuide('${b.id}')">Трансфер</button>
@@ -2413,7 +2423,7 @@ function bPlatMentioned(txt,re){
   return false;
 }
 function bDetectPlatform(b){
-  const n=b.notes||'';
+  const n=безЗаметкиГиду(b.notes);
   // «База» — это осознанный выбор «площадки нет». Он должен перебивать любое
   // угадывание ниже: раньше бронь с ценой, совпавшей с ценой площадки, снова
   // подписывалась этой площадкой, и снять подпись было нечем.
@@ -2637,9 +2647,10 @@ function bCopyGuide(id){
 }
 
 function bCopyCard(id){
-  // Кнопка «Гиду»: только заявка — дата, тур, люди, контакт, отель,
-  // стоимость, сколько взять на месте и сдача; отель со ссылкой (06.11). Площадки, расчёт
-  // и предоплату гиду знать не нужно (06.11).
+  // Кнопка «Гиду»: дата, тур, люди, контакт, отель со ссылкой и всегда строка
+  // «К оплате на месте». Полная стоимость и сдача партнёру не нужны (16.11);
+  // последней строкой — отдельное «Примечание для гида». Площадки, расчёт
+  // и предоплату партнёру знать не нужно (06.11).
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   const pax=[b.adults?b.adults+' взр':'',b.children?b.children+' дет':'',b.infants?b.infants+' мал':''].filter(Boolean).join(', ');
   const вДолларах=(сумма,вал)=>{
@@ -2653,10 +2664,8 @@ function bCopyCard(id){
     pax,
     b.contact,
     b.hotel,
-    b.totalAmount?'Стоимость: '+b.totalAmount:'',
-    parseFloat(b.onsite)>0?'Взять на месте: '+b.onsite+' '+(b.onsiteCur||'')+вДолларах(b.onsite,b.onsiteCur):'',
-    (()=>{const c=сдачаПоБрони(b);
-      return c&&c.сдача>0?'Сдача с '+c.дают+' $: '+c.сдача+' $ = '+c.донги.toLocaleString('ru-RU')+' ₫':'';})()
+    'К оплате на месте: '+(parseFloat(b.onsite)>0?b.onsite+' '+(b.onsiteCur||'')+вДолларах(b.onsite,b.onsiteCur):'0'),
+    заметкаГиду(b)
   ].filter(Boolean);
   copyText(строки.join('\n'));
 }
@@ -2685,8 +2694,19 @@ async function bSaveNote(id,val){
   const isInd=(b.notes||'').endsWith('​')||b.isIndividual;
   const platMark=(b.notes||'').match(/‌[TSB]/)?.[0]||'';
   const srcMark=(b.notes||'').match(МЕТКА_ИСТОЧНИКА)?.[0]||'';
-  b.notes=val.replace(/​/g,'').replace(/‌[TSB]/g,'').replace(МЕТКА_ИСТОЧНИКА,'')+platMark+srcMark+(isInd?'​':'');
+  const gm=(b.notes||'').match(ЗАМЕТКА_ГИДУ)?.[0]||'';
+  b.notes=val.replace(/​/g,'').replace(/‌[TSB]/g,'').replace(МЕТКА_ИСТОЧНИКА,'').replace(ЗАМЕТКА_ГИДУ,'')+platMark+srcMark+gm+(isInd?'​':'');
   await gasSave('updateBooking',b);
+}
+async function bSaveGuideNote(id,val){
+  const b=allBookings.find(x=>x.id==id); if(!b) return;
+  const rest=безЗаметкиГиду(b.notes);
+  const isInd=rest.endsWith('​');
+  const base=isInd?rest.slice(0,-1):rest;
+  const t=String(val||'').replace(/\u2063/g,'').trim();
+  b.notes=base+(t?'\u2063'+t+'\u2063':'')+(isInd?'​':'');
+  await gasSave('updateBooking',b);
+  toast('Примечание для гида сохранено');
 }
 async function bCyclePay(id){
   const b=allBookings.find(x=>x.id==id); if(!b) return;
@@ -2784,7 +2804,7 @@ function bEdit(id){
   document.getElementById('fOnsite').value=b.onsite||'';
   document.getElementById('fOnsiteCur').value=b.onsite?(b.onsiteCur||b.currency||'USD'):'USD';
   запомнитьВалюты();
-  document.getElementById('fNotes').value=(b.notes||'').replace(/​/g,'');
+  document.getElementById('fNotes').value=безЗаметкиГиду(b.notes).replace(/​/g,'');
   // трансфер: без этого он обнулялся при каждом открытии на редактирование
   const _etr=document.getElementById('fTransfer'); if(_etr) _etr.value=b.transfer||'';
   // Трансфер: маршрут хранится в названии после «ТРАНСФЕР: »
@@ -3927,7 +3947,7 @@ function bGetFormData(){
     tripStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.tripStatus||'waiting') : (document.getElementById(p+'TripStatus')?.value||'waiting'),
     notes:(()=>{const _pn=mTab==='manual'?fPlatformName:pfPlatformName;const _pm=_pn==='Sputnik8'?'‌S':_pn==='Tripster'?'‌T':_pn==='База'?'‌B':'';// Метку источника больше не ставим руками, но у старых броней её нужно сохранить —
     // иначе при любой правке примечания источник исчезнет.
-    const _sm=editingId?((allBookings.find(x=>x.id==editingId)?.notes||'').match(МЕТКА_ИСТОЧНИКА)?.[0]||''):'';return(document.getElementById(p+'Notes').value||'').replace(/​/g,'').replace(/‌[TSB]/g,'').replace(МЕТКА_ИСТОЧНИКА,'')+_pm+_sm+(isIndividual?'​':'');})()
+    const _sm=editingId?((allBookings.find(x=>x.id==editingId)?.notes||'').match(МЕТКА_ИСТОЧНИКА)?.[0]||''):'';const _gm=editingId?((allBookings.find(x=>x.id==editingId)?.notes||'').match(ЗАМЕТКА_ГИДУ)?.[0]||''):'';return(document.getElementById(p+'Notes').value||'').replace(/​/g,'').replace(/‌[TSB]/g,'').replace(МЕТКА_ИСТОЧНИКА,'').replace(ЗАМЕТКА_ГИДУ,'')+_pm+_sm+_gm+(isIndividual?'​':'');})()
   };
 }
 function bRepeat(id){
