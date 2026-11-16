@@ -2646,11 +2646,29 @@ function bCopyGuide(id){
   copyText(ru.join('\n')+'\n──────────\n'+vi.join('\n'));
 }
 
+// Сколько тур стоит у партнёра (не цена площадки): для процентных туров —
+// комиссия, делённая на ставку; для туров с комиссией в долларах — цена
+// строк прайса × люди; «Индивидуально» со свободной ценой — вписанная сумма.
+function ценаУПартнёра(b,тур){
+  if(!тур) return 0;
+  const c=parseFloat(b.commission)||0;
+  if(тур.commRate && c>0) return Math.round(c/тур.commRate*100)/100;
+  if(фиксированнаяКомиссия(тур)){
+    const взр=parseInt(b.adults)||0, дет=parseInt(b.children)||0;
+    if(b.isIndividual||(b.notes||'').endsWith('​')) return parseFloat(b.customPriceAdult)||0;
+    let сумма=(тур.rows[0].usd||0)*взр;
+    if(тур.rows[1]&&!тур.rows[1].flat) сумма+=(тур.rows[1].usd||0)*дет;
+    return Math.round(сумма*100)/100;
+  }
+  return 0;
+}
+
 function bCopyCard(id){
-  // Кнопка «Гиду»: дата, тур, люди, контакт, отель со ссылкой и всегда строка
-  // «К оплате на месте». Полная стоимость и сдача партнёру не нужны (16.11);
-  // последней строкой — отдельное «Примечание для гида». Площадки, расчёт
-  // и предоплату партнёру знать не нужно (06.11).
+  // Кнопка «Гиду»: дата, тур, люди, контакт, отель со ссылкой. У туров партнёров
+  // дальше «Стоимость» (цена тура у партнёра, не площадки), «Комиссия» и всегда
+  // «К оплате на месте» (16.11); сдачи у партнёров нет. У остальных — как было:
+  // стоимость, «Взять на месте», сдача. Последней строкой — «Примечание для гида».
+  // Площадки, расчёт и предоплату партнёру знать не нужно (06.11).
   const b=allBookings.find(x=>x.id==id); if(!b) return;
   const pax=[b.adults?b.adults+' взр':'',b.children?b.children+' дет':'',b.infants?b.infants+' мал':''].filter(Boolean).join(', ');
   const вДолларах=(сумма,вал)=>{
@@ -2658,13 +2676,25 @@ function bCopyCard(id){
     if(!(n>0)||!вал||вал==='USD'||!currentRates) return '';
     return ' ('+Math.round(payToUsd(n,вал,currentRates))+' $)';
   };
+  const тур=турБрони(b.route,b.adults||0);
+  const партнёр=турПартнёра(тур);
+  const цена=партнёр?ценаУПартнёра(b,тур):0;
   const строки=[
     b.date?formatDateLabel(b.date):'',
     подписьМаршрута(b.route)||'',
     pax,
     b.contact,
     b.hotel,
-    'К оплате на месте: '+(parseFloat(b.onsite)>0?b.onsite+' '+(b.onsiteCur||'')+вДолларах(b.onsite,b.onsiteCur):'0'),
+    ...(партнёр?[
+      цена>0?'Стоимость: '+цена+' $':'',
+      parseFloat(b.commission)>0?'Комиссия: '+b.commission+' $':'',
+      'К оплате на месте: '+(parseFloat(b.onsite)>0?b.onsite+' '+(b.onsiteCur||'')+вДолларах(b.onsite,b.onsiteCur):'0')
+    ]:[
+      b.totalAmount?'Стоимость: '+b.totalAmount:'',
+      parseFloat(b.onsite)>0?'Взять на месте: '+b.onsite+' '+(b.onsiteCur||'')+вДолларах(b.onsite,b.onsiteCur):'',
+      (()=>{const c=сдачаПоБрони(b);
+        return c&&c.сдача>0?'Сдача с '+c.дают+' $: '+c.сдача+' $ = '+c.донги.toLocaleString('ru-RU')+' ₫':'';})()
+    ]),
     заметкаГиду(b)
   ].filter(Boolean);
   copyText(строки.join('\n'));
