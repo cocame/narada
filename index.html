@@ -2687,7 +2687,7 @@ function bCopyCard(id){
     b.hotel,
     ...(партнёр?[
       цена>0?'Стоимость: '+цена+' $':'',
-      parseFloat(b.commission)>0?'Комиссия: '+b.commission+' $':'',
+      parseFloat(b.commission)>0?'Комиссия'+(цена>0?' '+(Math.round(parseFloat(b.commission)/цена*1000)/10)+'%':'')+': '+b.commission+' $':'',
       'К оплате на месте: '+(parseFloat(b.onsite)>0?b.onsite+' '+(b.onsiteCur||'')+вДолларах(b.onsite,b.onsiteCur):'0')
     ]:[
       b.totalAmount?'Стоимость: '+b.totalAmount:'',
