@@ -1242,7 +1242,7 @@ function турБрони(key, adults){
   const n=Math.min(Math.max(adults||1,1),t.group.length);
   // Цена Трипстера (tr) берём из строки «n чел.» — иначе в брони её нет; снизу — строка «Индивидуально» со своей суммой, как у остальных туров.
   const tr=t.rows[n-1]&&t.rows[n-1].tr;
-  return {...t, rows:[{label:'Группа '+n+' чел.',usd:t.group[n-1],flat:true,...(tr?{tr}:{})},{label:t.rows[t.rows.length-2>=0?t.rows.length-1:0].label,usd:t.childAdd},{label:'Индивидуально',usd:0,flat:true,free:true}]};
+  return {...t, rows:[{label:'Группа '+n+' чел.',usd:t.group[n-1],flat:true,...(tr?{tr}:{})},{label:t.rows[t.rows.length-1].label,usd:t.childAdd},{label:'Индивидуально',usd:0,flat:true,free:true}]};
 }
 
 // Отмечена «Индивидуально» со свободной ценой — возвращает вписанную сумму.
