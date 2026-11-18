@@ -550,6 +550,7 @@ body.ro .ro-badge{display:inline-block}
             <div class="pay-hint" id="fChangeHint"></div>
           </div>
           <div class="form-group full"><label>Примечание</label><textarea id="fNotes"></textarea></div>
+          <div class="form-group full"><label>Примечание для гида (копируется в «Гиду», в свои записи не попадает)</label><textarea id="fGuideNote"></textarea></div>
         </div>
         <div class="comm-preview" style="margin-top:10px">
           <div><div class="cv" id="previewComm">$0</div><div class="cl">Ваша комиссия</div></div>
@@ -652,6 +653,7 @@ body.ro .ro-badge{display:inline-block}
               <div class="pay-hint" id="pfChangeHint"></div>
             </div>
             <div class="form-group full"><label>Примечание</label><textarea id="pfNotes"></textarea></div>
+          <div class="form-group full"><label>Примечание для гида (копируется в «Гиду», в свои записи не попадает)</label><textarea id="pfGuideNote"></textarea></div>
           </div>
           <div class="comm-preview" style="margin-top:10px">
             <div><div class="cv" id="previewComm2">$0</div><div class="cl">Ваша комиссия</div></div>
@@ -2862,6 +2864,7 @@ function bEdit(id){
   document.getElementById('fOnsiteCur').value=b.onsite?(b.onsiteCur||b.currency||'USD'):'USD';
   запомнитьВалюты();
   document.getElementById('fNotes').value=безЗаметкиГиду(b.notes).replace(/​/g,'');
+  const _egn=document.getElementById('fGuideNote'); if(_egn) _egn.value=заметкаГиду(b);
   // трансфер: без этого он обнулялся при каждом открытии на редактирование
   const _etr=document.getElementById('fTransfer'); if(_etr) _etr.value=b.transfer||'';
   // Трансфер: маршрут хранится в названии после «ТРАНСФЕР: »
@@ -3208,7 +3211,7 @@ function fCurrencyChanged(p){
 }
 
 function bClearForm(){
-  ['fDate','fContact','fHotel','fAmount','fNotes','fPrepay','fPrepayDate','fOnsite','fPlat','fPlatDate','fPlatUsd','fPlatFx','pfDate','pfContact','pfHotel','pfAmount','pfNotes','pfPrepay','pfPrepayDate','pfOnsite','pfPlat','pfPlatDate','pfPlatUsd','pfPlatFx'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['fDate','fContact','fHotel','fAmount','fNotes','fGuideNote','fPrepay','fPrepayDate','fOnsite','fPlat','fPlatDate','fPlatUsd','fPlatFx','pfDate','pfContact','pfHotel','pfAmount','pfNotes','pfGuideNote','pfPrepay','pfPrepayDate','pfOnsite','pfPlat','pfPlatDate','pfPlatUsd','pfPlatFx'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   // Все платежи ведём в долларах — доллар не меняется. В донгах только сдача.
   ['fPrepayCur','pfPrepayCur','fPlatCur','pfPlatCur','fOnsiteCur','pfOnsiteCur'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='USD';});
   ['fChange','pfChange'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
@@ -4004,7 +4007,7 @@ function bGetFormData(){
     tripStatus: editingId ? (allBookings.find(x=>x.id==editingId)?.tripStatus||'waiting') : (document.getElementById(p+'TripStatus')?.value||'waiting'),
     notes:(()=>{const _pn=mTab==='manual'?fPlatformName:pfPlatformName;const _pm=_pn==='Sputnik8'?'‌S':_pn==='Tripster'?'‌T':_pn==='База'?'‌B':'';// Метку источника больше не ставим руками, но у старых броней её нужно сохранить —
     // иначе при любой правке примечания источник исчезнет.
-    const _sm=editingId?((allBookings.find(x=>x.id==editingId)?.notes||'').match(МЕТКА_ИСТОЧНИКА)?.[0]||''):'';const _gm=editingId?((allBookings.find(x=>x.id==editingId)?.notes||'').match(ЗАМЕТКА_ГИДУ)?.[0]||''):'';return(document.getElementById(p+'Notes').value||'').replace(/​/g,'').replace(/‌[TSB]/g,'').replace(МЕТКА_ИСТОЧНИКА,'').replace(ЗАМЕТКА_ГИДУ,'')+_pm+_sm+_gm+(isIndividual?'​':'');})()
+    const _sm=editingId?((allBookings.find(x=>x.id==editingId)?.notes||'').match(МЕТКА_ИСТОЧНИКА)?.[0]||''):'';let _gm=editingId?((allBookings.find(x=>x.id==editingId)?.notes||'').match(ЗАМЕТКА_ГИДУ)?.[0]||''):'';{const _gf=document.getElementById(p+'GuideNote');if(_gf&&(p==='f'||_gf.value.trim())){const _gv=_gf.value.replace(/\u2063/g,'').trim();_gm=_gv?'\u2063'+_gv+'\u2063':'';}}return(document.getElementById(p+'Notes').value||'').replace(/​/g,'').replace(/‌[TSB]/g,'').replace(МЕТКА_ИСТОЧНИКА,'').replace(ЗАМЕТКА_ГИДУ,'')+_pm+_sm+_gm+(isIndividual?'​':'');})()
   };
 }
 function bRepeat(id){
@@ -4022,7 +4025,7 @@ function bRepeat(id){
   document.getElementById('fCurrency').value=b.currency||'VND';
   document.getElementById('fPayMethod').value=b.payMethod||'Наличные';
   document.getElementById('fAmount').value='';
-  document.getElementById('fNotes').value='';
+  document.getElementById('fNotes').value='';{const _g=document.getElementById('fGuideNote'); if(_g) _g.value='';}
   bUpdatePreview();
 }
 // Подсветить незаполненное поле и сказать, чего не хватает
